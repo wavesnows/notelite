@@ -1,14 +1,17 @@
-var defaultConf:any ={}
+var defaultConf:any ={
+  
+}
 
 const baseConf:any ={
   newFolderName:"MyFolder",
+  defaultStore:"yesnotelite",
   defaultRepoPath:"repos",
   defaultRepoName:"default",
 }
 
   const devConf:any = {
-    storeName:"noteStore",
     appName:"mynotelite",
+    storeName:"myNoteStore",
     
   }
   const proConf:any = {
@@ -21,9 +24,11 @@ const baseConf:any ={
   if(paths.includes('node_modules')){
     defaultConf = {...baseConf, ...devConf};
   }
-  else
+  else{
     defaultConf = {...baseConf, ...proConf}
     console.dir(defaultConf);
+  }
+
 
 
   const env = process.argv[2] || 'development';

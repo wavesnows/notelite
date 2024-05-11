@@ -31,7 +31,7 @@ watch(
     console.log('value change')
     editorInstance.render(newv)
    // ttsStore.editerData = newv
-    ttsStore.setLastPath();
+    ttsStore.setLastEditNote();
   } 
 )
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron";
+import { app, BrowserWindow, shell, ipcMain, dialog } from "electron";
 import { release } from "os";
 import { join } from "path";
 
@@ -160,4 +160,14 @@ ipcMain.on("openDevTools", async (event, arg) => {
   } else {
     win.webContents.openDevTools({ mode: "undocked", activate: true });
   }
+});
+
+ipcMain.on('open-dialog', (event) => {
+  dialog.showOpenDialog({
+    properties: ['openDirectory']
+  }).then(result => {
+    if (!result.canceled) {
+      event.sender.send('selected-directory', result.filePaths);
+    }
+  });
 });

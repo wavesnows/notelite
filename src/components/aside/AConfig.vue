@@ -18,7 +18,7 @@
       </el-dropdown-menu>
     </template>
     </el-dropdown>
-    <!--<el-tooltip
+    <el-tooltip
       class="box-item"
       content="Setting"
       placement="top-start"
@@ -31,7 +31,7 @@
       @click="popHandler">
       <el-icon ><Setting /></el-icon>
     </el-button>
-    </el-tooltip>-->
+    </el-tooltip>
     </el-button-group>
     </div>
     <!--Left Panel End-->
@@ -42,7 +42,37 @@
       </template>
       <template #default>
         <el-tabs tab-position="left" style="height: 100%" class="demo-tabs">
-          <el-tab-pane label="Note Book Config">
+          <el-tab-pane label="Local Config">
+            <el-form  v-model="config" label-width="120px" label-position="top">
+ 
+              <el-form-item label="Local Path">
+                <el-input readonly="true"  v-model="notestore.currentStore" />
+                <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="openDialog">Change Default Path</el-button>
+              </el-form-item>
+              <el-form-item label="Default Notebook Path">
+                {{ config.defaultNotePath }}
+                <!-- <el-input readonly="true"  v-model="config.defaultNotePath" />-->
+                <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
+              </el-form-item>
+              <!--<el-form-item label="Default Local Path">
+                <el-input v-model="config.savePath" />
+              </el-form-item>-->
+              <el-form-item label="Current Notebook">
+              <el-select v-model="value" placeholder="Select Note Repo" @change="saveHander" >
+                <el-option-group v-for="group in options" :key="group.label" :label="group.label">
+                  <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
+                </el-option-group>
+              </el-select>   
+            </el-form-item>
+            <el-form-item label="Notebook Path">
+               {{ notebook.currentPath }}
+              </el-form-item>
+            </el-form>
+            <div style="flex: auto">
+              <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="Note Config">
             <el-form  v-model="config" label-width="120px" label-position="top">
             <!--<el-form-item label="Note Book Config"></el-form-item>-->
             <el-form-item label="Current Notebook">
@@ -57,22 +87,7 @@
               </el-form-item>
             </el-form>
           </el-tab-pane>
-          <el-tab-pane label="Local Config">
-            <el-form  v-model="config" label-width="120px" label-position="top">
-              <el-form-item label="Path Config"></el-form-item>
-              <el-form-item label="Default Local Path">
-                <el-input v-model="config.savePath" />
-              </el-form-item>
-              <el-form-item label="Default Notebook Path">
-                {{ config.defaultNotePath }}
-               <!-- <el-input readonly="true"  v-model="config.defaultNotePath" />-->
-              </el-form-item>
-            </el-form>
-            <div style="flex: auto">
-              <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="Remote Store Config">
+          <el-tab-pane label="Remote Config">
             <el-form :model="config" label-width="120px" label-position="top">
               <el-form-item label="GitHub Config"></el-form-item>
               <el-form-item label="Enable Config">
@@ -101,7 +116,7 @@
         </div>
       </template>
     </el-drawer>
-    <!--Config Drawer Start-->
+    <!--Config Drawer End-->
     <!--Create Note Folder Dialog Start -->
     <el-dialog v-model="dialogFormVisible" title="Type Folder Name">
       <el-form :model="ttsStore.menu">
@@ -130,13 +145,14 @@
   import type Node from 'element-plus/es/components/tree/src/model/node'
   import {initDefaultNotebook} from "@/libs/noteUtil"
   import { readDir,readNotes} from "@/libs/fileHandler"
+  import { Select } from "@element-plus/icons-vue";
+  import defaultConf from "@/global/defaultConf";
 
   const formLabelWidth = '140px';
   const dialogFormVisible = ref(false)
 
   const ttsStore = useTtsStore();
-  var {config, notebook} = storeToRefs(ttsStore);
-
+  var {config, notebook, notestore} = storeToRefs(ttsStore);
 
   //const value = ref(ttsStore.notebook.current)
 
@@ -154,7 +170,10 @@
         })
 */
   
-  const options = [
+import { ipcRenderer } from 'electron';
+
+
+var options = [
     {
       label: 'Local Note Repo',
       options: [
@@ -182,6 +201,26 @@
         }
       )
     }
+
+
+
+
+const openDialog = () => {
+  ipcRenderer.send('open-dialog');
+  console.log('store::'+ttsStore.notestore.currentStore)
+};
+
+ipcRenderer.on('selected-directory', (event, path) => {
+  console.log(path);
+  config.value.savePath = path[0];
+  ttsStore.notestore.currentStore = path[0];
+  ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
+  config.value.defaultNotePath = ttsStore.notebook.currentPath;
+  ttsStore.notebook.currentPath = join(path[0], defaultConf.defaultRepoPath, defaultConf.defaultRepoName)
+  
+});
+
+ 
 
   const direction = ref('rtl')
   const handleClose = (done: () => void) => {
@@ -213,15 +252,19 @@
   }
   
   function confirmClick() {
-    ttsStore.initDefaultNotePath();
+   // ttsStore.initDefaultNotePath();//
     ElMessageBox.confirm(`Are you confirm Changeed?`)
       .then(() => {
-        ttsStore.setLocalNotePath()
+       
+       // ttsStore.setLocalNotePath();
+        ttsStore.updateConfig();
+        console.log("confirm log")
         ttsStore.config.drawer = false;
         ttsStore.config.needUpdateTree = true;
       })
       .catch(() => {
         // catch error
+        console.log("confirm log error")
       })
   }
 

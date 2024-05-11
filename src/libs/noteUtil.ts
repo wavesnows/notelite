@@ -40,7 +40,7 @@ export function initDefaultNotebook(dir:string):string{
     let str:string = ''
     let localNotePath = path.join(dir,defaultConf.defaultRepoPath,defaultConf.defaultRepoName,"notes");
     let hasDefaultNoteBook = existsSync(localNotePath) && statSync(localNotePath).isDirectory()
-    if(!existsSync(dir)){
+    if(!existsSync(dir)||existsSync(dir)&&isFolderEmpty(dir)){
         ensureDirSync(localNotePath);
         copyFileSync(path.join(path.resolve(process.cwd()),'src/assets/Note.json'),path.join(localNotePath,'demo.json'))
         str = "create default note book"
