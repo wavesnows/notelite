@@ -51,7 +51,7 @@ export function readDir(dir:string = ''):any{
   let dirPath = dir
   if(dir ==''){
     const ttsStore = useTtsStore();
-    dirPath = path.join(ttsStore.config.savePath,'repos', ttsStore.config.githubRepoName, 'notes');
+    dirPath = path.join(ttsStore.settings.currentStore,'repos', ttsStore.config.githubRepoName, 'notes');
     console.log(dirPath)
   }
   const files = fs.readdirSync(dirPath).filter((file:string) => !file.startsWith('.') && (path.extname(file) == '.json'|| path.extname(file) =='' ));
@@ -67,6 +67,25 @@ export function readDir(dir:string = ''):any{
     })
 }
 
+
+export function readOneDir(dir:string = ''):Array<any>{
+  let dirPath = dir
+  const files = fs.readdirSync(dirPath).filter((file:string) => !file.startsWith('.') && (path.extname(file) =='' ));
+  return files.map((file:string) => {
+      const fullPath = path.resolve(dirPath, file);
+      const isDirectory = fs.statSync(fullPath).isDirectory();
+      if(isDirectory){
+        return {
+          label:file,
+          value:file,
+          path:fullPath,
+          type:'local',
+        }
+      }
+      else return ""
+      
+    }).filter(item => item !== "")
+}
 
 export function readNotes(dirPath:string):any{
   if(fs.existsSync(dirPath)){

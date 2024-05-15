@@ -25,7 +25,6 @@ export var editorInstance:EditorJS
 const store = defaultStore
 
 /*
-
 if(store.get("savePath") == ""){
   const homedir = os.homedir();
   store.set("savePath", path.join(homedir, noteConf.appName))
@@ -34,7 +33,6 @@ if(store.get("savePath") == ""){
 
 // 定义并导出容器，第一个参数是容器id，必须唯一，用来将所有的容器
 // 挂载到根容器上
-
 
 /*一个数据是存储在本地的数据，
   配置的数据一部分是存储在本地的，另外也会有一些是构造出来的
@@ -47,7 +45,6 @@ export const useTtsStore = defineStore(DFConf.appName, {
   // 定义state，用来存储状态的
   state: () => {
     return {
-      currentbook:store.get('currentNoteBookObj'),
       notestore:{
         currentStore:store.get('currentStore'),
       },
@@ -109,6 +106,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       },
       settings: {
         currentStore:store.get('currentStore'),
+        currentbook:store.get('currentNoteBookObj'),
         needUpdateTree:false,
      //   defaultNoteInit:store.get("defaultNoteInit")? true:false,
         savePath: store.get("savePath"),
@@ -142,7 +140,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
     //  store.set("currentNotebook", this.notebook.current);
       store.set("currentNotebookType",this.notebook.bookType);
       store.set("currentNotebookPath",this.notebook.currentPath);
-      store.set('currentNoteBookObj',this.currentbook)
+      store.set('currentNoteBookObj',this.settings.currentbook)
     },
     setLocalNotePath() {
      // store.set("savePath", this.config.savePath);
@@ -151,16 +149,16 @@ export const useTtsStore = defineStore(DFConf.appName, {
       store.set("GithubToken", this.config.githubToken);
       this.setSavePath()
     },
-    updateConfig(){
+    updateSettings(){
       store.set("currentStore",this.notestore.currentStore);
       store.set("currentNotebookPath",this.notebook.currentPath)
+      store.set("defaultNotePath",this.settings.defaultNotePath)
 
-      console.log("confirm log + "+ this.config.githubRepoName)
-      store.set("GithubRepoName", this.config.githubRepoName);
-
+     
       
-      store.set("GithubUsername", this.config.githubUsername);
-      store.set("GithubToken", this.config.githubToken);
+      store.set("GithubRepoName", this.config.githubRepoName?this.config.githubRepoName:"");
+      store.set("GithubUsername", this.config.githubUsername?this.config.githubUsername:"");
+      store.set("GithubToken", this.config.githubToken?this.config.githubToken:"");
 
      // this.setLocalNotePath();
      // this.setSavePath();

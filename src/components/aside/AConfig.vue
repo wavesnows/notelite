@@ -18,11 +18,7 @@
       </el-dropdown-menu>
     </template>
     </el-dropdown>
-    <el-tooltip
-      class="box-item"
-      content="Setting"
-      placement="top-start"
-    >
+    <el-tooltip class="box-item" content="Setting" placement="top-start">
     <el-button
       type="info"
       size="small"
@@ -50,15 +46,11 @@
                 <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="openDialog">Change Default Path</el-button>
               </el-form-item>
               <el-form-item label="Default Notebook Path">
-                {{ config.defaultNotePath }}
-                <!-- <el-input readonly="true"  v-model="config.defaultNotePath" />-->
-                <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
+                {{ settings.defaultNotePath }}
+                <el-button v-show="true" style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
               </el-form-item>
-              <!--<el-form-item label="Default Local Path">
-                <el-input v-model="config.savePath" />
-              </el-form-item>-->
               <el-form-item label="Current Notebook">
-              <el-select v-model="value" placeholder="Select Note Repo" @change="saveHander" >
+              <el-select v-model="settings.currentbook" placeholder="Select Note Repo" @change="saveHander" >
                 <el-option-group v-for="group in options" :key="group.label" :label="group.label">
                   <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
                 </el-option-group>
@@ -72,40 +64,25 @@
               <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="Note Config">
-            <el-form  v-model="config" label-width="120px" label-position="top">
-            <!--<el-form-item label="Note Book Config"></el-form-item>-->
-            <el-form-item label="Current Notebook">
-              <el-select v-model="value" placeholder="Select Note Repo" @change="saveHander" >
-                <el-option-group v-for="group in options" :key="group.label" :label="group.label">
-                  <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
-                </el-option-group>
-              </el-select>   
-            </el-form-item>
-            <el-form-item label="Notebook Path">
-               {{ notebook.currentPath }}
-              </el-form-item>
-            </el-form>
-          </el-tab-pane>
           <el-tab-pane label="Remote Config">
             <el-form :model="config" label-width="120px" label-position="top">
               <el-form-item label="GitHub Config"></el-form-item>
-              <el-form-item label="Enable Config">
+              <el-form-item label="Enable GitHub">
                 <el-switch v-model="config.githubEnable" active-text="Open" inactive-text="Close" />
               </el-form-item>
-              <el-form-item label="User Name">
+              <el-form-item label="GitHub User Name">
                 <el-input v-model="config.githubUsername" :disabled="!config.githubEnable"/>
               </el-form-item>
-              <el-form-item label="Token">
+              <el-form-item label="GitHub Token">
                 <el-input v-model="config.githubToken" :disabled="!config.githubEnable" />
               </el-form-item>
               <el-form-item label="GitHub RepoName">
                 <el-input v-model="config.githubRepoName" :disabled="!config.githubEnable"/>
               </el-form-item>
             </el-form>
-            <div style="flex: auto">
+            <!--<div style="flex: auto">
               <el-button style="float: right;"  type="success" @click="initClick" :disabled="!config.githubEnable">Initial Form GitHub</el-button>
-            </div>
+            </div>-->
           </el-tab-pane>
         </el-tabs>
       </template>
@@ -144,7 +121,7 @@
   import {join} from "path";
   import type Node from 'element-plus/es/components/tree/src/model/node'
   import {initDefaultNotebook} from "@/libs/noteUtil"
-  import { readDir,readNotes} from "@/libs/fileHandler"
+  import { readDir, readOneDir,readNotes} from "@/libs/fileHandler"
   import { Select } from "@element-plus/icons-vue";
   import defaultConf from "@/global/defaultConf";
 
@@ -152,18 +129,17 @@
   const dialogFormVisible = ref(false)
 
   const ttsStore = useTtsStore();
-  var {config, notebook, notestore} = storeToRefs(ttsStore);
+  var {config, notebook, notestore, settings} = storeToRefs(ttsStore);
 
-  //const value = ref(ttsStore.notebook.current)
-
+   /* 
   type BookRepo = {
     value: string,
     label: string,
     type:string,
   }
-  const value = ref(ttsStore.currentbook)
+//  const value = ref(ttsStore.currentbook)
  // const value = ref<BookRepo>(ttsStore.currentbook)
-  /*  const value = ref<BookRepo>({
+  const value = ref<BookRepo>({
           value: 'default',
           label: 'default',
           type:'local',
@@ -175,7 +151,7 @@ import { ipcRenderer } from 'electron';
 
 var options = [
     {
-      label: 'Local Note Repo',
+      label: 'Local Note Books',
       options: [
         {
           value: 'default',
@@ -185,7 +161,7 @@ var options = [
       ],
     },
     {
-      label: 'Remote Note Repo',
+      label: 'Remote Note Books',
       options: [
         
       ],
@@ -202,7 +178,7 @@ var options = [
       )
     }
 
-
+    options[0].options = [...readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath))];
 
 
 const openDialog = () => {
@@ -215,9 +191,8 @@ ipcRenderer.on('selected-directory', (event, path) => {
   config.value.savePath = path[0];
   ttsStore.notestore.currentStore = path[0];
   ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-  config.value.defaultNotePath = ttsStore.notebook.currentPath;
-  ttsStore.notebook.currentPath = join(path[0], defaultConf.defaultRepoPath, defaultConf.defaultRepoName)
-  
+  ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
+  getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
 });
 
  
@@ -255,12 +230,10 @@ ipcRenderer.on('selected-directory', (event, path) => {
    // ttsStore.initDefaultNotePath();//
     ElMessageBox.confirm(`Are you confirm Changeed?`)
       .then(() => {
-       
-       // ttsStore.setLocalNotePath();
-        ttsStore.updateConfig();
-        console.log("confirm log")
+        ttsStore.updateSettings();
         ttsStore.config.drawer = false;
         ttsStore.config.needUpdateTree = true;
+        console.log("confirm log")
       })
       .catch(() => {
         // catch error
@@ -300,8 +273,8 @@ ipcRenderer.on('selected-directory', (event, path) => {
 
     function saveHander(value:any){
      
-      ttsStore.currentbook = value;
-      ttsStore.notebook.currentPath = join(ttsStore.config.savePath,"repos",value.value)
+      ttsStore.settings.currentbook = value;
+      ttsStore.notebook.currentPath = join(settings.value.currentStore,"repos",value.value)
      // ttsStore.setNoteBookConfig();
       ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath) // reload file
       console.dir(value)
@@ -314,8 +287,24 @@ ipcRenderer.on('selected-directory', (event, path) => {
       console.log(ttsStore.notebook.currentPath)
       ttsStore.setNoteBookConfig();
       ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath) // reload file
-       */
+      */
+
+      
   }
+
+
+    function getNoteBookList(dir = ""){
+     // console.log("start find lists")
+    /*  var op:Array<Object> = readOneDir(dir)
+        const simplifiedUsers = op.map(obj => {
+        return {
+              name: obj['label'],
+              email: obj['value']
+        };
+      });
+      */
+      options[0].options = [...readOneDir(dir)];
+    }
     //console.log(command)
    // append(command.data)
   </script>
