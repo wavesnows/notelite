@@ -19,9 +19,7 @@
         </el-menu-item>-->
       </el-menu>
         <!--<el-divider class="divider"/>-->
-      <div class="setting">
-        <AConf/>
-      </div>
+      <div class="setting"><AConf/></div>
     
     </div>
   </template>

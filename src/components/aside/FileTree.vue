@@ -16,10 +16,9 @@
     <template #default="{ node, data }">
         <div class="custom-tree-node" @contextmenu.prevent="handleContextMenu(node, $event)">
           <span class="el-dropdown-link">{{ node.label }}</span>
-         
             <el-dropdown  @command="handleCommand">
              <a  v-if="node.data.isFolder" class="icon-add" >⚙︎</a>
-             <!--  <a v-if="!node.data.isFolder" class="icon-remove" > ☸︎</a>-->
+             <!--<a v-if="!node.data.isFolder" class="icon-remove" > ☸︎</a>-->
               <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item v-if="node.data.isFolder" :command="{type:'file', data:data}">📄 File</el-dropdown-item>
@@ -52,11 +51,6 @@
     
     </el-tree>
     </el-scrollbar>
-
-
- 
-
-
 
     <el-dialog v-model="dialogFormVisible" title="Type Folder Name">
     <el-form :model="ttsStore.menu">

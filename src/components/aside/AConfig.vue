@@ -2,17 +2,17 @@
     <!--Left Panel Start-->
     <div class="button-container">
       <el-button-group>
-      <el-dropdown @command="handleGit" v-show="notebook.bookType != 'local'">
-        <el-button
-          type="success"
-          size="small"
-          circle
-          class="circle-btn"
-        >
-        <el-icon><Suitcase /></el-icon>
+      <el-tooltip class="box-item" content="Add Folder" placement="top-start">
+        <el-button type="info" size="small" circle class="circle-btn" @click="handleCommand">
+          <el-icon ><Plus /></el-icon>
         </el-button>
-          <template #dropdown>
-        <el-dropdown-menu>
+      </el-tooltip>
+      <el-dropdown @command="handleGit" v-show="notebook.bookType != 'local'">
+        <el-button type="success" size="small" circle class="circle-btn">
+          <el-icon><Suitcase /></el-icon>
+        </el-button>
+      <template #dropdown>
+      <el-dropdown-menu>
         <el-dropdown-item command="pull">📥 Pull</el-dropdown-item>
         <el-dropdown-item command="push">📤 Push</el-dropdown-item>
       </el-dropdown-menu>
@@ -60,9 +60,9 @@
                {{ notebook.currentPath }}
               </el-form-item>
             </el-form>
-            <div style="flex: auto">
+           <!-- <div style="flex: auto">
               <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
-            </div>
+            </div>-->
           </el-tab-pane>
           <el-tab-pane label="Remote Config">
             <el-form :model="config" label-width="120px" label-position="top">
@@ -80,9 +80,9 @@
                 <el-input v-model="config.githubRepoName" :disabled="!config.githubEnable"/>
               </el-form-item>
             </el-form>
-            <!--<div style="flex: auto">
+            <div style="flex: auto">
               <el-button style="float: right;"  type="success" @click="initClick" :disabled="!config.githubEnable">Initial Form GitHub</el-button>
-            </div>-->
+            </div>
           </el-tab-pane>
         </el-tabs>
       </template>
@@ -95,19 +95,20 @@
     </el-drawer>
     <!--Config Drawer End-->
     <!--Create Note Folder Dialog Start -->
-    <el-dialog v-model="dialogFormVisible" title="Type Folder Name">
-      <el-form :model="ttsStore.menu">
-        <el-form-item label="name" :label-width="formLabelWidth">
-          <el-input v-model="ttsStore.treeMenu.newFolderName" autocomplete="off" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogFormVisible = false">Cancel</el-button>
-          <el-button type="primary" @click="addFolder">OK</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <el-dialog v-model="dialogFormVisible" title="Add Root Folder">
+    <el-form :model="ttsStore.menu">
+      <el-form-item label="Type Folder Name" :label-width="formLabelWidth">
+        <el-input v-model="rootFolderName" autocomplete="off" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="addRootFolder" >OK</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
  <!--Create Note Folder Dialog End -->
   </template>
     
@@ -122,11 +123,13 @@
   import type Node from 'element-plus/es/components/tree/src/model/node'
   import {initDefaultNotebook} from "@/libs/noteUtil"
   import { readDir, readOneDir,readNotes} from "@/libs/fileHandler"
-  import { Select } from "@element-plus/icons-vue";
+  import { Select, Plus } from "@element-plus/icons-vue";
   import defaultConf from "@/global/defaultConf";
 
   const formLabelWidth = '140px';
   const dialogFormVisible = ref(false)
+
+  var rootFolderName = ref("notes")
 
   const ttsStore = useTtsStore();
   var {config, notebook, notestore, settings} = storeToRefs(ttsStore);
@@ -244,7 +247,50 @@ ipcRenderer.on('selected-directory', (event, path) => {
   const handleCommand = (command: string) => {
     ElMessage(`click on item ${command}`)
     dialogFormVisible.value = true; 
+    
   }
+
+  /*
+
+  const handleCommand = (command: any) => {
+    ttsStore.treeMenu.treeData = command.data as Tree;
+    ttsStore.treeMenu.node = command.node as Node;
+    ElMessage(`click on item ${command.type}`)
+    switch (command.type) {
+      case 'file':
+        append(command.data)
+        break;
+      case 'folder':
+        dialogFormVisible.value = true; 
+        break;
+      case 'removeitem':
+      ElMessageBox.confirm('Are you sure to delete this file?','Delete')
+        .then(()=>{
+         // removeFolder() 
+         remove(command.node, command.data)
+        }
+        )
+        .catch(() => {
+      // catch error
+        })
+        break;
+      case 'remove':
+        ElMessageBox.confirm('Are you sure to Delete this Folder?','Delete')
+        .then(()=>{
+          removeFolder() 
+        }
+        )
+        .catch(() => {
+      // catch error
+        })
+        break;
+      default:
+        break;
+    }
+  }
+
+*/
+
 
   const handleGit = async (command:string) =>{
     if(command == 'pull'){
@@ -271,6 +317,21 @@ ipcRenderer.on('selected-directory', (event, path) => {
       fs.mkdirSync(path);
     }
 
+
+
+    const addRootFolder = () =>{
+  //let data:Tree = ttsStore.menu.curentData;
+        let data:Tree = ttsStore.treeMenu.treeData;
+        console.log("add folder",data)
+        dialogFormVisible.value = false;
+        let foldername  = rootFolderName.value;
+        let path = join(ttsStore.notebook.currentPath, foldername)
+        const newChild:Tree = {label: foldername, path: path, isFolder:true, isLeaf: true}
+        fs.mkdirSync(join(ttsStore.notebook.currentPath,foldername));
+        ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath)
+ 
+  }
+
     function saveHander(value:any){
      
       ttsStore.settings.currentbook = value;
@@ -288,8 +349,6 @@ ipcRenderer.on('selected-directory', (event, path) => {
       ttsStore.setNoteBookConfig();
       ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath) // reload file
       */
-
-      
   }
 
 
