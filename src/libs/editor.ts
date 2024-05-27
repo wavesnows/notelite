@@ -2,8 +2,8 @@ import EditorJS from "@editorjs/editorjs";
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import Quote from '@editorjs/quote';
-
 import { useTtsStore } from "@/store/store";
+import { ElMessage } from 'element-plus'
 
 const Store = require("electron-store");
 const path = require("path");
@@ -32,6 +32,7 @@ export function initEditor(editor:any){
         placeholder: 'Let`s write an awesome story!',
         onChange: (api, event) => {
          console.log('Now I know that Editor\'s content changed!', api, event)
+         saveContent()
        },
         onReady: () =>{
           console.log('ready!');
@@ -54,27 +55,31 @@ export function readyInit(){
 };
 
 export  function loadContent(){
-  let url = store.get("lastPath")
-  if(url){
+  let url:string = store.get("lastPath") as string
+  if(url && url.includes(store.get('currentNotebookPath'))){
     fs.readFile(url, 'utf8', (err:any, data:any) => {
       if (err) throw err;
       const jsonData = JSON.parse(data);
-      console.log(url)
+      //console.log(url)
       console.log(jsonData)
     })
   }
   else{
+    const ttsStore = useTtsStore();
+    ttsStore.cnote.title = ''
+    ttsStore.cnote.lastPath = ''
+    console.log("no current file.")
   }
 }
 
-  export function saveContent(){
-    const ttsStore = useTtsStore();
-    editorInstance.save().then((outputData:any) => {
-      ttsStore.editerflag = false
-          console.dir(outputData,{depth:5})
-          var fileData = JSON.stringify(outputData, null, 2); // 以 2 个空格缩进 JSON 数据
-         // var blob = new Blob([fileData], { type: 'application/json;charset=utf-8' });
-          //fs.appendFileSync("/Users/fusong/note/demo/data.json", fileData, 'utf8');
+export function saveContent(){
+  const ttsStore = useTtsStore();
+  editorInstance.save().then((outputData:any) => {
+    ttsStore.editerflag = false
+      console.dir(outputData,{depth:5})
+      var fileData = JSON.stringify(outputData, null, 2); // 以 2 个空格缩进 JSON 数据
+       // var blob = new Blob([fileData], { type: 'application/json;charset=utf-8' });
+        //fs.appendFileSync("/Users/fusong/note/demo/data.json", fileData, 'utf8');
           var data = new Date();
           var title = data.getTime().toString();
           var path = data.getMonth().toString();
@@ -84,8 +89,18 @@ export  function loadContent(){
          console.log(title, ttsStore.inputs.notePath)
           fs.writeFileSync(ttsStore.inputs.notePath, fileData, 'utf8')
           console.log('Saving Finish');
+    /*      ElMessage({
+            message: 'Saving Finish!',
+            grouping: true,
+            type: 'success',
+          })*/
           //ttsStore.treeMenu.data = readDir()
     }).catch((error) => {
+      ElMessage({
+        message: 'Saving Failed!',
+        grouping: true,
+        type: 'error',
+      })
         console.log('Saving failed: ', error)
         ttsStore.editerflag = false
       });

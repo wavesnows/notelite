@@ -154,8 +154,6 @@ export const useTtsStore = defineStore(DFConf.appName, {
       store.set("currentNotebookPath",this.notebook.currentPath)
       store.set("defaultNotePath",this.settings.defaultNotePath)
 
-     
-      
       store.set("GithubRepoName", this.config.githubRepoName?this.config.githubRepoName:"");
       store.set("GithubUsername", this.config.githubUsername?this.config.githubUsername:"");
       store.set("GithubToken", this.config.githubToken?this.config.githubToken:"");

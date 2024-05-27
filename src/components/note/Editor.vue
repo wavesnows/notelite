@@ -37,7 +37,7 @@ watch(
 
 onMounted(() => {
   editorInstance = initEditor(editor)
-  ttsStore.editorInstance = editorInstance;
+    ttsStore.editorInstance = editorInstance;
   })
 </script>
 
@@ -65,7 +65,13 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubun
   width: 100%;
   height: 800px;
 }
-
+ /*
+.ce-block__content {
+  max-width: 100%;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+*/
 :deep(.el-input__wrapper) {
   background-color: transparent;
   font-size: 1.5rem;

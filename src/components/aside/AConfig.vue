@@ -34,11 +34,11 @@
     <!--Config Drawer Start-->
     <el-drawer v-model="config.drawer" :direction="direction" size="50%">
       <template #header>
-        <h3>Config</h3>
+        <h3>Settings</h3>
       </template>
       <template #default>
         <el-tabs tab-position="left" style="height: 100%" class="demo-tabs">
-          <el-tab-pane label="Local Config">
+          <el-tab-pane label="Local Setting">
             <el-form  v-model="config" label-width="120px" label-position="top">
  
               <el-form-item label="Local Path">
@@ -64,9 +64,15 @@
               <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
             </div>-->
           </el-tab-pane>
-          <el-tab-pane label="Remote Config">
+          <el-tab-pane label="Remote Seting">
             <el-form :model="config" label-width="120px" label-position="top">
-              <el-form-item label="GitHub Config"></el-form-item>
+              <el-form-item label="Remote Repo">
+              <!-- <el-select v-model="settings.currentbook" placeholder="Select Note Repo" @change="RemoteStoreSelectHander" >
+                <el-option-group v-for="group in options" :key="group.label" :label="group.label">
+                  <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
+                </el-option-group>
+              </el-select> --> 
+              </el-form-item>
               <el-form-item label="Enable GitHub">
                 <el-switch v-model="config.githubEnable" active-text="Open" inactive-text="Close" />
               </el-form-item>
@@ -110,9 +116,9 @@
   </el-dialog>
 
  <!--Create Note Folder Dialog End -->
-  </template>
+</template>
     
-  <script lang="ts" setup>
+<script lang="ts" setup>
   import { ref } from 'vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
@@ -125,34 +131,16 @@
   import { readDir, readOneDir,readNotes} from "@/libs/fileHandler"
   import { Select, Plus } from "@element-plus/icons-vue";
   import defaultConf from "@/global/defaultConf";
+  import { ipcRenderer } from 'electron';
+
 
   const formLabelWidth = '140px';
   const dialogFormVisible = ref(false)
-
   var rootFolderName = ref("notes")
-
   const ttsStore = useTtsStore();
   var {config, notebook, notestore, settings} = storeToRefs(ttsStore);
-
-   /* 
-  type BookRepo = {
-    value: string,
-    label: string,
-    type:string,
-  }
-//  const value = ref(ttsStore.currentbook)
- // const value = ref<BookRepo>(ttsStore.currentbook)
-  const value = ref<BookRepo>({
-          value: 'default',
-          label: 'default',
-          type:'local',
-        })
-*/
   
-import { ipcRenderer } from 'electron';
-
-
-var options = [
+  var options = [
     {
       label: 'Local Note Books',
       options: [
@@ -171,8 +159,8 @@ var options = [
     },
   ]
 
-    if(ttsStore.config.githubRepoName!=""){
-      options[1].options.push(
+  if(ttsStore.config.githubRepoName!=""){
+    options[1].options.push(
         {
           value: ttsStore.config.githubRepoName,
           label: ttsStore.config.githubRepoName,
@@ -181,22 +169,21 @@ var options = [
       )
     }
 
-    options[0].options = [...readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath))];
+  options[0].options = [...readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath))];
 
+  const openDialog = () => {
+    ipcRenderer.send('open-dialog');
+    console.log('store::'+ttsStore.notestore.currentStore)
+  };
 
-const openDialog = () => {
-  ipcRenderer.send('open-dialog');
-  console.log('store::'+ttsStore.notestore.currentStore)
-};
-
-ipcRenderer.on('selected-directory', (event, path) => {
-  console.log(path);
-  config.value.savePath = path[0];
-  ttsStore.notestore.currentStore = path[0];
-  ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-  ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-  getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
-});
+  ipcRenderer.on('selected-directory', (event, path) => {
+    console.log(path);
+    config.value.savePath = path[0];
+    ttsStore.notestore.currentStore = path[0];
+    ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
+    ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
+    getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
+  });
 
  
 
@@ -228,24 +215,33 @@ ipcRenderer.on('selected-directory', (event, path) => {
   function popHandler(){
     ttsStore.config.drawer = true
   }
-  
+  function RemoteStoreSelectHander(){
+    
+  }
   function confirmClick() {
-   // ttsStore.initDefaultNotePath();//
     ElMessageBox.confirm(`Are you confirm Changeed?`)
       .then(() => {
         ttsStore.updateSettings();
         ttsStore.config.drawer = false;
         ttsStore.config.needUpdateTree = true;
+        ElMessage({
+            message: 'Save succed!',
+            grouping: true,
+            type: 'success',
+          })
         console.log("confirm log")
       })
       .catch(() => {
-        // catch error
-        console.log("confirm log error")
+        ElMessage({
+            message: 'Save faild! Please try again',
+            grouping: true,
+            type: 'error',
+          })
       })
   }
 
   const handleCommand = (command: string) => {
-    ElMessage(`click on item ${command}`)
+    //ElMessage(`click on item ${command}`)
     dialogFormVisible.value = true; 
     
   }
@@ -306,39 +302,45 @@ ipcRenderer.on('selected-directory', (event, path) => {
       ElMessage("Do nothings")
     }
   }
-    const addFolder = ()=>{
-      dialogFormVisible.value = false;
-      let data = ttsStore.treeMenu.data
-      let foldername  = ttsStore.treeMenu.newFolderName
-      let repo = ttsStore.config.githubRepoName
-      let path = join(ttsStore.config.savePath, 'repos',repo,'notes', foldername)
-      const newChild:Tree = {label: foldername, path: path, isFolder:true, isLeaf: true,children:[]}
-      data.push(newChild as Tree)
-      fs.mkdirSync(path);
-    }
 
 
 
     const addRootFolder = () =>{
-  //let data:Tree = ttsStore.menu.curentData;
-        let data:Tree = ttsStore.treeMenu.treeData;
-        console.log("add folder",data)
         dialogFormVisible.value = false;
         let foldername  = rootFolderName.value;
         let path = join(ttsStore.notebook.currentPath, foldername)
         const newChild:Tree = {label: foldername, path: path, isFolder:true, isLeaf: true}
-        fs.mkdirSync(join(ttsStore.notebook.currentPath,foldername));
-        ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath)
+        if(ttsStore.treeMenu.data.length <= 5){
+          try{
+            fs.mkdirSync(join(ttsStore.notebook.currentPath,foldername));
+            ttsStore.treeMenu.data.push(newChild)
+          }
+          catch(error){
+            ElMessage({
+            message: error as string,
+            grouping: true,
+            type: 'error',
+          })
+          }
+        }
+        else
+        {
+          ElMessage({
+            message: 'We only allow 6 folders at most!',
+            grouping: true,
+            type: 'warning',
+          })
+        }
+
+       //'success' | 'warning' | 'info' | 'error'
+       // ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath)
  
   }
 
     function saveHander(value:any){
-     
       ttsStore.settings.currentbook = value;
       ttsStore.notebook.currentPath = join(settings.value.currentStore,"repos",value.value)
-     // ttsStore.setNoteBookConfig();
       ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath) // reload file
-      console.dir(value)
       ttsStore.notebook.bookType = value.type;
       ttsStore.setNoteBookConfig();
       /*
@@ -364,8 +366,6 @@ ipcRenderer.on('selected-directory', (event, path) => {
       */
       options[0].options = [...readOneDir(dir)];
     }
-    //console.log(command)
-   // append(command.data)
   </script>
     
   <style scoped>

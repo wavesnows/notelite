@@ -4,8 +4,8 @@ import { globalRegister } from "./global";
 import { createPinia } from "pinia";
 import  i18n  from "@/i18n";
 
-const app = createApp(App) as any;
 const pinia = createPinia();
+const app = createApp(App) as any;
 
 app.use(pinia);
 app.use(globalRegister);

@@ -4,6 +4,7 @@ import fse from 'fs-extra'
 import { ElMessage } from 'element-plus';
 import {getNoteLabel} from '@/libs/noteUtil'
 import { useTtsStore, editorInstance,Tree } from "@/store/store";
+import Node from 'element-plus/es/components/tree/src/model/node'
 import { storeToRefs } from "pinia";
 import {updateTreeMenu} from "@/libs/treeMenu"
 
@@ -35,15 +36,67 @@ import {updateTreeMenu} from "@/libs/treeMenu"
     return ;
   }
 
+
+  export function removeFolder() {
+    let ttsStore = useTtsStore()
+    console.log("remove Folder")
+    let node  = ttsStore.treeMenu.node ;
+  //  updateTreeMenu()
+    updateTreeMenu()
+    ttsStore.inputs.notePath =  node.data.path
+    console.log("----"+node.data.path)
+    try {
+      fs.rmdirSync(node.data.path,{recursive: true}) 
+      ElMessage({
+              message: 'Remove success!',
+              grouping: true,
+              type: 'success',
+            })
+         //'success' | 'warning' | 'info' | 'error'
+    } catch (error) {
+      ElMessage({
+              message: error as string,
+              grouping: true,
+              type: 'error',
+            })
+         //'success' | 'warning' | 'info' | 'error'
+    }
+    return null
+  }
+  
+  export function remove(node: Node, data: Tree) {
+    let ttsStore = useTtsStore()
+    ttsStore.treeMenu.treeData = data;
+    ttsStore.treeMenu.node = node;
+    updateTreeMenu()
+    ttsStore.inputs.notePath =  node.data.path
+    fs.rmSync(ttsStore.inputs.notePath)
+  }
+
+
+
+
   export function removeFile(){
     const ttsStore = useTtsStore();
+    
     updateTreeMenu()
     // var destPath = path.dirname(ttsStore.inputs.notePath)
-     fs.rmSync(ttsStore.inputs.notePath)
-     console.dir(ttsStore.treeMenu.data)
-     //let data:Tree <any> = ttsStore.treeMenu.data;
-    // ttsStore.treeMenu.data = readDir();
-   //  console.dir(readDir())
+    try {
+      fs.rmSync(ttsStore.inputs.notePath)
+      ElMessage({
+              message: 'Remove success!',
+              grouping: true,
+              type: 'success',
+            })
+         //'success' | 'warning' | 'info' | 'error'
+    } catch (error) {
+      ElMessage({
+              message: error as string,
+              grouping: true,
+              type: 'error',
+            })
+         //'success' | 'warning' | 'info' | 'error'
+    }
       return ;
   }
 

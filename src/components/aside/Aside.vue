@@ -6,7 +6,7 @@
         @select="menuChange"
       >
         <el-menu-item index="1">
-          <el-icon><document /></el-icon>
+          <el-icon><notebook/></el-icon>
           <span></span>
         </el-menu-item>
       <!-- <el-menu-item index="2">

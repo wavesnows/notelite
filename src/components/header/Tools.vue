@@ -1,13 +1,12 @@
 <template>
-  <el-tooltip content="Save">    
+  <!--<el-tooltip content="Save">    
     <el-button size="small" circle class="tool-btn" @click="saveHandle">
       <el-icon><DocumentAdd /></el-icon>
     </el-button>
-  </el-tooltip>
+  </el-tooltip>-->
   <el-tooltip content="Delete File">   
     <el-button size="small" circle class="tool-btn" @click="removeHandle">
       <el-icon><Delete /></el-icon>
-  
     </el-button>
   </el-tooltip>
   <el-tooltip content="Lock/Edit Mode">   
@@ -17,17 +16,16 @@
     </el-button>
   </el-tooltip>
 </template>
-  
 <script setup lang="ts">
 
 import { useTtsStore } from "@/store/store";
 import { storeToRefs } from "pinia";
 import {removeFile} from '@/libs/fileHandler'
 import {saveContent} from '@/libs/editor'
+import {ElMessageBox} from 'element-plus'
 //import {  DocumentAdd } from "@element-plus/icons-vue";
 
 //const currShow = ref(0);
-
 const ttsStore = useTtsStore();
 var { editerflag,readOnly } = storeToRefs(ttsStore);
 
@@ -45,8 +43,14 @@ function editHandle(){
 }
 
 async function removeHandle(){
+  ElMessageBox.confirm(`Are you sure to Delete "${ttsStore.treeMenu.node.label}" ?`,'Delete')
+  .then(()=>{
+    removeFile()
+    })
+  .catch(() => {
+      // catch error
+    })
   console.log("Remove Press")
-  removeFile()
 }
 
 

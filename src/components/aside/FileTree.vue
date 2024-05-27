@@ -72,13 +72,14 @@ import fs from 'fs'
 import {join} from "path"
 import { storeToRefs } from "pinia"
 import {ref, watch,getCurrentInstance, onMounted} from 'vue'
-import type Node from 'element-plus/es/components/tree/src/model/node'
+import Node from 'element-plus/es/components/tree/src/model/node'
 import {ElTree, ElMessage,ElMessageBox, ElPopconfirm} from 'element-plus'
 import { Search,InfoFilled } from "@element-plus/icons-vue"
 import {getNoteLabel} from "@/libs/noteUtil"
 import { useTtsStore, editorInstance, Tree } from "@/store/store"
 import { readDir,readNotes} from "@/libs/fileHandler"
 import {updateTreeMenu} from "@/libs/treeMenu"
+import {remove, removeFolder} from "@/libs/fileHandler"
 
 const ttsStore = useTtsStore();
 var {editerData,inputs,cnote ,treeMenu} = storeToRefs(ttsStore);
@@ -118,7 +119,8 @@ const showItemMenu = () => {
 const handleCommand = (command: any) => {
     ttsStore.treeMenu.treeData = command.data as Tree;
     ttsStore.treeMenu.node = command.node as Node;
-    ElMessage(`click on item ${command.type}`)
+    console.dir(command.node)
+   // ElMessage(`click on item ${command.type}`)
     switch (command.type) {
       case 'file':
         append(command.data)
@@ -127,7 +129,7 @@ const handleCommand = (command: any) => {
         dialogFormVisible.value = true; 
         break;
       case 'removeitem':
-      ElMessageBox.confirm('Are you sure to delete this file?','Delete')
+      ElMessageBox.confirm(`Are you sure to delete "${ttsStore.treeMenu.node.label}" ?`,'Delete')
         .then(()=>{
          // removeFolder() 
          remove(command.node, command.data)
@@ -138,7 +140,7 @@ const handleCommand = (command: any) => {
         })
         break;
       case 'remove':
-        ElMessageBox.confirm('Are you sure to Delete this Folder?','Delete')
+        ElMessageBox.confirm(`Are you sure to Delete "${ttsStore.treeMenu.node.label}" ?`,'Delete')
         .then(()=>{
           removeFolder() 
         }
@@ -191,6 +193,8 @@ function loadHandler(data:any){
   console.log(data)
 }
 
+/*
+
 function updateMenu(){
     console.log("Update Menu")
     let treedata:Tree = ttsStore.treeMenu.treeData;
@@ -200,7 +204,7 @@ function updateMenu(){
     const index = children.findIndex((d) => d.path === treedata.path)
     children.splice(index, 1)
 }
-
+*/
 const addFolder = () =>{
   //let data:Tree = ttsStore.menu.curentData;
   let data:Tree = ttsStore.treeMenu.treeData;
@@ -232,19 +236,20 @@ const addFolder = () =>{
  // ttsStore.treeMenu.data.value = [...ttsStore.treeMenu.data.value]
 }
 
-
+/*
 
 const remove = (node: Node, data: Tree) => {
   console.log("remove")
   ttsStore.treeMenu.treeData = data;
   ttsStore.treeMenu.node = node;
- // updateTreeMenu()
-  updateMenu()
+  updateTreeMenu()
+ // updateMenu()
   ttsStore.inputs.notePath =  node.data.path
   console.log("----"+node.data.path)
   fs.rmSync(ttsStore.inputs.notePath)
 }
 
+/*
 const removeFolder= () => {
   console.log("remove Folder")
   let node  = ttsStore.treeMenu.node ;
@@ -253,14 +258,25 @@ const removeFolder= () => {
   ttsStore.inputs.notePath =  node.data.path
   console.log("----"+node.data.path)
   try {
-    fs.rmdirSync(node.data.path,{recursive: true})
+    fs.rmdirSync(node.data.path,{recursive: true}) 
+    ElMessage({
+            message: 'Remove success!',
+            grouping: true,
+            type: 'success',
+          })
+       //'success' | 'warning' | 'info' | 'error'
   } catch (error) {
-    console.log(error);
+    ElMessage({
+            message: error as string,
+            grouping: true,
+            type: 'error',
+          })
+       //'success' | 'warning' | 'info' | 'error'
   }
   return null
 }
 
-
+*/
 
   const handleNodeClick = ((itemdata: Tree,node:Node) => {
     console.log('node data is '+ node + itemdata)
