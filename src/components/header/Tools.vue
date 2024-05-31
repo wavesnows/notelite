@@ -52,18 +52,14 @@ async function removeHandle(){
     })
   console.log("Remove Press")
 }
-
-
 </script>
   
-  <style scoped>
-  /* From uiverse.io by @mrhyddenn */
+<style scoped>
   .button {
     -webkit-app-region: no-drag;
     display: flex;
   }
   .tool-btn {
     margin-left: 1px !important;
-  }
-  
-  </style>
+  }  
+</style>
