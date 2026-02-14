@@ -2,7 +2,14 @@
 import path from "path";
 import defaultConf from '../global/defaultConf';
 
-const { copyFileSync, ensureDirSync, statSync ,existsSync, readdirSync} = require("fs-extra");
+// Lazy load fs-extra only when needed (not in renderer process)
+let fse: any = null;
+function loadFse() {
+  if (!fse) {
+    fse = require('fs-extra');
+  }
+  return fse;
+}
 
 export function getNoteLabel(){
     var date = new Date();
@@ -31,12 +38,13 @@ export function dateFormat(fmt:string, date:Date) {
 
 
 export function isFolderEmpty(dir:string):boolean{
-    
+    const { readdirSync } = loadFse();
     let isEmpty = ((readdirSync(dir) as Array<string>).length > 0)? false:true;
     return isEmpty;
 }
 
 export function initDefaultNotebook(dir:string):string{
+    const { copyFileSync, ensureDirSync, statSync, existsSync } = loadFse();
     let str:string = ''
     let localNotePath = path.join(dir,defaultConf.defaultRepoPath,defaultConf.defaultRepoName,"notes");
     let hasDefaultNoteBook = existsSync(localNotePath) && statSync(localNotePath).isDirectory()
@@ -53,5 +61,5 @@ export function initDefaultNotebook(dir:string):string{
     }
     console.log(str)
     return str;
-    
+
 }

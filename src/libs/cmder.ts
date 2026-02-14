@@ -1,5 +1,5 @@
-const util = require('util');
-const { exec } = require('child_process');
+import util from 'util';
+import { exec } from 'child_process';
 
 const execPromise = util.promisify(exec);
 

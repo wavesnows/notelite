@@ -32,7 +32,7 @@
   font-size: 15px;
   font-weight: 700;
   color: #fff;
-  transition: all 0.8s;
+  transition: all 0.4s ease-in-out;
   cursor: pointer;
   position: relative;
   background: rgb(58, 165, 253);
@@ -50,8 +50,17 @@
   align-items: center;
   justify-content: center;
   transform: translateY(100%);
-  transition: transform 0.4s;
+  transition: transform 0.3s ease-in-out;
 }
+
+.box:nth-child(1):before { transition-delay: 0s; }
+.box:nth-child(2):before { transition-delay: 0.05s; }
+.box:nth-child(3):before { transition-delay: 0.1s; }
+.box:nth-child(4):before { transition-delay: 0.15s; }
+.box:nth-child(5):before { transition-delay: 0.2s; }
+.box:nth-child(6):before { transition-delay: 0.25s; }
+.box:nth-child(7):before { transition-delay: 0.3s; }
+.box:nth-child(8):before { transition-delay: 0.35s; }
 
 .box:nth-child(2)::before {
   transform: translateY(-100%);
@@ -84,5 +93,9 @@
 */
 .button:hover .box:before {
   transform: translateY(0);
+}
+
+.button:not(:hover) .box:before {
+  transition-delay: 0s;
 }
 </style>

@@ -1,19 +1,21 @@
 <template>
     <div class="aside">
       <FileTree v-if="ttsStore.page.asideIndex == '1'"/>
-      <Common v-if="ttsStore.page.asideIndex == '2'"/>
-      <Lan v-if="ttsStore.page.asideIndex == '3'"/>
+      <Favorites v-if="ttsStore.page.asideIndex == '2'"/>
+      <Common v-if="ttsStore.page.asideIndex == '3'"/>
+      <Lan v-if="ttsStore.page.asideIndex == '4'"/>
 </div>
 
   </template>
-  
+
   <script setup lang="ts">
   import { useTtsStore } from "@/store/store";
   import { storeToRefs } from "pinia";
   import FileTree from "./FileTree.vue"
+  import Favorites from "./Favorites.vue"
   import Common from "./Common.vue";
   import Lan from "./Lan.vue"
-  
+
   const ttsStore = useTtsStore();
   const { page, config } = storeToRefs(ttsStore);
 

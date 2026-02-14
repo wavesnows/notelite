@@ -1,7 +1,7 @@
 {
   "name": "note-lite",
   "productName": "YesnoteLite",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "dist/electron/main/index.js",
   "description": "🎤 ",
   "author": "",
@@ -9,14 +9,14 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build && electron-builder"
+    "build": "vite build && electron-builder",
+    "build:check": "vue-tsc --noEmit && vite build && electron-builder"
   },
   "engines": {
     "node": ">=14.17.0"
   },
   "devDependencies": {
     "@editorjs/quote": "^2.5.0",
-    "@types/editorjs__header": "^2.6.0",
     "@types/fs-extra": "^11.0.1",
     "@vitejs/plugin-vue": "^2.3.3",
     "electron": "^24.1.2",
@@ -39,18 +39,23 @@
     "vue"
   ],
   "dependencies": {
+    "@editorjs/checklist": "^1.6.0",
+    "@editorjs/code": "^2.9.4",
     "@editorjs/editorjs": "^2.26.5",
     "@editorjs/header": "^2.7.0",
+    "@editorjs/image": "^2.9.0",
     "@editorjs/list": "^1.8.0",
+    "@editorjs/table": "^2.4.5",
+    "@editorjs/underline": "^1.1.0",
+    "@editorjs/warning": "^1.4.0",
     "@electron/remote": "^2.0.9",
-    "axios": "^1.6.2",
+    "axios": "^1.9.0",
     "electron-log": "^4.4.8",
     "electron-store": "^8.0.2",
     "element-plus": "2.2.9",
     "encoding": "^0.1.13",
     "fs-extra": "^11.1.1",
     "github-api": "^0.10.7",
-    "node-cmd": "^5.0.0",
     "nodejs-websocket": "^1.7.2",
     "pinia": "^2.0.17",
     "simple-git": "^3.17.0",

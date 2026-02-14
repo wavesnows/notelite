@@ -1,129 +1,137 @@
 import {showMessage} from './globalLib'
 import { useTtsStore } from "@/store/store";
-
+import { store } from '@/global/initLocalStore';
+import { ErrorType } from '@/libs/errorHandler';
+import path from 'path';
+import fs from 'fs';
 
 const GitHub = require('github-api');
-const encode =require('encoding');
+const encode = require('encoding');
 const simpleGit = require('simple-git');
-const Store = require("electron-store");
-const path = require("path");
-
-let store = new Store();
 
 /**
- * 
+ * Clone a GitHub repository to local storage
+ * @param t - i18n translation function
+ * @returns Promise<boolean> - true if clone succeeded, false otherwise
  */
-export async function gitHubClone(){
+export async function gitHubClone(t: (key: string) => string): Promise<boolean> {
   const ttsStore = useTtsStore();
- // store.set("GithubToken", this.config.githubToken);
-  let name = ttsStore.config.githubUsername;
-  let repo = ttsStore.config.githubRepoName;
-  let notePath  = ttsStore.config.savePath
-  const gitUrl = `https://github.com/${name}/${repo}.git`
-  const localPath = path.join(notePath,"repos",repo)
-  console.log(localPath)
-  const git = simpleGit()
-  try{
-    await git.clone(gitUrl,localPath);
-    showMessage('Init Clone Finished!')
-    console.log('clone finish')
+
+  // Validate configuration
+  if (!ttsStore.config.githubUsername || !ttsStore.config.githubRepoName) {
+    ttsStore.setPushStatus(t('github.configMissing'), 'error');
+    return false;
   }
-  catch(error:any)
-  {
-    showMessage(error.message)
-    console.log(error.message)
+
+  const name = ttsStore.config.githubUsername;
+  const repo = ttsStore.config.githubRepoName;
+  const notePath = ttsStore.config.savePath;
+  const gitUrl = `https://github.com/${name}/${repo}.git`;
+  const localPath = path.join(notePath, "repos", repo);
+
+  console.log('Cloning to:', localPath);
+  ttsStore.setPushStatus(t('github.cloning'), 'loading');
+
+  const git = simpleGit();
+  try {
+    await git.clone(gitUrl, localPath);
+    ttsStore.setPushStatus(t('github.cloneSuccess'), 'success');
+    console.log('Clone finished');
+    return true;
+  } catch(error: any) {
+    ttsStore.setPushStatus(t('github.cloneFailed') + ': ' + error.message, 'error');
+    console.error('Clone failed:', error);
+    return false;
   }
- 
 }
 
 
 /**
- * 
- * @param loclRepo 
+ * Pull updates from remote GitHub repository
+ * @param t - i18n translation function
+ * @param loclRepo Optional local repository path
  */
-export async function gitPull(loclRepo:string='') {
+export async function gitPull(t: (key: string) => string, loclRepo: string = ''): Promise<boolean> {
   const ttsStore = useTtsStore();
+
+  // Validate configuration
+  if (!ttsStore.config.githubRepoName) {
+    ttsStore.setPushStatus(t('github.configMissing'), 'error');
+    return false;
+  }
+
   let repo = ttsStore.config.githubRepoName;
-    if(loclRepo == ''){
-      loclRepo = path.join(store.get("savePath"), "repos", repo);
-    }
-    console.log("==="+loclRepo)
-    // 本地仓库目录
-    const repoDir = loclRepo; 
-    // 创建 simple-git 对象
-    const git = simpleGit(repoDir);
-    git.pull((err:any, update:any) => {
-      if (err) {
-        console.error('Failed to pull changes: ', err);
-        showMessage(err.message);
-        return;
-      }
-      console.log('Repo updated: ', update);
-      showMessage('Repo updated!');
-    })
-   }
+  if (loclRepo === '') {
+    loclRepo = path.join(store.get("savePath"), "repos", repo);
+  }
 
-   export async function gitHubPush(){
-    const ttsStore = useTtsStore();
-    let repo = ttsStore.config.githubRepoName
-    let loclRepo = path.join(store.get("savePath"), "repos", repo);
-    const repoDir = loclRepo // 本地仓库目录
-    const repoName = repo; // GitHub 仓库名称
-    const username = ttsStore.config.githubUsername;// GitHub 用户名
-    const token = ttsStore.config.githubToken;// GitHub 访问令牌
-    // 创建 simple-git 对象
-    const git = simpleGit(repoDir);
+  // Check if directory exists
+  if (!fs.existsSync(loclRepo)) {
+    console.error('Repository directory does not exist:', loclRepo);
+    ttsStore.setPushStatus(t('github.repoNotCloned'), 'error');
+    return false;
+  }
 
-    // 提交文件
-    git
-      .add('.')
-      .commit('[wavenote] add file')
-    // .addRemote('origin', `https://${username}:${token}@github.com/${username}/${repoName}`)
-      .push(['-u', 'origin', 'main'], (err:any, result:any) => {
-        if (err) throw err;
-        console.log('文件提交成功！', result);
-        showMessage('File Pushed Succeed!')
-      });
- }
+  console.log('Pulling from:', loclRepo);
+  ttsStore.setPushStatus(t('github.pulling'), 'loading');
 
+  const git = simpleGit(loclRepo);
+  try {
+    const update = await git.pull();
+    console.log('Repo updated:', update);
+    ttsStore.setPushStatus(t('github.pullSuccess'), 'success');
+    return true;
+  } catch (err: any) {
+    console.error('Pull failed:', err);
+    ttsStore.setPushStatus(t('github.pullFailed') + ': ' + err.message, 'error');
+    return false;
+  }
+}
 
-  // export async function githubPull(loclRepo:string, remoteRepoName:string, user:string, token:string) {}
+/**
+ * Push local changes to remote GitHub repository
+ * @param t - i18n translation function
+ */
+export async function gitHubPush(t: (key: string) => string): Promise<boolean> {
+  const ttsStore = useTtsStore();
 
-  export async function githubPush(){
-    // 本地仓库目录
-    const repoDir = '';
-    // GitHub 仓库名称
-    const repoName = 'demo';
-    // GitHub 用户名
-    const username = 'zlpx96';
-    // GitHub 访问令牌
-    const token = '';
-    
-    // 创建 simple-git 对象
-    const git = simpleGit(repoDir);
-    
-    // 读取要提交的文件
-   // const data = fs.readFileSync('file.txt', 'utf8');
-    
-    // 将文件内容写入本地仓库的 file.txt
-  //  fs.writeFileSync(`${repoDir}/file.txt`, data);
+  // Validate configuration
+  if (!ttsStore.config.githubUsername || !ttsStore.config.githubRepoName) {
+    ttsStore.setPushStatus(t('github.configMissing'), 'error');
+    return false;
+  }
 
-    // 提交文件
-    git
-      .add('.')
-      .commit('[note] add file')
-    //  .addRemote('origin', `https://${username}:${token}@github.com/${username}/${repoName}`)
-      .push(['-u', 'origin', 'main'], (err:any, result:any) => {
-        if (err) throw err;
-        console.log('文件提交成功！', result);
-        showMessage('File Pushed Succeed!')
-      });
- }
+  const repo = ttsStore.config.githubRepoName;
+  const loclRepo = path.join(store.get("savePath"), "repos", repo);
+  const repoDir = loclRepo;
+  const repoName = repo;
+  const username = ttsStore.config.githubUsername;
+  const token = ttsStore.config.githubToken;
 
- export async function getGitFileUsingGithub() {
-  const gh = new GitHub('');
-  const repo = gh.getRepo('zlpx96', 'demo');
-  const fileContent = await repo.getContents('', 'README.md');
-  console.log(fileContent);
-  console.log(encode.convert(fileContent.data.content, 'base64',"UTF8").toString())
+  // Check if directory exists
+  if (!fs.existsSync(repoDir)) {
+    console.error('Repository directory does not exist:', repoDir);
+    ttsStore.setPushStatus(t('github.repoNotCloned'), 'error');
+    return false;
+  }
+
+  console.log('Pushing from:', repoDir);
+  ttsStore.setPushStatus(t('github.pushing'), 'loading');
+
+  const git = simpleGit(repoDir);
+
+  try {
+    // Commit and push files
+    await git.add('.');
+    await git.commit('[notelite] add file');
+    await git.push(['-u', 'origin', 'main']);
+
+    console.log('Push succeeded');
+    ttsStore.setPushStatus(t('github.pushSuccess'), 'success');
+    return true;
+  } catch (err: any) {
+    console.error('Push failed:', err);
+    ttsStore.setPushStatus(t('github.pushFailed') + ': ' + err.message, 'error');
+    return false;
+  }
 }

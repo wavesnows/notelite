@@ -9,18 +9,21 @@
           <el-icon><notebook/></el-icon>
           <span></span>
         </el-menu-item>
-      <!-- <el-menu-item index="2">
+        <el-menu-item index="2">
+          <el-icon><StarFilled /></el-icon>
+          <span></span>
+        </el-menu-item>
+      <!-- <el-menu-item index="3">
           <el-icon><Files /></el-icon>
           <span></span>
         </el-menu-item>
-        <el-menu-item index="3">
+        <el-menu-item index="4">
           <el-icon><Menu /></el-icon>
           <span></span>
         </el-menu-item>-->
       </el-menu>
         <!--<el-divider class="divider"/>-->
       <div class="setting"><AConf/></div>
-    
     </div>
   </template>
   
@@ -28,10 +31,11 @@
   import { useTtsStore } from "@/store/store";
   import { storeToRefs } from "pinia";
   import AConf from "./AConfig.vue";
-  
+  import { StarFilled } from '@element-plus/icons-vue';
+
   const ttsStore = useTtsStore();
   const { page, config } = storeToRefs(ttsStore);
-  
+
   const menuChange = (index: number) => {
     if (index === 4) return;
     ttsStore.page.asideIndex = index.toString();

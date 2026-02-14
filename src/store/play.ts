@@ -1,10 +1,9 @@
-const axios = require("axios");
-const { v4: uuidv4 } = require("uuid");
-const ws = require("nodejs-websocket");
-const { ipcRenderer,ipcMain ,contextBridge} = require("electron");
+import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
+import ws from 'nodejs-websocket';
+import { ipcRenderer, ipcMain, contextBridge } from 'electron';
 import { exec } from 'child_process';
-//import simpleGit from 'simple-git';
-import  remote  from '@electron/remote/main';
+import remote from '@electron/remote/main';
 
 
 

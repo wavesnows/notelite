@@ -2,23 +2,31 @@
     <!--Left Panel Start-->
     <div class="button-container">
       <el-button-group>
-      <el-tooltip class="box-item" content="Add Folder" placement="top-start">
+      <el-tooltip class="box-item" :content="t('toolbar.addFolder')" placement="top-start">
         <el-button type="info" size="small" circle class="circle-btn" @click="handleCommand">
           <el-icon ><Plus /></el-icon>
         </el-button>
       </el-tooltip>
-      <el-dropdown @command="handleGit" v-show="notebook.bookType != 'local'">
-        <el-button type="success" size="small" circle class="circle-btn">
-          <el-icon><Suitcase /></el-icon>
-        </el-button>
-      <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item command="pull">📥 Pull</el-dropdown-item>
-        <el-dropdown-item command="push">📤 Push</el-dropdown-item>
-      </el-dropdown-menu>
-    </template>
-    </el-dropdown>
-    <el-tooltip class="box-item" content="Setting" placement="top-start">
+      <el-tooltip class="box-item" :content="t('toolbar.gitSync')" placement="top-start">
+        <el-dropdown @command="handleGit" v-show="notebook.bookType != 'local'">
+          <el-button type="success" size="small" circle class="circle-btn">
+            <el-icon><Suitcase /></el-icon>
+          </el-button>
+        <template #dropdown>
+        <el-dropdown-menu class="git-dropdown">
+          <el-dropdown-item command="pull">
+            <el-icon><Download /></el-icon>
+            <span>{{ t('toolbar.pull') }}</span>
+          </el-dropdown-item>
+          <el-dropdown-item command="push">
+            <el-icon><Upload /></el-icon>
+            <span>{{ t('toolbar.push') }}</span>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+      </el-dropdown>
+      </el-tooltip>
+    <el-tooltip class="box-item" :content="t('toolbar.setting')" placement="top-start">
     <el-button
       type="info"
       size="small"
@@ -34,29 +42,36 @@
     <!--Config Drawer Start-->
     <el-drawer v-model="config.drawer" :direction="direction" size="50%">
       <template #header>
-        <h3>Settings</h3>
+        <h3>{{ t('settings.title') }}</h3>
       </template>
       <template #default>
         <el-tabs tab-position="left" style="height: 100%" class="demo-tabs">
-          <el-tab-pane label="Local Setting">
+          <el-tab-pane :label="t('settings.globalSetting')">
             <el-form  v-model="config" label-width="120px" label-position="top">
- 
-              <el-form-item label="Local Path">
+
+              <el-form-item :label="t('settings.languageLabel')">
+                <el-select v-model="config.language" @change="changeLanguage">
+                  <el-option :label="t('settings.english')" value="en_US" />
+                  <el-option :label="t('settings.chinese')" value="zh_CN" />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item :label="t('settings.localPath')">
                 <el-input readonly="true"  v-model="notestore.currentStore" />
-                <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="openDialog">Change Default Path</el-button>
+                <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
               </el-form-item>
-              <el-form-item label="Default Notebook Path">
+              <el-form-item :label="t('settings.defaultNotebookPath')">
                 {{ settings.defaultNotePath }}
-                <el-button v-show="true" style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
+                <el-button v-show="true" style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="initCommonBook">{{ t('settings.initDefaultNotebook') }}</el-button>
               </el-form-item>
-              <el-form-item label="Current Notebook">
-              <el-select v-model="settings.currentbook" placeholder="Select Note Repo" @change="saveHander" >
+              <el-form-item :label="t('settings.currentNotebook')">
+              <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" @change="saveHander" >
                 <el-option-group v-for="group in options" :key="group.label" :label="group.label">
                   <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
                 </el-option-group>
-              </el-select>   
+              </el-select>
             </el-form-item>
-            <el-form-item label="Notebook Path">
+            <el-form-item :label="t('settings.notebookPath')">
                {{ notebook.currentPath }}
               </el-form-item>
             </el-form>
@@ -64,53 +79,53 @@
               <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
             </div>-->
           </el-tab-pane>
-          <el-tab-pane label="Remote Seting">
+          <el-tab-pane :label="t('settings.remoteSetting')">
             <el-form :model="config" label-width="120px" label-position="top">
-              <el-form-item label="Remote Repo">
+              <el-form-item :label="t('settings.remoteRepo')">
               <!-- <el-select v-model="settings.currentbook" placeholder="Select Note Repo" @change="RemoteStoreSelectHander" >
                 <el-option-group v-for="group in options" :key="group.label" :label="group.label">
                   <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
                 </el-option-group>
-              </el-select> --> 
+              </el-select> -->
               </el-form-item>
-              <el-form-item label="Enable GitHub">
-                <el-switch v-model="config.githubEnable" active-text="Open" inactive-text="Close" />
+              <el-form-item :label="t('settings.enableGitHub')">
+                <el-switch v-model="config.githubEnable" :active-text="t('settings.open')" :inactive-text="t('settings.close')" />
               </el-form-item>
-              <el-form-item label="GitHub User Name">
+              <el-form-item :label="t('settings.githubUsername')">
                 <el-input v-model="config.githubUsername" :disabled="!config.githubEnable"/>
               </el-form-item>
-              <el-form-item label="GitHub Token">
+              <el-form-item :label="t('settings.githubToken')">
                 <el-input v-model="config.githubToken" :disabled="!config.githubEnable" />
               </el-form-item>
-              <el-form-item label="GitHub RepoName">
+              <el-form-item :label="t('settings.githubRepoName')">
                 <el-input v-model="config.githubRepoName" :disabled="!config.githubEnable"/>
               </el-form-item>
             </el-form>
             <div style="flex: auto">
-              <el-button style="float: right;"  type="success" @click="initClick" :disabled="!config.githubEnable">Initial Form GitHub</el-button>
+              <el-button style="float: right;"  type="success" @click="initClick" :disabled="!config.githubEnable">{{ t('settings.initFromGitHub') }}</el-button>
             </div>
           </el-tab-pane>
         </el-tabs>
       </template>
       <template #footer>
         <div style="flex: auto">
-          <el-button @click="cancelClick">Cancel</el-button>
-          <el-button type="primary" @click="confirmClick">OK</el-button>
+          <el-button @click="cancelClick">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="confirmClick">{{ t('common.ok') }}</el-button>
         </div>
       </template>
     </el-drawer>
     <!--Config Drawer End-->
     <!--Create Note Folder Dialog Start -->
-    <el-dialog v-model="dialogFormVisible" title="Add Root Folder">
+    <el-dialog v-model="dialogFormVisible" :title="t('dialog.addRootFolder')">
     <el-form :model="ttsStore.menu">
-      <el-form-item label="Type Folder Name" :label-width="formLabelWidth">
+      <el-form-item :label="t('dialog.typeFolderName')" :label-width="formLabelWidth">
         <el-input v-model="rootFolderName" autocomplete="off" />
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="addRootFolder" >OK</el-button>
+        <el-button @click="dialogFormVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="addRootFolder" >{{ t('common.ok') }}</el-button>
       </span>
     </template>
   </el-dialog>
@@ -119,57 +134,52 @@
 </template>
     
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
-  import {gitHubClone, gitPull, gitHubPush, githubPush} from "@/libs/github"
+  import {gitHubClone, gitPull, gitHubPush} from "@/libs/github"
   import fs from 'fs'
   import {join} from "path";
   import type Node from 'element-plus/es/components/tree/src/model/node'
   import {initDefaultNotebook} from "@/libs/noteUtil"
   import { readDir, readOneDir,readNotes} from "@/libs/fileHandler"
-  import { Select, Plus } from "@element-plus/icons-vue";
+  import { Select, Plus, Download, Upload } from "@element-plus/icons-vue";
   import defaultConf from "@/global/defaultConf";
   import { ipcRenderer } from 'electron';
+  import { useI18n } from 'vue-i18n';
 
 
+  const { t, locale } = useI18n();
   const formLabelWidth = '140px';
   const dialogFormVisible = ref(false)
   var rootFolderName = ref("notes")
   const ttsStore = useTtsStore();
   var {config, notebook, notestore, settings} = storeToRefs(ttsStore);
-  
-  var options = [
-    {
-      label: 'Local Note Books',
-      options: [
-        {
-          value: 'default',
-          label: 'default',
-          type:'local',
-        },
-      ],
-    },
-    {
-      label: 'Remote Note Books',
-      options: [
-        
-      ],
-    },
-  ]
 
-  if(ttsStore.config.githubRepoName!=""){
-    options[1].options.push(
-        {
-          value: ttsStore.config.githubRepoName,
-          label: ttsStore.config.githubRepoName,
-          type:'github',
-        }
-      )
+  const options = computed(() => {
+    const localOptions = readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath));
+    const remoteOptions = [];
+
+    if(ttsStore.config.githubRepoName!=""){
+      remoteOptions.push({
+        value: ttsStore.config.githubRepoName,
+        label: ttsStore.config.githubRepoName,
+        type:'github',
+      });
     }
 
-  options[0].options = [...readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath))];
+    return [
+      {
+        label: t('notebook.localNoteBooks'),
+        options: localOptions,
+      },
+      {
+        label: t('notebook.remoteNoteBooks'),
+        options: remoteOptions,
+      },
+    ];
+  });
 
   const openDialog = () => {
     ipcRenderer.send('open-dialog');
@@ -199,7 +209,20 @@
   }
   
   async function initClick(){
-    await gitHubClone();
+    const success = await gitHubClone(t);
+    // 克隆成功后自动切换到 GitHub 笔记本
+    if (success && ttsStore.config.githubRepoName) {
+      const githubNotebook = {
+        value: ttsStore.config.githubRepoName,
+        label: ttsStore.config.githubRepoName,
+        type: 'github',
+      };
+      saveHander(githubNotebook);
+      ElMessage({
+        message: t('github.switchedToRemote'),
+        type: 'success',
+      });
+    }
   }
 
   function initCommonBook(){
@@ -219,31 +242,45 @@
     
   }
   function confirmClick() {
-    ElMessageBox.confirm(`Are you confirm Changeed?`)
+    ElMessageBox.confirm(
+      t('settings.confirmChange'),
+      t('common.confirm'),
+      {
+        confirmButtonText: t('common.ok'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning',
+      }
+    )
       .then(() => {
         ttsStore.updateSettings();
         ttsStore.config.drawer = false;
         ttsStore.config.needUpdateTree = true;
         ElMessage({
-            message: 'Save succed!',
+            message: t('settings.saveSuccess'),
             grouping: true,
             type: 'success',
           })
         console.log("confirm log")
       })
       .catch(() => {
-        ElMessage({
-            message: 'Save faild! Please try again',
-            grouping: true,
-            type: 'error',
-          })
+        // 用户点击取消，不显示错误提示
+        console.log("User cancelled save")
       })
   }
 
   const handleCommand = (command: string) => {
     //ElMessage(`click on item ${command}`)
-    dialogFormVisible.value = true; 
-    
+    dialogFormVisible.value = true;
+
+  }
+
+  const changeLanguage = (lang: string) => {
+    locale.value = lang;
+    ttsStore.setLanguage(lang);
+    ElMessage({
+      message: t('settings.languageSwitched'),
+      type: 'success',
+    });
   }
 
   /*
@@ -290,12 +327,12 @@
 
   const handleGit = async (command:string) =>{
     if(command == 'pull'){
-      await gitPull()
+      await gitPull(t)
       console.log("Git Pull")
     }
     else if(command == 'push'){
      // await githubPush()
-      await gitHubPush();
+      await gitHubPush(t);
       console.log("Git Push");
     }
     else{
@@ -337,12 +374,20 @@
  
   }
 
-    function saveHander(value:any){
+    async function saveHander(value:any){
       ttsStore.settings.currentbook = value;
       ttsStore.notebook.currentPath = join(settings.value.currentStore,"repos",value.value)
-      ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath) // reload file
       ttsStore.notebook.bookType = value.type;
       ttsStore.setNoteBookConfig();
+
+      // Auto-pull when switching to remote notebook
+      if (value.type === 'github') {
+        console.log('Switching to remote notebook, pulling updates...');
+        await gitPull(t, ttsStore.notebook.currentPath);
+      }
+
+      ttsStore.refreshTreeData() // reload file after pull
+      ttsStore.startGitStatusCheck(); // Check git status for new notebook
       /*
       ttsStore.notebook.current = value.value;
       // ttsStore.notebook.bookType = value.type;
@@ -391,5 +436,16 @@
     background-color: gray;
   }
 
+  /* Git dropdown menu styling */
+  .git-dropdown :deep(.el-dropdown-menu__item) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+  }
+
+  .git-dropdown :deep(.el-dropdown-menu__item .el-icon) {
+    font-size: 16px;
+  }
 
   </style>

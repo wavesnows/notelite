@@ -1,10 +1,11 @@
 import defaultConf from './defaultConf'
 import {initDefaultNotebook} from "@/libs/noteUtil"
+import path from 'path';
+import os from 'os';
 
-const Store = require("electron-store");
-const path = require('path')
+const Store = require('electron-store');
 export const store = new Store();
-const homeDir = require("os").homedir();
+const homeDir = os.homedir();
 const defaultDir = path.join(homeDir, defaultConf.appName);
 
 initDefaultNotebook(defaultDir)

@@ -13,7 +13,7 @@
     "paths": { "@/*": ["src/*"] },
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "suppressImplicitAnyIndexErrors": true,
+    "noImplicitAny": true,
     "ignoreDeprecations": "5.0",
     "allowJs": true
   },

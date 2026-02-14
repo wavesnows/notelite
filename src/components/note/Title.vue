@@ -1,23 +1,20 @@
 <template>
-    <el-page-header class="title" @back="editShow" :icon="Edit" v-show="cnote.titleVisable">
-        <template #title >
-            <span>Edit</span>
-        </template>
-        <template #content>
-        <span class="text-large font-600 mr-3"> {{cnote.title}}</span>
-        </template>
-        <template #extra>
-            <div class="flex items-center">
-                <el-button>Print</el-button>
-                <el-button  type="primary">Edit</el-button>
-            </div>
-        </template>
-    </el-page-header>
-    <el-input ref="myInput" v-show="!cnote.titleVisable"  v-model="cnote.destTitle"   @blur="okHandler"  /> 
-  <!--  <div v-show="!cnote.titleVisable" class= "rename">
-        <el-input  v-model="inputs.noteTitle"   @blur="okHandler" autofocuse /> 
-        <el-button size="small" type="success" :icon="Check" circle  @click="okHandler"/>
-    </div>-->
+    <!-- Display mode: show title with edit icon on hover -->
+    <div v-show="cnote.titleVisable" class="title-display" @click="editShow">
+        <h1 class="title-text">{{ cnote.title }}</h1>
+        <el-icon class="edit-icon"><Edit /></el-icon>
+    </div>
+
+    <!-- Edit mode: input field -->
+    <el-input
+        ref="myInput"
+        v-show="!cnote.titleVisable"
+        v-model="cnote.destTitle"
+        @blur="okHandler"
+        @keyup.enter="okHandler"
+        class="title-input"
+        placeholder="Enter title..."
+    />
 </template>
 
 <script lang="ts" setup>
@@ -44,8 +41,11 @@ const editShow = () =>{
 
 const okHandler = () =>{
     console.log("OK")
+    // Only rename if title actually changed
+    if (ttsStore.cnote.destTitle !== ttsStore.cnote.title) {
+        renameFile()
+    }
     ttsStore.cnote.titleVisable = !ttsStore.cnote.titleVisable;
-    renameFile()
 }
 
 const goBack = () => {
@@ -59,13 +59,56 @@ const goBack = () => {
 }
   </script>
 
-<style>
-.title{
-  margin-top: 5px;
-  margin-left: 10px;
-}
-.rename{
-    display: block;
+<style scoped>
+.title-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid transparent;
 }
 
+.title-display:hover {
+  border-bottom-color: #e0e0e0;
+}
+
+.title-display:hover .edit-icon {
+  opacity: 1;
+}
+
+.title-text {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #303133;
+  flex: 1;
+}
+
+.edit-icon {
+  font-size: 18px;
+  color: #909399;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.title-input {
+  margin-bottom: 16px;
+}
+
+.title-input :deep(.el-input__wrapper) {
+  background-color: transparent;
+  font-size: 28px;
+  font-weight: 600;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 2px solid #409eff;
+  padding: 8px 0;
+}
+
+.title-input :deep(.el-input__inner) {
+  color: #303133;
+  font-weight: 600;
+}
 </style>

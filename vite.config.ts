@@ -16,6 +16,9 @@ export default defineConfig({
       "@components": join(__dirname, "./src/components"),
     }, // +++
   },
+  optimizeDeps: {
+    exclude: ['simple-git', 'node-cmd', 'fs-extra', 'electron-store', 'github-api']
+  },
   plugins: [
     vue(),
     electron({

@@ -1,19 +1,27 @@
-import EditorJS from "@editorjs/editorjs";
+import EditorJS, { OutputData } from "@editorjs/editorjs";
 import Header from '@editorjs/header';
+import Underline from '@editorjs/underline';
+import Warning from "@editorjs/warning";
+import Image from '@editorjs/image';
 import List from '@editorjs/list';
 import Quote from '@editorjs/quote';
+import Code from '@editorjs/code';
+import Table from '@editorjs/table';
+import Checklist from '@editorjs/checklist';
 import { useTtsStore } from "@/store/store";
-import { ElMessage } from 'element-plus'
+import { store } from '@/global/initLocalStore';
+import { showMessage } from '@/libs/globalLib';
+import { showError, ErrorType } from '@/libs/errorHandler';
+import path from 'path';
+import fs from 'fs';
+let editorInstance: EditorJS
 
-const Store = require("electron-store");
-const path = require("path");
-const fs = require('fs')
-const fse = require('fs-extra')
+// 定义编辑器元素类型
+interface EditorElement extends HTMLElement {
+  value: string;
+}
 
-const store = new Store();
-var editorInstance:EditorJS
-
-export function initEditor(editor:any){
+export function initEditor(editor: EditorElement){
     editorInstance = new EditorJS({
         holder: editor.value,
         tools: {
@@ -26,7 +34,40 @@ export function initEditor(editor:any){
             shortcut: 'CMD+SHIFT+H'
           },
           list: List,
-          quote: Quote
+          quote: Quote,
+          underline: Underline,
+          warning:{
+
+              class: Warning,
+              inlineToolbar: true,
+              shortcut: 'CMD+SHIFT+W',
+              config: {
+                titlePlaceholder: 'Title',
+                messagePlaceholder: 'Message',
+              },
+          },
+          code: {
+            class: Code,
+            config: {
+              placeholder: 'Enter code here...'
+            },
+            shortcut: 'CMD+SHIFT+C'
+          },
+          table: {
+            class: Table,
+            config: {
+              rows: 2,
+              cols: 3,
+              withHeadings: false
+            },
+            inlineToolbar: true,
+            shortcut: 'CMD+SHIFT+T'
+          },
+          checklist: {
+            class: Checklist,
+            inlineToolbar: true,
+            shortcut: 'CMD+SHIFT+K'
+          },
         },
         data:store.get("editerData"),
         placeholder: 'Let`s write an awesome story!',
@@ -54,32 +95,35 @@ export function readyInit(){
     loadContent()
 };
 
-export  function loadContent(){
-  let url:string = store.get("lastPath") as string
-  if(url && url.includes(store.get('currentNotebookPath'))){
-    fs.readFile(url, 'utf8', (err:any, data:any) => {
-      if (err) throw err;
+export function loadContent(){
+  let url: string = store.get("lastPath") as string;
+  if (url && url.includes(store.get('currentNotebookPath'))) {
+    try {
+      const data = fs.readFileSync(url, 'utf8');
       const jsonData = JSON.parse(data);
-      //console.log(url)
-      console.log(jsonData)
-    })
-  }
-  else{
+      console.log(jsonData);
+    } catch (err) {
+      console.error('Error loading content:', err);
+      showMessage('Failed to load content', 'error');
+    }
+  } else {
     const ttsStore = useTtsStore();
-    ttsStore.cnote.title = ''
-    ttsStore.cnote.lastPath = ''
-    console.log("no current file.")
+    ttsStore.cnote.title = '';
+    ttsStore.cnote.lastPath = '';
+    console.log("no current file.");
   }
 }
 
 export function saveContent(){
   const ttsStore = useTtsStore();
+
+  // Set saving status
+  ttsStore.setSaveStatus('saving', ttsStore.config.language === 'zh_CN' ? '保存中...' : 'Saving...');
+
   editorInstance.save().then((outputData:any) => {
     ttsStore.editerflag = false
       console.dir(outputData,{depth:5})
       var fileData = JSON.stringify(outputData, null, 2); // 以 2 个空格缩进 JSON 数据
-       // var blob = new Blob([fileData], { type: 'application/json;charset=utf-8' });
-        //fs.appendFileSync("/Users/fusong/note/demo/data.json", fileData, 'utf8');
           var data = new Date();
           var title = data.getTime().toString();
           var path = data.getMonth().toString();
@@ -89,31 +133,38 @@ export function saveContent(){
          console.log(title, ttsStore.inputs.notePath)
           fs.writeFileSync(ttsStore.inputs.notePath, fileData, 'utf8')
           console.log('Saving Finish');
-    /*      ElMessage({
-            message: 'Saving Finish!',
-            grouping: true,
-            type: 'success',
-          })*/
-          //ttsStore.treeMenu.data = readDir()
+
+          // Set saved status
+          ttsStore.setSaveStatus('saved', ttsStore.config.language === 'zh_CN' ? '已保存' : 'Saved');
+
+          // Schedule Git status check after save
+          ttsStore.scheduleGitStatusCheck();
     }).catch((error) => {
-      ElMessage({
-        message: 'Saving Failed!',
-        grouping: true,
-        type: 'error',
-      })
-        console.log('Saving failed: ', error)
-        ttsStore.editerflag = false
+      // Set error status
+      ttsStore.setSaveStatus('error', ttsStore.config.language === 'zh_CN' ? '保存失败' : 'Save failed');
+      // Use unified error handler
+      showError(ErrorType.FILE_WRITE, 'Failed to save note', error.message, error);
+      console.log('Saving failed: ', error)
+      ttsStore.editerflag = false
       });
   }
   
-  export function renameFile(){
+export function renameFile(){
+  try {
     saveContent();
     const ttsStore = useTtsStore();
-   // ttsStore.treeMenu.data = readDir();
-    var destPath = path.dirname(ttsStore.inputs.notePath)
-    var destPath = path.join(destPath,ttsStore.cnote.title)
-   // fse.moveSync(ttsStore.inputs.notePath,destPath)
-    ttsStore.inputs.notePath = destPath;
+    const dirPath = path.dirname(ttsStore.inputs.notePath);
+    const newPath = path.join(dirPath, ttsStore.cnote.title);
 
-    return ;
+    // 检查目标路径是否已存在
+    if (fs.existsSync(newPath)) {
+      throw new Error('File already exists');
+    }
+
+    fs.renameSync(ttsStore.inputs.notePath, newPath);
+    ttsStore.inputs.notePath = newPath;
+  } catch (err) {
+    console.error('Error renaming file:', err);
+    showMessage('Failed to rename file', 'error');
+  }
 }
