@@ -57,12 +57,16 @@
               </el-form-item>
 
               <el-form-item :label="t('settings.localPath')">
-                <el-input readonly="true"  v-model="notestore.currentStore" />
-                <el-button style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
+                <div class="form-item-content">
+                  <div class="path-display">{{ notestore.currentStore }}</div>
+                  <el-button class="action-button" :prefix-icon="Select" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
+                </div>
               </el-form-item>
               <el-form-item :label="t('settings.defaultNotebookPath')">
-                {{ settings.defaultNotePath }}
-                <el-button v-show="true" style="margin-top: 5px;" :prefix-icon="Select"  type="success" @click="initCommonBook">{{ t('settings.initDefaultNotebook') }}</el-button>
+                <div class="form-item-content">
+                  <div class="path-display">{{ settings.defaultNotePath }}</div>
+                  <el-button class="action-button" :prefix-icon="Select" @click="initCommonBook">{{ t('settings.initDefaultNotebook') }}</el-button>
+                </div>
               </el-form-item>
               <el-form-item :label="t('settings.currentNotebook')">
               <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" @change="saveHander" >
@@ -81,28 +85,18 @@
           </el-tab-pane>
           <el-tab-pane :label="t('settings.remoteSetting')">
             <el-form :model="config" label-width="120px" label-position="top">
-              <el-form-item :label="t('settings.remoteRepo')">
-              <!-- <el-select v-model="settings.currentbook" placeholder="Select Note Repo" @change="RemoteStoreSelectHander" >
-                <el-option-group v-for="group in options" :key="group.label" :label="group.label">
-                  <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
-                </el-option-group>
-              </el-select> -->
-              </el-form-item>
-              <el-form-item :label="t('settings.enableGitHub')">
-                <el-switch v-model="config.githubEnable" :active-text="t('settings.open')" :inactive-text="t('settings.close')" />
-              </el-form-item>
               <el-form-item :label="t('settings.githubUsername')">
-                <el-input v-model="config.githubUsername" :disabled="!config.githubEnable"/>
+                <el-input v-model="config.githubUsername" :placeholder="t('settings.githubUsernamePlaceholder')"/>
               </el-form-item>
               <el-form-item :label="t('settings.githubToken')">
-                <el-input v-model="config.githubToken" :disabled="!config.githubEnable" />
+                <el-input v-model="config.githubToken" type="password" show-password :placeholder="t('settings.githubTokenPlaceholder')" />
               </el-form-item>
               <el-form-item :label="t('settings.githubRepoName')">
-                <el-input v-model="config.githubRepoName" :disabled="!config.githubEnable"/>
+                <el-input v-model="config.githubRepoName" :placeholder="t('settings.githubRepoPlaceholder')"/>
               </el-form-item>
             </el-form>
-            <div style="flex: auto">
-              <el-button style="float: right;"  type="success" @click="initClick" :disabled="!config.githubEnable">{{ t('settings.initFromGitHub') }}</el-button>
+            <div class="form-actions">
+              <el-button class="action-button" @click="initClick" :disabled="!isGithubConfigured">{{ t('settings.initFromGitHub') }}</el-button>
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -156,6 +150,13 @@
   var rootFolderName = ref("notes")
   const ttsStore = useTtsStore();
   var {config, notebook, notestore, settings} = storeToRefs(ttsStore);
+
+  // Check if GitHub is configured (all fields filled)
+  const isGithubConfigured = computed(() => {
+    return !!(config.value.githubUsername &&
+              config.value.githubToken &&
+              config.value.githubRepoName);
+  });
 
   const options = computed(() => {
     const localOptions = readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath));
@@ -446,6 +447,41 @@
 
   .git-dropdown :deep(.el-dropdown-menu__item .el-icon) {
     font-size: 16px;
+  }
+
+  /* Form item content layout */
+  .form-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .path-display {
+    padding: 8px 12px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #606266;
+    word-break: break-all;
+  }
+
+  .action-button {
+    width: fit-content;
+    align-self: flex-start;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #ebeef5;
+  }
+
+  /* Make all form labels bold */
+  :deep(.el-form-item__label) {
+    font-weight: 600;
   }
 
   </style>
