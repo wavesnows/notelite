@@ -56,6 +56,7 @@ const zh = {
       saveSuccess: '保存成功！',
       saveFailed: '保存失败！请重试',
       languageSwitched: '语言已切换为中文',
+      notebookSwitched: '已切换到笔记本: {name}',
     },
     fileTree: {
       filterPlaceholder: '过滤关键词',
@@ -122,6 +123,10 @@ const zh = {
       pulling: '正在拉取更新...',
       pushing: '正在推送更改...',
       switchedToRemote: '已切换到远程笔记本',
+      authFailed: '认证失败，请检查 Token',
+      networkError: '网络错误，请检查连接',
+      conflictError: '检测到合并冲突',
+      pushRejected: '推送被拒绝，请先拉取',
     },
     git: {
       checking: '正在检查 Git 状态...',
@@ -174,6 +179,21 @@ const zh = {
       bold: '加粗文本',
       italic: '斜体文本',
       link: '插入链接',
+    },
+    welcome: {
+      title: '欢迎使用 YesnoteLite',
+      subtitle: '简洁优雅的笔记应用',
+      quickActions: '快速操作',
+      createNote: '创建笔记',
+      createNoteDesc: '开始编写你的第一篇笔记',
+      settings: '设置',
+      settingsDesc: '配置你的笔记本',
+      help: '帮助',
+      helpDesc: '查看快捷键',
+      tipsTitle: '快速提示',
+      tip1: '点击左侧文件夹创建新笔记',
+      tip2: '使用 Cmd+S 保存，Cmd+F 搜索',
+      tip3: '在设置中启用 Git 同步进行备份',
     },
   };
 

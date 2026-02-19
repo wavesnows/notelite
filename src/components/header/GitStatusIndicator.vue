@@ -90,13 +90,8 @@ const tooltipContent = computed(() => {
 
 async function handleClick() {
   try {
-    const success = await gitHubPush(t);
-    if (success) {
-      // Refresh status immediately after successful push
-      console.log('Push succeeded, checking git status...');
-      await ttsStore.checkGitStatus();
-      console.log('Git status checked, new status:', ttsStore.gitStatus);
-    }
+    await gitHubPush(t);
+    // Git status will be checked automatically by gitHubPush
   } catch (error) {
     console.error('Push failed:', error);
   }

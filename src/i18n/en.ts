@@ -56,6 +56,7 @@ const en = {
       saveSuccess: 'Save succeeded!',
       saveFailed: 'Save failed! Please try again',
       languageSwitched: 'Language switched to English',
+      notebookSwitched: 'Switched to notebook: {name}',
     },
     fileTree: {
       filterPlaceholder: 'Filter keyword',
@@ -122,6 +123,10 @@ const en = {
       pulling: 'Pulling updates...',
       pushing: 'Pushing changes...',
       switchedToRemote: 'Switched to remote notebook',
+      authFailed: 'Authentication failed. Check token',
+      networkError: 'Network error. Check connection',
+      conflictError: 'Merge conflict detected',
+      pushRejected: 'Push rejected. Pull first',
     },
     git: {
       checking: 'Checking Git status...',
@@ -174,6 +179,21 @@ const en = {
       bold: 'Bold text',
       italic: 'Italic text',
       link: 'Insert link',
+    },
+    welcome: {
+      title: 'Welcome to YesnoteLite',
+      subtitle: 'A simple and elegant note-taking app',
+      quickActions: 'Quick Actions',
+      createNote: 'Create Note',
+      createNoteDesc: 'Start writing your first note',
+      settings: 'Settings',
+      settingsDesc: 'Configure your notebook',
+      help: 'Help',
+      helpDesc: 'View keyboard shortcuts',
+      tipsTitle: 'Quick Tips',
+      tip1: 'Click a folder in the left sidebar to create a new note',
+      tip2: 'Use Cmd+S to save, Cmd+F to search',
+      tip3: 'Enable Git sync in settings for backup',
     },
   };
 

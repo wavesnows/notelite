@@ -29,6 +29,8 @@
     overscroll-behavior: contain;
     display: flex;
     justify-content: space-between;
+    overflow-y: auto; /* Ensure content can scroll */
+    padding-bottom: 20px; /* Extra space at bottom */
   }
   </style>
   

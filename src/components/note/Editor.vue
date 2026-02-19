@@ -1,29 +1,51 @@
 <template>
   <div class="editor-container">
-    <div class="title-container">
-      <Title></Title>
-    </div>
-    <div ref="editor" class="editor"></div>
+    <Welcome v-if="!hasNote" />
+    <template v-else>
+      <div class="title-container">
+        <Title></Title>
+      </div>
+      <div ref="editor" class="editor"></div>
+    </template>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {ref, onMounted, onUnmounted, watch} from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import EditorJS from "@editorjs/editorjs";
 import { useTtsStore } from "@/store/store";
 import { initEditor, saveContent} from "@/libs/editor";
 import { storeToRefs } from "pinia";
 import Title from './Title.vue'
+import Welcome from './Welcome.vue'
 
 const ttsStore = useTtsStore();
+
+// Check if there's a note to display
+const hasNote = computed(() => {
+  return ttsStore.cnote.lastPath && ttsStore.cnote.lastPath.length > 0;
+});
 //var {editerData,readOnly,inputs} = storeToRefs(ttsStore);
 const editor = ref<HTMLElement | null>(null);
 
 var editorInstance:EditorJS;
 
+// Watch for note changes - initialize editor when switching from welcome to note
+watch(hasNote, async (newVal, oldVal) => {
+  if (newVal && !oldVal && !editorInstance) {
+    // Switching from welcome to note - initialize editor
+    await new Promise(resolve => setTimeout(resolve, 100)); // Wait for DOM
+    editorInstance = initEditor(editor);
+    ttsStore.editorInstance = editorInstance;
+  }
+});
+
 watch(
   () => ttsStore.readOnly, (newValue, oldValue) => {
-    editorInstance.readOnly.toggle()}
+    if (editorInstance) {
+      editorInstance.readOnly.toggle()
+    }
+  }
 )
 
 watch(
@@ -50,8 +72,11 @@ watch(
 )
 
 onMounted(() => {
-  editorInstance = initEditor(editor)
-  ttsStore.editorInstance = editorInstance;
+  // Only initialize editor if there's a note
+  if (hasNote.value) {
+    editorInstance = initEditor(editor)
+    ttsStore.editorInstance = editorInstance;
+  }
 
   // Start auto-save
   ttsStore.startAutoSave();
@@ -108,7 +133,7 @@ onUnmounted(() => {
 }
 
 .editor-container {
-  width: 1000px;
+  width: 950px;
   margin: 0 auto;
   display: block;
 }
@@ -120,7 +145,8 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubun
 
 .editor {
   width: 100%;
-  height: 800px;
+  min-height: 500px;
+  padding-bottom: 60px; /* Add padding for EditorJS '+' button */
 }
  /*
 .ce-block__content {

@@ -40,7 +40,7 @@
     </div>
     <!--Left Panel End-->
     <!--Config Drawer Start-->
-    <el-drawer v-model="config.drawer" :direction="direction" size="50%">
+    <el-drawer v-model="config.drawer" direction="rtl" size="50%" :close-on-click-modal="true">
       <template #header>
         <h3>{{ t('settings.title') }}</h3>
       </template>
@@ -76,8 +76,8 @@
               </el-select>
             </el-form-item>
             <el-form-item :label="t('settings.notebookPath')">
-               {{ notebook.currentPath }}
-              </el-form-item>
+              <div class="path-display">{{ notebook.currentPath }}</div>
+            </el-form-item>
             </el-form>
            <!-- <div style="flex: auto">
               <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
@@ -86,13 +86,27 @@
           <el-tab-pane :label="t('settings.remoteSetting')">
             <el-form :model="config" label-width="120px" label-position="top">
               <el-form-item :label="t('settings.githubUsername')">
-                <el-input v-model="config.githubUsername" :placeholder="t('settings.githubUsernamePlaceholder')"/>
+                <el-input
+                  v-model="config.githubUsername"
+                  :placeholder="t('settings.githubUsernamePlaceholder')"
+                  @change="saveGitHubConfig"
+                />
               </el-form-item>
               <el-form-item :label="t('settings.githubToken')">
-                <el-input v-model="config.githubToken" type="password" show-password :placeholder="t('settings.githubTokenPlaceholder')" />
+                <el-input
+                  v-model="config.githubToken"
+                  type="password"
+                  show-password
+                  :placeholder="t('settings.githubTokenPlaceholder')"
+                  @change="saveGitHubConfig"
+                />
               </el-form-item>
               <el-form-item :label="t('settings.githubRepoName')">
-                <el-input v-model="config.githubRepoName" :placeholder="t('settings.githubRepoPlaceholder')"/>
+                <el-input
+                  v-model="config.githubRepoName"
+                  :placeholder="t('settings.githubRepoPlaceholder')"
+                  @change="saveGitHubConfig"
+                />
               </el-form-item>
             </el-form>
             <div class="form-actions">
@@ -100,12 +114,6 @@
             </div>
           </el-tab-pane>
         </el-tabs>
-      </template>
-      <template #footer>
-        <div style="flex: auto">
-          <el-button @click="cancelClick">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" @click="confirmClick">{{ t('common.ok') }}</el-button>
-        </div>
       </template>
     </el-drawer>
     <!--Config Drawer End-->
@@ -159,16 +167,12 @@
   });
 
   const options = computed(() => {
-    const localOptions = readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath));
-    const remoteOptions = [];
+    // Read all notebooks from the repos directory
+    const allNotebooks = readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath));
 
-    if(ttsStore.config.githubRepoName!=""){
-      remoteOptions.push({
-        value: ttsStore.config.githubRepoName,
-        label: ttsStore.config.githubRepoName,
-        type:'github',
-      });
-    }
+    // Separate local and remote notebooks based on type
+    const localOptions = allNotebooks.filter(nb => nb.type === 'local');
+    const remoteOptions = allNotebooks.filter(nb => nb.type === 'github');
 
     return [
       {
@@ -198,17 +202,6 @@
 
  
 
-  const direction = ref('rtl')
-  const handleClose = (done: () => void) => {
-    ElMessageBox.confirm('Are you sure you want to close this?')
-      .then(() => {
-        done()
-      })
-      .catch(() => {
-        // catch error
-      })
-  }
-  
   async function initClick(){
     const success = await gitHubClone(t);
     // 克隆成功后自动切换到 GitHub 笔记本
@@ -231,42 +224,17 @@
     ElMessage(str);
   }
 
-
-  function cancelClick() {
-    ttsStore.config.drawer = false
-  }
-  
   function popHandler(){
     ttsStore.config.drawer = true
   }
-  function RemoteStoreSelectHander(){
-    
-  }
-  function confirmClick() {
-    ElMessageBox.confirm(
-      t('settings.confirmChange'),
-      t('common.confirm'),
-      {
-        confirmButtonText: t('common.ok'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning',
-      }
-    )
-      .then(() => {
-        ttsStore.updateSettings();
-        ttsStore.config.drawer = false;
-        ttsStore.config.needUpdateTree = true;
-        ElMessage({
-            message: t('settings.saveSuccess'),
-            grouping: true,
-            type: 'success',
-          })
-        console.log("confirm log")
-      })
-      .catch(() => {
-        // 用户点击取消，不显示错误提示
-        console.log("User cancelled save")
-      })
+
+  function saveGitHubConfig() {
+    // Save GitHub config immediately when input changes
+    ttsStore.setLocalNotePath();
+    ElMessage({
+      message: t('settings.saveSuccess'),
+      type: 'success',
+    });
   }
 
   const handleCommand = (command: string) => {
@@ -377,9 +345,14 @@
 
     async function saveHander(value:any){
       ttsStore.settings.currentbook = value;
-      ttsStore.notebook.currentPath = join(settings.value.currentStore,"repos",value.value)
+      // Use notestore.currentStore which is the source of truth
+      const newPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
+      ttsStore.notebook.currentPath = newPath;
       ttsStore.notebook.bookType = value.type;
       ttsStore.setNoteBookConfig();
+
+      console.log('Switched to notebook:', value.value);
+      console.log('New notebook path:', newPath);
 
       // Auto-pull when switching to remote notebook
       if (value.type === 'github') {
@@ -387,16 +360,18 @@
         await gitPull(t, ttsStore.notebook.currentPath);
       }
 
-      ttsStore.refreshTreeData() // reload file after pull
+      // Force tree refresh by creating new array reference
+      ttsStore.refreshTreeData();
+
+      // Also set needUpdateTree to trigger any watchers
+      ttsStore.config.needUpdateTree = true;
+
       ttsStore.startGitStatusCheck(); // Check git status for new notebook
-      /*
-      ttsStore.notebook.current = value.value;
-      // ttsStore.notebook.bookType = value.type;
-      ttsStore.notebook.currentPath = join(ttsStore.config.savePath,"repos",ttsStore.notebook.current)
-      console.log(ttsStore.notebook.currentPath)
-      ttsStore.setNoteBookConfig();
-      ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath) // reload file
-      */
+
+      ElMessage({
+        message: t('settings.notebookSwitched', { name: value.label }),
+        type: 'success',
+      });
   }
 
 

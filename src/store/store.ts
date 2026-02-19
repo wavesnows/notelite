@@ -46,19 +46,34 @@ if(store.get("savePath") == ""){
 export const useTtsStore = defineStore(DFConf.appName, {
   // 定义state，用来存储状态的
   state: () => {
+    const homeDir = os.homedir();
+    const defaultDir = path.join(homeDir, DFConf.appName);
+    const defaultNotebookPath = path.join(defaultDir, DFConf.defaultRepoPath, DFConf.defaultRepoName);
+    const currentNotebookPath = store.get('currentNotebookPath') || defaultNotebookPath;
+    const savedLastPath = store.get("lastPath");
+
+    // Check if lastPath belongs to current notebook
+    let validLastPath = "";
+    if (savedLastPath && savedLastPath.startsWith(currentNotebookPath)) {
+      // Check if file still exists
+      if (fs.existsSync(savedLastPath)) {
+        validLastPath = savedLastPath;
+      }
+    }
+
     return {
       notestore:{
-        currentStore:store.get('currentStore'),
+        currentStore: store.get('currentStore') || defaultDir,
       },
       notebook:{
-        currentPath:store.get('currentNotebookPath'),
-        current:store.get('currentNotebook'),
-        bookType:store.get('currentNotebookType')
+        currentPath: currentNotebookPath,
+        current: store.get('currentNotebook') || DFConf.defaultRepoName,
+        bookType: store.get('currentNotebookType') || 'local'
       },
       cnote:{ // current note which in editor
-        title:store.get("title"),
-        lastPath: store.get("lastPath"),
-        destTitle:store.get("title"),
+        title: validLastPath ? store.get("title") : "",
+        lastPath: validLastPath,
+        destTitle: validLastPath ? store.get("title") : "",
         titleVisable:true,
       },
       inputs: {
@@ -68,7 +83,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         itemData:<Tree>{}
       },
       treeMenu:{
-        data:readNotes(store.get('currentNotebookPath'), store.get('pinnedNotes') || []),
+        data:readNotes(store.get('currentNotebookPath') || defaultNotebookPath, store.get('pinnedNotes') || []),
         node:<Node>{},
         treeData:<Tree>{},
         currentNode:<any>{},
@@ -99,26 +114,26 @@ export const useTtsStore = defineStore(DFConf.appName, {
       config: {
         needUpdateTree:false,
      //   defaultNoteInit:store.get("defaultNoteInit")? true:false,
-        savePath: store.get("savePath"),
+        savePath: store.get("savePath") || defaultDir,
       //  store.set("defaultStorePath",this.notestore.currentStore);
-        defaultNotePath: store.get("defaultNotePath"),
+        defaultNotePath: store.get("defaultNotePath") || defaultNotebookPath,
         drawer:false,
         githubEnable:false,
-        githubRepoName:store.get("GithubRepoName"),
-        githubUsername:store.get("GithubUsername"),
-        githubToken:store.get("GithubToken"),
+        githubRepoName:store.get("GithubRepoName") || "",
+        githubUsername:store.get("GithubUsername") || "",
+        githubToken:store.get("GithubToken") || "",
         formConfigJson: store.get("FormConfig"),
         updateNotification: store.get("updateNotification"),
         language: store.get("language") || 'en_US',
       },
       settings: {
-        currentStore:store.get('currentStore'),
+        currentStore: store.get('currentStore') || defaultDir,
         currentbook:store.get('currentNoteBookObj'),
         needUpdateTree:false,
      //   defaultNoteInit:store.get("defaultNoteInit")? true:false,
-        savePath: store.get("savePath"),
+        savePath: store.get("savePath") || defaultDir,
       //  store.set("defaultStorePath",this.notestore.currentStore);
-        defaultNotePath: store.get("defaultNotePath"),
+        defaultNotePath: store.get("defaultNotePath") || defaultNotebookPath,
         drawer:false,
         githubEnable:false,
         githubRepoName:store.get("GithubRepoName"),
@@ -286,7 +301,11 @@ export const useTtsStore = defineStore(DFConf.appName, {
       return this.favorites.starred.includes(path);
     },
     refreshTreeData() {
-      this.treeMenu.data = readNotes(this.notebook.currentPath, this.favorites.pinned);
+      console.log('Refreshing tree data for path:', this.notebook.currentPath);
+      const newData = readNotes(this.notebook.currentPath, this.favorites.pinned);
+      // Create new array reference to ensure Vue reactivity detection
+      this.treeMenu.data = [...newData];
+      console.log('Tree data refreshed, items count:', this.treeMenu.data.length);
     },
 
     // Debounced tree refresh to avoid excessive file scanning

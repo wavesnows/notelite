@@ -164,20 +164,32 @@ export function readDir(dir: string = ''): any {
 }
 
 export function readOneDir(dir: string = ''): Array<any> {
-  return readDirGeneric(dir, {
+  console.log('readOneDir called with dir:', dir);
+
+  const result = readDirGeneric(dir, {
     dirsOnly: true,
+    checkExists: true,
     customMapper: (file, fullPath, isDirectory) => {
       if (isDirectory) {
+        // Check if this is a git repository (has .git folder)
+        const gitPath = path.join(fullPath, '.git');
+        const isGitRepo = fs.existsSync(gitPath);
+
+        console.log(`Checking notebook: ${file}, path: ${fullPath}, isGitRepo: ${isGitRepo}`);
+
         return {
           label: file,
           value: file,
           path: fullPath,
-          type: 'local',
+          type: isGitRepo ? 'github' : 'local',
         }
       }
       return ""
     }
-  })
+  });
+
+  console.log('readOneDir result:', result);
+  return result;
 }
 
 export function sortTreeByPinned(tree: Tree[], pinnedPaths: string[]): Tree[] {

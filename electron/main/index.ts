@@ -4,6 +4,11 @@ import { join } from "path";
 
 import logger from "../utils/log";
 
+// Initialize electron-store for window state
+const ElectronStore = require("electron-store");
+const windowStateStore = new ElectronStore({ name: "window-state" });
+ElectronStore.initRenderer();
+
 // Disable GPU Acceleration for Windows 7
 //if (release().startsWith("6.1")) app.disableHardwareAcceleration();
 app.disableHardwareAcceleration();
@@ -35,12 +40,48 @@ const preload = join(__dirname, "../preload/index.js");
 const url = `http://${process.env["VITE_DEV_SERVER_HOST"]}:${process.env["VITE_DEV_SERVER_PORT"]}`;
 const indexHtml = join(ROOT_PATH.dist, "index.html");
 
+// Default window state
+const defaultWindowState = {
+  width: 1300,
+  height: 800,
+  x: undefined as number | undefined,
+  y: undefined as number | undefined,
+  isMaximized: false,
+};
+
+// Get saved window state
+function getWindowState() {
+  return {
+    width: windowStateStore.get("width", defaultWindowState.width) as number,
+    height: windowStateStore.get("height", defaultWindowState.height) as number,
+    x: windowStateStore.get("x", defaultWindowState.x) as number | undefined,
+    y: windowStateStore.get("y", defaultWindowState.y) as number | undefined,
+    isMaximized: windowStateStore.get("isMaximized", defaultWindowState.isMaximized) as boolean,
+  };
+}
+
+// Save window state
+function saveWindowState() {
+  if (!win) return;
+
+  const bounds = win.getBounds();
+  windowStateStore.set("width", bounds.width);
+  windowStateStore.set("height", bounds.height);
+  windowStateStore.set("x", bounds.x);
+  windowStateStore.set("y", bounds.y);
+  windowStateStore.set("isMaximized", win.isMaximized());
+}
+
 async function createWindow() {
+  const windowState = getWindowState();
+
   win = new BrowserWindow({
-    width: 1300,
+    width: windowState.width,
+    height: windowState.height,
+    x: windowState.x,
+    y: windowState.y,
     minWidth: 1200,
     minHeight: 700,
-    height: 800,
 
     title: "Main window",
     icon: join(ROOT_PATH.public, "favicon.ico"),
@@ -57,12 +98,23 @@ async function createWindow() {
       webSecurity: false,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+      // Read more on https://electronjs.org/docs/latest/tutorial/contextIsolation
       nodeIntegration: true,
       contextIsolation: false,
-  
+
     },
   });
+
+  // Restore maximized state
+  if (windowState.isMaximized) {
+    win.maximize();
+  }
+
+  // Save window state on close
+  win.on("close", () => {
+    saveWindowState();
+  });
+
   app.commandLine.appendSwitch("disable-features", "OutOfBlinkCors");
   if (app.isPackaged) {
     win.loadFile(indexHtml);
@@ -135,8 +187,6 @@ ipcMain.handle("open-win", (event, arg) => {
     childWindow.webContents.openDevTools({ mode: "undocked", activate: true });
   }
 });
-const ElectronStore = require("electron-store");
-ElectronStore.initRenderer();
 
 ipcMain.on("log.info", async (event, arg) => {
   logger.info(arg);

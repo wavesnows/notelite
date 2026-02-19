@@ -18,10 +18,31 @@ export default function initStore() {
       pitch: 1.0,
     });
   }
-  store.set("savePath", defaultDir);
+
+  // Initialize savePath
   if (!store.has("savePath")) {
     store.set("savePath", defaultDir);
   }
+
+  // Initialize currentStore (same as savePath)
+  if (!store.has("currentStore")) {
+    store.set("currentStore", defaultDir);
+  }
+
+  // Initialize default notebook path
+  const defaultNotebookPath = path.join(defaultDir, defaultConf.defaultRepoPath, defaultConf.defaultRepoName);
+  if (!store.has("currentNotebookPath")) {
+    store.set("currentNotebookPath", defaultNotebookPath);
+  }
+  if (!store.has("defaultNotePath")) {
+    store.set("defaultNotePath", defaultNotebookPath);
+  }
+
+  // Initialize notebook type
+  if (!store.has("currentNotebookType")) {
+    store.set("currentNotebookType", "local");
+  }
+
   if (!store.has("audition")) {
     store.set(
       "audition",

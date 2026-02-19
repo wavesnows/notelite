@@ -101,6 +101,30 @@ function handleClose() {
 .shortcuts-container {
   max-height: 60vh;
   overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* 滚动条样式 - 不使用时自动隐藏 */
+.shortcuts-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shortcuts-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shortcuts-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+
+.shortcuts-container:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.shortcuts-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .shortcut-section {

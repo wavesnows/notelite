@@ -437,6 +437,7 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
 
   .treemenu{
       background-color: transparent;
+      padding-bottom: 50px; /* Add padding to avoid being covered by AConfig buttons */
   }
 
 .el-dropdown{

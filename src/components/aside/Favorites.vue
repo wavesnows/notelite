@@ -52,13 +52,15 @@ import fs from 'fs'
 const { t } = useI18n()
 const ttsStore = useTtsStore()
 
-// 获取所有星标笔记
+// 获取当前笔记本的星标笔记
 const starredNotes = computed(() => {
   const starred = ttsStore.favorites.starred
+  const currentNotebookPath = ttsStore.notebook.currentPath
   const notes: Array<{path: string, label: string}> = []
 
   starred.forEach(path => {
-    if (fs.existsSync(path)) {
+    // 只显示当前笔记本中的星标笔记
+    if (path.startsWith(currentNotebookPath) && fs.existsSync(path)) {
       const fileName = path.split('/').pop() || ''
       const label = fileName.replace('.json', '')
       notes.push({ path, label })
@@ -163,6 +165,7 @@ const removeStar = (path: string) => {
 .favorites-list {
   flex: 1;
   overflow-y: auto;
+  padding-bottom: 50px; /* Add padding to avoid being covered by AConfig buttons */
 }
 
 .favorite-item {
