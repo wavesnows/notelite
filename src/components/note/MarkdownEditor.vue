@@ -2,7 +2,6 @@
   <div class="md-editor-container">
     <div
       v-show="ttsStore.mdMode === 'edit'"
-      v-bind="ttsStore.mdMode === 'preview' ? { inert: '' } : {}"
       ref="editorEl"
       class="md-codemirror"
     ></div>
@@ -73,7 +72,6 @@ onMounted(() => {
   })
 
   loadFile(ttsStore.inputs.notePath)
-  window.addEventListener('keydown', handleSelectAll, true)
 })
 
 onBeforeUnmount(() => {
@@ -100,8 +98,14 @@ watch(
   () => ttsStore.mdMode,
   (mode) => {
     if (mode === 'preview') {
+      // 用 JS 直接设置 inert，彻底冻结 CodeMirror
+      editorEl.value?.setAttribute('inert', '')
+      window.addEventListener('keydown', handleSelectAll, true)
       setTimeout(() => previewEl.value?.focus(), 0)
     } else {
+      // 移除 inert，恢复 CodeMirror 交互
+      editorEl.value?.removeAttribute('inert')
+      window.removeEventListener('keydown', handleSelectAll, true)
       cmView?.focus()
     }
   }
