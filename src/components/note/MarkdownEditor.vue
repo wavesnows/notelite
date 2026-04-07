@@ -18,8 +18,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { EditorView, basicSetup, keymap } from 'codemirror'
-import { selectAll } from '@codemirror/commands'
+import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import MarkdownIt from 'markdown-it'
@@ -62,24 +61,6 @@ onMounted(() => {
       basicSetup,
       markdown(),
       oneDark,
-      keymap.of([
-        {
-          key: 'Mod-a',
-          run: (view) => {
-            selectAll(view)
-            return true
-          }
-        },
-        {
-          key: 'Mod-c',
-          run: (view) => {
-            const selection = view.state.selection.main
-            const text = view.state.sliceDoc(selection.from, selection.to)
-            if (text) navigator.clipboard.writeText(text)
-            return false // 让默认行为也执行
-          }
-        }
-      ]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           content.value = update.state.doc.toString()
