@@ -19,7 +19,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
-import { Compartment } from '@codemirror/state'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import MarkdownIt from 'markdown-it'
@@ -33,7 +32,6 @@ const editorEl = ref<HTMLElement | null>(null)
 const previewEl = ref<HTMLElement | null>(null)
 const content = ref('')
 let cmView: EditorView | null = null
-const editableCompartment = new Compartment()
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
@@ -63,7 +61,6 @@ onMounted(() => {
       basicSetup,
       markdown(),
       oneDark,
-      editableCompartment.of(EditorView.editable.of(true)),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           content.value = update.state.doc.toString()
@@ -101,18 +98,10 @@ watch(
   () => ttsStore.mdMode,
   (mode) => {
     if (mode === 'preview') {
-      // 禁用 CodeMirror 编辑，防止它响应 Cmd+A 等全局事件
-      cmView?.dispatch({
-        effects: editableCompartment.reconfigure(EditorView.editable.of(false))
-      })
       window.addEventListener('keydown', handleSelectAll, true)
       setTimeout(() => previewEl.value?.focus(), 0)
     } else {
       window.removeEventListener('keydown', handleSelectAll, true)
-      // 恢复 CodeMirror 编辑
-      cmView?.dispatch({
-        effects: editableCompartment.reconfigure(EditorView.editable.of(true))
-      })
       cmView?.focus()
     }
   }
