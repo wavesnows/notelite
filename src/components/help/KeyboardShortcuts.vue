@@ -65,6 +65,26 @@
           <span class="description">{{ t('help.link') }}</span>
         </div>
       </div>
+
+      <div class="shortcut-section">
+        <h3>{{ t('help.markdown') }}</h3>
+        <div class="feature-item">
+          <span class="feature-label">{{ t('help.mdEditPreview') }}</span>
+          <span class="feature-desc">{{ t('help.mdEditPreviewDesc') }}</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-label">{{ t('help.mdCopyAll') }}</span>
+          <span class="feature-desc">{{ t('help.mdCopyAllDesc') }}</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-label">{{ t('help.mdTheme') }}</span>
+          <span class="feature-desc">{{ t('help.mdThemeDesc') }}</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-label">{{ t('help.multiRoot') }}</span>
+          <span class="feature-desc">{{ t('help.multiRootDesc') }}</span>
+        </div>
+      </div>
     </div>
 
     <template #footer>
@@ -180,5 +200,29 @@ function handleClose() {
   color: #606266;
   flex: 1;
   text-align: right;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f7fa;
+  gap: 4px;
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.feature-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.feature-desc {
+  font-size: 13px;
+  color: #909399;
+  line-height: 1.6;
 }
 </style>
