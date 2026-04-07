@@ -2,6 +2,7 @@
   <div class="md-editor-container">
     <div
       v-show="ttsStore.mdMode === 'edit'"
+      :inert="ttsStore.mdMode === 'preview'"
       ref="editorEl"
       class="md-codemirror"
     ></div>
@@ -72,6 +73,7 @@ onMounted(() => {
   })
 
   loadFile(ttsStore.inputs.notePath)
+  window.addEventListener('keydown', handleSelectAll, true)
 })
 
 onBeforeUnmount(() => {
@@ -98,16 +100,15 @@ watch(
   () => ttsStore.mdMode,
   (mode) => {
     if (mode === 'preview') {
-      window.addEventListener('keydown', handleSelectAll, true)
       setTimeout(() => previewEl.value?.focus(), 0)
     } else {
-      window.removeEventListener('keydown', handleSelectAll, true)
       cmView?.focus()
     }
   }
 )
 
 function handleSelectAll(e: KeyboardEvent) {
+  if (ttsStore.mdMode !== 'preview') return
   if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
     e.preventDefault()
     e.stopPropagation()
