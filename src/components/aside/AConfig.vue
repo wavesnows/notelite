@@ -62,6 +62,38 @@
                   <el-button class="action-button" :prefix-icon="Select" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
                 </div>
               </el-form-item>
+              <el-form-item label="根目录列表">
+                <div class="root-stores-list">
+                  <div
+                    v-for="storeDir in notestore.rootStores"
+                    :key="storeDir"
+                    class="root-store-item"
+                    :class="{ active: storeDir === notestore.currentStore }"
+                  >
+                    <span class="root-store-path" :title="storeDir">{{ storeDir.split('/').pop() || storeDir }}</span>
+                    <div class="root-store-actions">
+                      <el-button
+                        v-if="storeDir !== notestore.currentStore"
+                        size="small"
+                        type="primary"
+                        link
+                        @click="switchRootStore(storeDir)"
+                      >切换</el-button>
+                      <el-button
+                        v-if="notestore.rootStores.length > 1"
+                        size="small"
+                        type="danger"
+                        link
+                        @click="removeRootStore(storeDir)"
+                      >移除</el-button>
+                    </div>
+                  </div>
+                  <el-button size="small" @click="addRootStore" style="margin-top: 8px;">
+                    + 添加根目录
+                  </el-button>
+                </div>
+              </el-form-item>
+
               <el-form-item :label="t('settings.defaultNotebookPath')">
                 <div class="form-item-content">
                   <div class="path-display">{{ settings.defaultNotePath }}</div>
@@ -167,23 +199,23 @@
   });
 
   const options = computed(() => {
-    // Read all notebooks from the repos directory
-    const allNotebooks = readOneDir(join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath));
+    const groups: { label: string; options: any[] }[] = [];
 
-    // Separate local and remote notebooks based on type
-    const localOptions = allNotebooks.filter(nb => nb.type === 'local');
-    const remoteOptions = allNotebooks.filter(nb => nb.type === 'github');
+    for (const rootDir of ttsStore.notestore.rootStores) {
+      const allNotebooks = readOneDir(join(rootDir, defaultConf.defaultRepoPath));
+      if (allNotebooks.length === 0) continue;
 
-    return [
-      {
-        label: t('notebook.localNoteBooks'),
-        options: localOptions,
-      },
-      {
-        label: t('notebook.remoteNoteBooks'),
-        options: remoteOptions,
-      },
-    ];
+      // Attach rootDir to each notebook option so saveHander can use it
+      const notebooksWithRoot = allNotebooks.map((nb: any) => ({ ...nb, rootDir }));
+
+      const dirName = rootDir.split('/').pop() || rootDir;
+      groups.push({
+        label: dirName,
+        options: notebooksWithRoot,
+      });
+    }
+
+    return groups;
   });
 
   const openDialog = () => {
@@ -191,7 +223,7 @@
     console.log('store::'+ttsStore.notestore.currentStore)
   };
 
-  ipcRenderer.on('selected-directory', (event, path) => {
+  ipcRenderer.once('selected-directory', (event, path) => {
     console.log(path);
     config.value.savePath = path[0];
     ttsStore.notestore.currentStore = path[0];
@@ -235,6 +267,27 @@
       message: t('settings.saveSuccess'),
       type: 'success',
     });
+  }
+
+  function addRootStore() {
+    ipcRenderer.send('open-dialog');
+    ipcRenderer.once('selected-directory', (_event: any, paths: string[]) => {
+      if (paths && paths[0]) {
+        ttsStore.addRootStore(paths[0]);
+        ElMessage({ message: '根目录已添加', type: 'success' });
+      }
+    });
+  }
+
+  function removeRootStore(dirPath: string) {
+    ttsStore.removeRootStore(dirPath);
+    ElMessage({ message: '根目录已移除', type: 'success' });
+  }
+
+  function switchRootStore(dirPath: string) {
+    ttsStore.setActiveStore(dirPath);
+    ttsStore.refreshTreeData();
+    ElMessage({ message: `已切换到：${dirPath.split('/').pop()}`, type: 'success' });
   }
 
   const handleCommand = (command: string) => {
@@ -345,8 +398,11 @@
 
     async function saveHander(value:any){
       ttsStore.settings.currentbook = value;
-      // Use notestore.currentStore which is the source of truth
-      const newPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
+      // Update active root store if notebook belongs to a different root
+      if (value.rootDir && value.rootDir !== ttsStore.notestore.currentStore) {
+        ttsStore.setActiveStore(value.rootDir);
+      }
+      const newPath = join(value.rootDir || ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
       ttsStore.notebook.currentPath = newPath;
       ttsStore.notebook.bookType = value.type;
       ttsStore.setNoteBookConfig();
@@ -444,6 +500,47 @@
   .action-button {
     width: fit-content;
     align-self: flex-start;
+  }
+
+  .root-stores-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 4px;
+  }
+
+  .root-store-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 4px;
+    background-color: #f5f7fa;
+    font-size: 13px;
+  }
+
+  .root-store-item.active {
+    background-color: #ecf5ff;
+    border: 1px solid #b3d8ff;
+  }
+
+  .root-store-path {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #606266;
+  }
+
+  .root-store-item.active .root-store-path {
+    color: #409eff;
+    font-weight: 600;
+  }
+
+  .root-store-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
   }
 
   .form-actions {
