@@ -1,7 +1,7 @@
 <template>
   <div class="md-editor-container">
     <div
-      v-if="ttsStore.mdMode === 'edit'"
+      v-show="ttsStore.mdMode === 'edit'"
       ref="editorEl"
       class="md-codemirror"
     ></div>
@@ -17,8 +17,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
+import { Compartment } from '@codemirror/state'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import MarkdownIt from 'markdown-it'
@@ -32,6 +33,7 @@ const editorEl = ref<HTMLElement | null>(null)
 const previewEl = ref<HTMLElement | null>(null)
 const content = ref('')
 let cmView: EditorView | null = null
+const editableCompartment = new Compartment()
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
@@ -54,14 +56,14 @@ function saveFile() {
   fs.writeFileSync(filePath, content.value, 'utf8')
 }
 
-function initEditor() {
-  if (!editorEl.value) return
+onMounted(() => {
   cmView = new EditorView({
     doc: content.value,
     extensions: [
       basicSetup,
       markdown(),
       oneDark,
+      editableCompartment.of(EditorView.editable.of(true)),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           content.value = update.state.doc.toString()
@@ -69,12 +71,9 @@ function initEditor() {
         }
       }),
     ],
-    parent: editorEl.value,
+    parent: editorEl.value!,
   })
-}
 
-onMounted(() => {
-  initEditor()
   loadFile(ttsStore.inputs.notePath)
 })
 
@@ -100,19 +99,20 @@ watch(
 
 watch(
   () => ttsStore.mdMode,
-  async (mode) => {
+  (mode) => {
     if (mode === 'preview') {
-      // v-if 会销毁编辑器 DOM，CodeMirror 彻底从页面移除
-      cmView?.destroy()
-      cmView = null
+      // 禁用 CodeMirror 编辑，防止它响应 Cmd+A 等全局事件
+      cmView?.dispatch({
+        effects: editableCompartment.reconfigure(EditorView.editable.of(false))
+      })
       window.addEventListener('keydown', handleSelectAll, true)
-      await nextTick()
-      previewEl.value?.focus()
+      setTimeout(() => previewEl.value?.focus(), 0)
     } else {
       window.removeEventListener('keydown', handleSelectAll, true)
-      // v-if 重新挂载编辑器 DOM，重建 CodeMirror
-      await nextTick()
-      initEditor()
+      // 恢复 CodeMirror 编辑
+      cmView?.dispatch({
+        effects: editableCompartment.reconfigure(EditorView.editable.of(true))
+      })
       cmView?.focus()
     }
   }
