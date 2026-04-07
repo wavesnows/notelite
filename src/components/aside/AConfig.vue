@@ -221,16 +221,15 @@
   const openDialog = () => {
     ipcRenderer.send('open-dialog');
     console.log('store::'+ttsStore.notestore.currentStore)
+    ipcRenderer.once('selected-directory', (event, path) => {
+      console.log(path);
+      config.value.savePath = path[0];
+      ttsStore.notestore.currentStore = path[0];
+      ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
+      ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
+      getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
+    });
   };
-
-  ipcRenderer.once('selected-directory', (event, path) => {
-    console.log(path);
-    config.value.savePath = path[0];
-    ttsStore.notestore.currentStore = path[0];
-    ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-    ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-    getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
-  });
 
  
 
