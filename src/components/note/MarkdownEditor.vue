@@ -74,10 +74,12 @@ function initEditor() {
 }
 
 onMounted(async () => {
-  // 每次打开 md 文件时重置为编辑模式，确保编辑器 DOM 存在
-  ttsStore.mdMode = 'edit'
-  window.removeEventListener('keydown', handleSelectAll, true)
-  await nextTick()
+  // 确保每次挂载时是编辑模式，清理预览模式的监听器
+  if (ttsStore.mdMode !== 'edit') {
+    ttsStore.mdMode = 'edit'
+    window.removeEventListener('keydown', handleSelectAll, true)
+    await nextTick()
+  }
   initEditor()
   loadFile(ttsStore.inputs.notePath)
 })
@@ -106,7 +108,6 @@ watch(
   () => ttsStore.mdMode,
   async (mode) => {
     if (mode === 'preview') {
-      // v-if 会销毁编辑器 DOM，CodeMirror 彻底从页面移除
       cmView?.destroy()
       cmView = null
       window.addEventListener('keydown', handleSelectAll, true)
@@ -114,9 +115,11 @@ watch(
       previewEl.value?.focus()
     } else {
       window.removeEventListener('keydown', handleSelectAll, true)
-      // v-if 重新挂载编辑器 DOM，重建 CodeMirror
       await nextTick()
-      initEditor()
+      // editorEl 由 v-if 重新挂载，重建 CodeMirror
+      if (!cmView && editorEl.value) {
+        initEditor()
+      }
       cmView?.focus()
     }
   }
