@@ -11,7 +11,8 @@ import {showMessage} from '@/libs/globalLib'
      // ttsStore.treeMenu.data = readDir();
     let ttsStore = useTtsStore()
     var destPath = path.dirname(ttsStore.inputs.notePath)
-    var destPath = path.join(destPath,ttsStore.cnote.destTitle +'.json')
+    const ext = path.extname(ttsStore.inputs.notePath) || '.json'
+    var destPath = path.join(destPath, ttsStore.cnote.destTitle + ext)
     //console.log(destPath)
     //console.log(ttsStore.inputs.notePath)
     if(ttsStore.inputs.notePath != destPath){
@@ -128,7 +129,7 @@ function readDirGeneric(dirPath: string, options: {
 
   let filter = (file: string) => !file.startsWith('.')
   if (options.includeJson) {
-    filter = (file: string) => !file.startsWith('.') && (path.extname(file) == '.json' || path.extname(file) == '')
+    filter = (file: string) => !file.startsWith('.') && (path.extname(file) == '.json' || path.extname(file) == '.md' || path.extname(file) == '')
   } else if (options.dirsOnly) {
     filter = (file: string) => !file.startsWith('.') && path.extname(file) == ''
   }

@@ -41,6 +41,10 @@
                   <el-icon><Document /></el-icon>
                   <span>{{ t('fileTree.createFile') }}</span>
                 </el-dropdown-item>
+                <el-dropdown-item v-if="node.data.isFolder" :command="{type:'mdfile', data:data}">
+                  <el-icon><Document /></el-icon>
+                  <span>📝 MD File</span>
+                </el-dropdown-item>
                 <el-dropdown-item v-if="node.data.isFolder" :command="{type:'folder', data:data}">
                   <el-icon><Folder /></el-icon>
                   <span>{{ t('fileTree.createFolder') }}</span>
@@ -191,6 +195,9 @@ const handleCommand = (command: any) => {
       case 'file':
         append(command.data)
         break;
+      case 'mdfile':
+        appendMd(command.data)
+        break;
       case 'folder':
         dialogFormVisible.value = true;
         break;
@@ -309,6 +316,18 @@ const addFolder = () =>{
 
   }
 
+  const appendMd = (data: Tree) => {
+    let label:string = getNoteLabel();
+    let path:any = join(data.path, label + '.md')
+    const newChild:Tree = {label: label, path: path, isFolder:false, isLeaf: true}
+    if (!data.children) {
+      data.children = []
+    }
+    data.children.push(newChild as Tree)
+    ttsStore.inputs.notePath = path
+    fs.writeFileSync(path, '', 'utf8')
+  }
+
   const append = (data: Tree) => {
     console.log("add")
     console.dir(data)
@@ -341,13 +360,18 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.inputs.notePath = itemdata.path;
     console.log(itemdata)
    if(!itemdata.isFolder && fs.existsSync(itemdata.path)){
-    fs.readFile(itemdata.path, 'utf8', (err:any, data:any) => {
-    if (err) throw err;
-    // 将文件内容解析为 JSON 对象
     ttsStore.cnote.title = itemdata.label;
     ttsStore.cnote.destTitle = itemdata.label;
     ttsStore.cnote.lastPath = itemdata.path;
     ttsStore.treeMenu.currentNode = treeRef.value?.getCurrentNode()
+
+    if (itemdata.path.endsWith('.md')) {
+      // MarkdownEditor handles loading via watch on notePath
+      return
+    }
+
+    fs.readFile(itemdata.path, 'utf8', (err:any, data:any) => {
+    if (err) throw err;
     data = data.trim().replace('\n','')
     if(data == "")
     {
