@@ -137,6 +137,11 @@ function handleSelectAll(e: KeyboardEvent) {
   font-size: 14px;
 }
 
+/* 预览模式下清除 CodeMirror 残留的 selection 背景色 */
+.md-codemirror :deep(.cm-selectionBackground) {
+  background: transparent !important;
+}
+
 .md-preview {
   flex: 1;
   overflow-y: auto;
