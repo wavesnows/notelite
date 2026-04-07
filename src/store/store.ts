@@ -64,6 +64,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
     return {
       notestore:{
         currentStore: store.get('currentStore') || defaultDir,
+        rootStores: (store.get('rootStores') as string[]) || [store.get('currentStore') || defaultDir],
       },
       notebook:{
         currentPath: currentNotebookPath,
@@ -649,6 +650,34 @@ export const useTtsStore = defineStore(DFConf.appName, {
       this.treeMenu.expandedKeys = expandKeys;
 
       console.log('Expanding tree to path:', targetPath, 'Keys:', expandKeys);
+    },
+
+    // Add a new root store directory
+    addRootStore(dirPath: string) {
+      if (!this.notestore.rootStores.includes(dirPath)) {
+        this.notestore.rootStores.push(dirPath);
+        store.set('rootStores', this.notestore.rootStores);
+      }
+    },
+
+    // Remove a root store directory (only removes from list, does not delete files)
+    removeRootStore(dirPath: string) {
+      const index = this.notestore.rootStores.indexOf(dirPath);
+      if (index > -1) {
+        this.notestore.rootStores.splice(index, 1);
+        store.set('rootStores', this.notestore.rootStores);
+        // If removed store was active, switch to first remaining store
+        if (this.notestore.currentStore === dirPath && this.notestore.rootStores.length > 0) {
+          this.setActiveStore(this.notestore.rootStores[0]);
+        }
+      }
+    },
+
+    // Switch active root store and update currentStore
+    setActiveStore(dirPath: string) {
+      this.notestore.currentStore = dirPath;
+      this.settings.currentStore = dirPath;
+      store.set('currentStore', dirPath);
     },
   },
 });
