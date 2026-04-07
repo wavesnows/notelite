@@ -54,6 +54,56 @@ function saveFile() {
   fs.writeFileSync(filePath, content.value, 'utf8')
 }
 
+function showContextMenu() {
+  const { Menu, MenuItem } = require('@electron/remote')
+  const menu = new Menu()
+
+  menu.append(new MenuItem({
+    label: '剪切',
+    accelerator: 'CmdOrCtrl+X',
+    click: () => {
+      if (!cmView) return
+      const sel = cmView.state.selection.main
+      const text = cmView.state.sliceDoc(sel.from, sel.to)
+      if (text) {
+        navigator.clipboard.writeText(text)
+        cmView.dispatch({ changes: { from: sel.from, to: sel.to, insert: '' } })
+      }
+    }
+  }))
+  menu.append(new MenuItem({
+    label: '复制',
+    accelerator: 'CmdOrCtrl+C',
+    click: () => {
+      if (!cmView) return
+      const sel = cmView.state.selection.main
+      const text = cmView.state.sliceDoc(sel.from, sel.to)
+      if (text) navigator.clipboard.writeText(text)
+    }
+  }))
+  menu.append(new MenuItem({
+    label: '粘贴',
+    accelerator: 'CmdOrCtrl+V',
+    click: async () => {
+      if (!cmView) return
+      const text = await navigator.clipboard.readText()
+      const sel = cmView.state.selection.main
+      cmView.dispatch({ changes: { from: sel.from, to: sel.to, insert: text } })
+    }
+  }))
+  menu.append(new MenuItem({ type: 'separator' }))
+  menu.append(new MenuItem({
+    label: '全选',
+    accelerator: 'CmdOrCtrl+A',
+    click: () => {
+      if (!cmView) return
+      cmView.dispatch({ selection: { anchor: 0, head: cmView.state.doc.length } })
+    }
+  }))
+
+  menu.popup()
+}
+
 onMounted(() => {
   cmView = new EditorView({
     doc: content.value,
@@ -61,6 +111,13 @@ onMounted(() => {
       basicSetup,
       markdown(),
       oneDark,
+      EditorView.domEventHandlers({
+        contextmenu: (e) => {
+          e.preventDefault()
+          showContextMenu()
+          return true
+        }
+      }),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           content.value = update.state.doc.toString()
