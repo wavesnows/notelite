@@ -202,17 +202,29 @@
     const groups: { label: string; options: any[] }[] = [];
 
     for (const rootDir of ttsStore.notestore.rootStores) {
-      const allNotebooks = readOneDir(join(rootDir, defaultConf.defaultRepoPath));
-      if (allNotebooks.length === 0) continue;
-
-      // Attach rootDir to each notebook option so saveHander can use it
-      const notebooksWithRoot = allNotebooks.map((nb: any) => ({ ...nb, rootDir }));
-
+      const reposPath = join(rootDir, defaultConf.defaultRepoPath);
+      const hasRepos = fs.existsSync(reposPath) && fs.statSync(reposPath).isDirectory();
       const dirName = rootDir.split('/').pop() || rootDir;
-      groups.push({
-        label: dirName,
-        options: notebooksWithRoot,
-      });
+
+      if (hasRepos) {
+        // 老逻辑：repos/ 子目录下的笔记本列表
+        const allNotebooks = readOneDir(reposPath);
+        if (allNotebooks.length === 0) continue;
+        const notebooksWithRoot = allNotebooks.map((nb: any) => ({ ...nb, rootDir }));
+        groups.push({ label: dirName, options: notebooksWithRoot });
+      } else {
+        // 新逻辑：整个根目录直接作为一个笔记本
+        groups.push({
+          label: dirName,
+          options: [{
+            label: dirName,
+            value: dirName,
+            path: rootDir,
+            type: 'direct',
+            rootDir,
+          }],
+        });
+      }
     }
 
     return groups;
@@ -288,6 +300,13 @@
 
   function switchRootStore(dirPath: string) {
     ttsStore.setActiveStore(dirPath);
+    const reposPath = join(dirPath, defaultConf.defaultRepoPath);
+    const hasRepos = fs.existsSync(reposPath) && fs.statSync(reposPath).isDirectory();
+    if (!hasRepos) {
+      // 无 repos/ 子目录，直接将根目录作为笔记本路径
+      ttsStore.notebook.currentPath = dirPath;
+      ttsStore.setNoteBookConfig();
+    }
     ttsStore.refreshTreeData();
     ElMessage({ message: `已切换到：${dirPath.split('/').pop()}`, type: 'success' });
   }
@@ -404,7 +423,10 @@
       if (value.rootDir && value.rootDir !== ttsStore.notestore.currentStore) {
         ttsStore.setActiveStore(value.rootDir);
       }
-      const newPath = join(value.rootDir || ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
+      // direct 类型：根目录本身就是笔记本，不拼 repos/ 子路径
+      const newPath = value.type === 'direct'
+        ? value.rootDir
+        : join(value.rootDir || ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
       ttsStore.notebook.currentPath = newPath;
       ttsStore.notebook.bookType = value.type;
       ttsStore.setNoteBookConfig();
