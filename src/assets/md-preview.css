@@ -7,7 +7,7 @@
   --md-accent-light: #e8f8ef;
   --md-heading-color: #1a1a1a;
   --md-heading-border: #07C160;
-  --md-heading-align: left;
+  --md-heading-align: center;
   --md-bold-color: #07C160;
   --md-em-color: #555;
   --md-blockquote-border: #07C160;
@@ -45,7 +45,7 @@
   --md-accent-light: #f0f0fa;
   --md-heading-color: #2b2b2b;
   --md-heading-border: #5B5EA6;
-  --md-heading-align: left;
+  --md-heading-align: center;
   --md-bold-color: #5B5EA6;
   --md-em-color: #7b7eb8;
   --md-blockquote-border: #5B5EA6;
