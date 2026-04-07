@@ -24,16 +24,16 @@
 .md-preview.theme-teal {
   --md-accent: #009688;
   --md-accent-light: #e0f2f1;
-  --md-heading-color: #009688;
-  --md-heading-border: #009688;
+  --md-heading-color: #00796B;        /* 深青，比正文青色更沉稳 */
+  --md-heading-border: #80CBC4;       /* 浅青边线，不抢眼 */
   --md-heading-align: center;
-  --md-bold-color: #BF360C;
-  --md-em-color: #009688;
-  --md-blockquote-border: #009688;
-  --md-blockquote-bg: #f0faf9;
-  --md-blockquote-color: #777;
-  --md-link-color: #009688;
-  --md-hr-color: #BF360C;
+  --md-bold-color: #BF360C;           /* 保留深红加粗 */
+  --md-em-color: #555;                /* 斜体改为深灰，不和加粗竞争 */
+  --md-blockquote-border: #009688;    /* 引用竖线保持青色 */
+  --md-blockquote-bg: #f5f5f5;        /* 引用背景改为中性浅灰，更清晰 */
+  --md-blockquote-color: #666;
+  --md-link-color: #00897B;           /* 链接用稍深的青，和标题有区分 */
+  --md-hr-color: #BDBDBD;             /* 分割线改为浅灰，低调 */
   --md-table-header-bg: #009688;
   --md-table-header-color: #fff;
   --md-code-bg: #f4f4f4;
