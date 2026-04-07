@@ -49,6 +49,20 @@ export default function initStore() {
       "如果你觉得这个项目还不错， 欢迎Star、Fork和PR。你的Star是对作者最好的鼓励。"
     );
   }
+
+  // Initialize rootStores array with current store if not set
+  if (!store.has("rootStores")) {
+    const currentStore = store.get("currentStore") || defaultDir;
+    store.set("rootStores", [currentStore]);
+  } else {
+    // Ensure currentStore is in rootStores (migration safety)
+    const currentStore = store.get("currentStore") || defaultDir;
+    const rootStores: string[] = store.get("rootStores") || [];
+    if (!rootStores.includes(currentStore)) {
+      rootStores.push(currentStore);
+      store.set("rootStores", rootStores);
+    }
+  }
 }
 
 
