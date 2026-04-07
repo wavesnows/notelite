@@ -1,6 +1,11 @@
 <template>
   <div class="md-editor-container">
-    <div v-show="ttsStore.mdMode === 'edit'" ref="editorEl" class="md-codemirror"></div>
+    <div
+      v-show="ttsStore.mdMode === 'edit'"
+      :inert="ttsStore.mdMode === 'preview'"
+      ref="editorEl"
+      class="md-codemirror"
+    ></div>
     <div
       v-show="ttsStore.mdMode === 'preview'"
       ref="previewEl"
