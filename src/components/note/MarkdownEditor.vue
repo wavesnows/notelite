@@ -72,11 +72,13 @@ onMounted(() => {
   })
 
   loadFile(ttsStore.inputs.notePath)
+  window.addEventListener('keydown', handleSelectAll, true)
 })
 
 onBeforeUnmount(() => {
   cmView?.destroy()
   cmView = null
+  window.removeEventListener('keydown', handleSelectAll, true)
 })
 
 watch(
@@ -92,13 +94,28 @@ watch(
   () => ttsStore.mdMode,
   (mode) => {
     if (mode === 'preview') {
-      // 让预览区获得焦点，Cmd+A 选中预览文本而非 CodeMirror 内容
       setTimeout(() => previewEl.value?.focus(), 0)
     } else {
       cmView?.focus()
     }
   }
 )
+
+function handleSelectAll(e: KeyboardEvent) {
+  if (ttsStore.mdMode !== 'preview') return
+  if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+    e.preventDefault()
+    e.stopPropagation()
+    const el = previewEl.value
+    if (!el) return
+    const selection = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(el)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
+}
+
 </script>
 
 <style scoped>
