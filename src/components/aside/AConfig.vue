@@ -219,12 +219,14 @@
   });
 
   const openDialog = () => {
+    ipcRenderer.removeAllListeners('selected-directory');
     ipcRenderer.send('open-dialog');
     console.log('store::'+ttsStore.notestore.currentStore)
     ipcRenderer.once('selected-directory', (event, path) => {
       console.log(path);
       config.value.savePath = path[0];
       ttsStore.notestore.currentStore = path[0];
+      ttsStore.addRootStore(path[0]);
       ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
       ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
       getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
@@ -269,6 +271,7 @@
   }
 
   function addRootStore() {
+    ipcRenderer.removeAllListeners('selected-directory');
     ipcRenderer.send('open-dialog');
     ipcRenderer.once('selected-directory', (_event: any, paths: string[]) => {
       if (paths && paths[0]) {
