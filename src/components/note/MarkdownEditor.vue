@@ -1,25 +1,8 @@
 <template>
   <div class="md-editor-container">
-    <div class="md-toolbar">
-      <span class="md-filename">{{ filename }}</span>
-      <div class="md-mode-switch">
-        <el-button
-          :type="mode === 'edit' ? 'primary' : 'default'"
-          size="small"
-          @click="mode = 'edit'"
-        >编辑</el-button>
-        <el-button
-          :type="mode === 'preview' ? 'primary' : 'default'"
-          size="small"
-          @click="mode = 'preview'"
-        >预览</el-button>
-      </div>
-    </div>
-
-    <div v-show="mode === 'edit'" ref="editorEl" class="md-codemirror"></div>
-
+    <div v-show="ttsStore.mdMode === 'edit'" ref="editorEl" class="md-codemirror"></div>
     <div
-      v-show="mode === 'preview'"
+      v-show="ttsStore.mdMode === 'preview'"
       class="md-preview"
       v-html="renderedHtml"
     ></div>
@@ -38,17 +21,11 @@ import '@/assets/md-preview.css'
 const fs = require('fs')
 
 const ttsStore = useTtsStore()
-const mode = ref<'edit' | 'preview'>('edit')
 const editorEl = ref<HTMLElement | null>(null)
 const content = ref('')
 let cmView: EditorView | null = null
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
-
-const filename = computed(() => {
-  const p = ttsStore.inputs.notePath
-  return p ? p.split('/').pop() : ''
-})
 
 const renderedHtml = computed(() => md.render(content.value))
 
@@ -110,24 +87,6 @@ watch(
   flex-direction: column;
   width: 100%;
   height: 100%;
-}
-
-.md-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 12px;
-  border-bottom: 1px solid #eee;
-}
-
-.md-filename {
-  font-size: 13px;
-  color: #888;
-}
-
-.md-mode-switch {
-  display: flex;
-  gap: 4px;
 }
 
 .md-codemirror {

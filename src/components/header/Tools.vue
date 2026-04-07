@@ -1,4 +1,13 @@
 <template>
+  <!-- MD 编辑/预览切换，仅 .md 文件时显示 -->
+  <template v-if="isMdFile">
+    <el-tooltip :content="ttsStore.mdMode === 'edit' ? '切换到预览' : '切换到编辑'" class="tool-tooltip">
+      <el-button size="small" circle class="tool-btn" @click="toggleMdMode">
+        <el-icon v-if="ttsStore.mdMode === 'edit'"><View /></el-icon>
+        <el-icon v-else><EditPen /></el-icon>
+      </el-button>
+    </el-tooltip>
+  </template>
   <!--<el-tooltip content="Save">
     <el-button size="small" circle class="tool-btn" @click="saveHandle">
       <el-icon><DocumentAdd /></el-icon>
@@ -28,19 +37,26 @@
 </template>
 <script setup lang="ts">
 
+import { computed } from 'vue'
 import { useTtsStore } from "@/store/store";
 import { storeToRefs } from "pinia";
 import {removeFile} from '@/libs/fileHandler'
 import {saveContent} from '@/libs/editor'
 import {ElMessageBox} from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Clock, QuestionFilled } from '@element-plus/icons-vue'
+import { Clock, QuestionFilled, View, EditPen } from '@element-plus/icons-vue'
 //import {  DocumentAdd } from "@element-plus/icons-vue";
 
 //const currShow = ref(0);
 const { t } = useI18n()
 const ttsStore = useTtsStore();
-var { editerflag,readOnly } = storeToRefs(ttsStore);
+var { editerflag, readOnly, inputs } = storeToRefs(ttsStore);
+
+const isMdFile = computed(() => inputs.value.notePath?.endsWith('.md') ?? false)
+
+function toggleMdMode() {
+  ttsStore.mdMode = ttsStore.mdMode === 'edit' ? 'preview' : 'edit'
+}
 
 
 function saveHandle(){

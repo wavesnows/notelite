@@ -160,6 +160,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       rawJsonEditor: {
         showDialog: false,
       },
+      mdMode: 'edit' as 'edit' | 'preview',
       gitStatus: {
         hasUncommitted: false,
         hasUnpushed: false,
