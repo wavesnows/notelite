@@ -174,9 +174,13 @@ function copyPreviewHtml() {
   font-size: 14px;
 }
 
-/* 预览模式下清除 CodeMirror 残留的 selection 背景色 */
+/* 编辑模式选中颜色，更明显 */
 .md-codemirror :deep(.cm-selectionBackground) {
-  background: transparent !important;
+  background: rgba(100, 180, 255, 0.35) !important;
+}
+
+.md-codemirror :deep(.cm-focused .cm-selectionBackground) {
+  background: rgba(100, 180, 255, 0.45) !important;
 }
 
 .md-preview {
