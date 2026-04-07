@@ -3,7 +3,9 @@
     <div v-show="ttsStore.mdMode === 'edit'" ref="editorEl" class="md-codemirror"></div>
     <div
       v-show="ttsStore.mdMode === 'preview'"
+      ref="previewEl"
       class="md-preview"
+      tabindex="-1"
       v-html="renderedHtml"
     ></div>
   </div>
@@ -22,6 +24,7 @@ const fs = require('fs')
 
 const ttsStore = useTtsStore()
 const editorEl = ref<HTMLElement | null>(null)
+const previewEl = ref<HTMLElement | null>(null)
 const content = ref('')
 let cmView: EditorView | null = null
 
@@ -76,6 +79,18 @@ watch(
   (newPath) => {
     if (newPath && newPath.endsWith('.md')) {
       loadFile(newPath)
+    }
+  }
+)
+
+watch(
+  () => ttsStore.mdMode,
+  (mode) => {
+    if (mode === 'preview') {
+      // 让预览区获得焦点，Cmd+A 选中预览文本而非 CodeMirror 内容
+      setTimeout(() => previewEl.value?.focus(), 0)
+    } else {
+      cmView?.focus()
     }
   }
 )
