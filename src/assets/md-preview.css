@@ -1,11 +1,91 @@
 /* Markdown 预览区域样式 - 可自由修改 */
+
+/* ===================== CSS 变量主题定义 ===================== */
+
+.md-preview {
+  --md-accent: #07C160;
+  --md-accent-light: #e8f8ef;
+  --md-heading-color: #1a1a1a;
+  --md-heading-border: #07C160;
+  --md-heading-align: left;
+  --md-bold-color: #07C160;
+  --md-em-color: #555;
+  --md-blockquote-border: #07C160;
+  --md-blockquote-bg: #f6fdf9;
+  --md-blockquote-color: #666;
+  --md-link-color: #07C160;
+  --md-hr-color: #07C160;
+  --md-table-header-bg: #07C160;
+  --md-table-header-color: #fff;
+  --md-code-bg: #f6f6f6;
+}
+
+/* 蓝紫知性 */
+.md-preview.theme-purple {
+  --md-accent: #5B5EA6;
+  --md-accent-light: #f0f0fa;
+  --md-heading-color: #2b2b2b;
+  --md-heading-border: #5B5EA6;
+  --md-heading-align: left;
+  --md-bold-color: #5B5EA6;
+  --md-em-color: #7b7eb8;
+  --md-blockquote-border: #5B5EA6;
+  --md-blockquote-bg: #f5f5fc;
+  --md-blockquote-color: #666;
+  --md-link-color: #5B5EA6;
+  --md-hr-color: #5B5EA6;
+  --md-table-header-bg: #5B5EA6;
+  --md-table-header-color: #fff;
+  --md-code-bg: #f4f4f8;
+}
+
+/* 暖橙活力 */
+.md-preview.theme-orange {
+  --md-accent: #FF6B35;
+  --md-accent-light: #fff5f1;
+  --md-heading-color: #333;
+  --md-heading-border: #FF6B35;
+  --md-heading-align: center;
+  --md-bold-color: #FF6B35;
+  --md-em-color: #e08060;
+  --md-blockquote-border: #FF6B35;
+  --md-blockquote-bg: #fff8f5;
+  --md-blockquote-color: #666;
+  --md-link-color: #FF6B35;
+  --md-hr-color: #FF6B35;
+  --md-table-header-bg: #FF6B35;
+  --md-table-header-color: #fff;
+  --md-code-bg: #fdf6f3;
+}
+
+/* 红黑经典 */
+.md-preview.theme-red {
+  --md-accent: #E53935;
+  --md-accent-light: #fef0f0;
+  --md-heading-color: #333;
+  --md-heading-border: #E53935;
+  --md-heading-align: center;
+  --md-bold-color: #E53935;
+  --md-em-color: #c06060;
+  --md-blockquote-border: #E53935;
+  --md-blockquote-bg: #fdf5f5;
+  --md-blockquote-color: #666;
+  --md-link-color: #E53935;
+  --md-hr-color: #E53935;
+  --md-table-header-bg: #E53935;
+  --md-table-header-color: #fff;
+  --md-code-bg: #f8f4f4;
+}
+
+/* ===================== 通用样式（使用变量） ===================== */
+
 .md-preview {
   font-size: 16px;
   line-height: 1.8em;
   letter-spacing: 0.1em;
   padding: 16px 24px;
   color: #333;
-  font-family: Roboto, 'Courier New', Consolas, Inconsolata, Courier, monospace, Avenir, 'PingFangSC-Light', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFangSC-Regular', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .md-preview p {
@@ -14,17 +94,17 @@
 
 .md-preview strong,
 .md-preview b {
-  color: #BF360C;
+  color: var(--md-bold-color);
 }
 
 .md-preview em,
 .md-preview i {
-  color: #009688;
+  color: var(--md-em-color);
 }
 
 .md-preview hr {
   border: none;
-  border-top: 1px solid #BF360C;
+  border-top: 1px solid var(--md-hr-color);
   margin: 1.5em auto;
 }
 
@@ -36,26 +116,28 @@
 .md-preview h5,
 .md-preview h6 {
   font-weight: bold;
-  color: #009688;
-  text-align: center;
+  color: var(--md-heading-color);
+  text-align: var(--md-heading-align);
   margin: 1em 5px !important;
-  padding: 0.5em !important;
+  padding: 0.5em 0 !important;
 }
 
 .md-preview h1 {
-  font-size: 28px;
-  border-bottom: 1px solid #ddd;
+  font-size: 26px;
+  border-bottom: 2px solid var(--md-heading-border);
+  padding-bottom: 0.3em !important;
 }
 
 .md-preview h2 {
-  font-size: 24px;
-  border-bottom: 1px solid #eee;
+  font-size: 22px;
+  border-bottom: 1px solid var(--md-heading-border);
+  padding-bottom: 0.2em !important;
 }
 
-.md-preview h3 { font-size: 22px; }
-.md-preview h4 { font-size: 20px; }
-.md-preview h5 { font-size: 18px; }
-.md-preview h6 { font-size: 16px; }
+.md-preview h3 { font-size: 20px; }
+.md-preview h4 { font-size: 18px; }
+.md-preview h5 { font-size: 16px; }
+.md-preview h6 { font-size: 15px; color: #666; }
 
 /* 列表 */
 .md-preview ul,
@@ -86,11 +168,12 @@
 
 /* 引用 */
 .md-preview blockquote {
-  border-left: 2px solid #009688;
-  padding: 0 10px;
-  color: #777;
+  border-left: 3px solid var(--md-blockquote-border);
+  background: var(--md-blockquote-bg);
+  padding: 0.5em 1em;
+  color: var(--md-blockquote-color);
   margin: 10px 5px 10px 1em;
-  quotes: none;
+  border-radius: 0 4px 4px 0;
 }
 
 .md-preview blockquote::before,
@@ -99,81 +182,45 @@
 }
 
 /* 代码 */
-.md-preview pre,
 .md-preview code {
   font-size: 14px;
-  font-family: Roboto, 'Courier New', Consolas, Inconsolata, Courier, monospace;
-  margin: auto 5px;
-}
-
-.md-preview code {
-  white-space: pre-wrap;
-  border-radius: 2px;
-  display: inline;
-  background: #f4f4f4;
+  font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+  background: var(--md-code-bg);
+  border-radius: 3px;
   padding: 0.1em 0.4em;
+  white-space: pre-wrap;
 }
 
 .md-preview pre {
-  font-size: 15px;
-  line-height: 1.4em;
-  display: block;
-  background: #f4f4f4;
-  border-radius: 3px;
-  padding: 1em;
+  font-size: 14px;
+  line-height: 1.5em;
+  background: var(--md-code-bg);
+  border-radius: 6px;
+  padding: 1em 1.2em;
   overflow-x: auto;
   margin: 10px 5px;
 }
 
 .md-preview pre code {
-  white-space: pre;
-  overflow: auto;
-  border-radius: 3px;
-  padding: 0;
-  display: block;
   background: none;
-}
-
-/* 定义列表 */
-.md-preview dl {
-  margin: 10px 5px;
   padding: 0;
-}
-
-.md-preview dl dt {
-  font-size: 1em;
-  font-weight: bold;
-  font-style: italic;
-}
-
-.md-preview dl dd {
-  margin: 0 0 10px;
-  padding: 0 10px;
+  white-space: pre;
+  font-size: inherit;
 }
 
 /* 表格 */
 .md-preview table {
-  padding: 0;
   border-collapse: collapse;
   border-spacing: 0;
-  font-size: 1em;
+  font-size: 15px;
   border: 0;
   margin: 10px auto;
   width: auto;
 }
 
-.md-preview tbody {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
 .md-preview table tr {
-  border: 0;
   border-top: 1px solid #CCC;
   background-color: white;
-  margin: 0;
-  padding: 0;
 }
 
 .md-preview table tr:nth-child(2n) {
@@ -182,30 +229,30 @@
 
 .md-preview table tr th,
 .md-preview table tr td {
-  font-size: 16px;
   border: 1px solid #CCC;
-  margin: 0;
-  padding: 5px 10px;
+  padding: 6px 12px;
 }
 
 .md-preview table tr th {
   font-weight: bold;
-  color: #eee;
-  border: 1px solid #009688;
-  background-color: #009688;
-}
-
-/* 图片 */
-.md-preview img {
-  max-width: 100%;
+  color: var(--md-table-header-color);
+  border: 1px solid var(--md-table-header-bg);
+  background-color: var(--md-table-header-bg);
 }
 
 /* 链接 */
 .md-preview a {
-  color: #009688;
+  color: var(--md-link-color);
   text-decoration: none;
 }
 
 .md-preview a:hover {
   text-decoration: underline;
+}
+
+/* 图片 */
+.md-preview img {
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
 }

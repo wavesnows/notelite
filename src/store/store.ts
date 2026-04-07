@@ -161,6 +161,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         showDialog: false,
       },
       mdMode: 'edit' as 'edit' | 'preview',
+      mdTheme: (store.get('mdTheme') as string) || 'default',
       gitStatus: {
         hasUncommitted: false,
         hasUnpushed: false,
@@ -651,6 +652,11 @@ export const useTtsStore = defineStore(DFConf.appName, {
       this.treeMenu.expandedKeys = expandKeys;
 
       console.log('Expanding tree to path:', targetPath, 'Keys:', expandKeys);
+    },
+
+    setMdTheme(theme: string) {
+      this.mdTheme = theme;
+      store.set('mdTheme', theme);
     },
 
     // Add a new root store directory

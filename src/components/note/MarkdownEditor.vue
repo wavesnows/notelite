@@ -10,6 +10,7 @@
       v-show="ttsStore.mdMode === 'preview'"
       ref="previewEl"
       class="md-preview"
+      :class="ttsStore.mdTheme !== 'default' ? `theme-${ttsStore.mdTheme}` : ''"
       tabindex="-1"
       v-html="renderedHtml"
     ></div>

@@ -94,6 +94,15 @@
                 </div>
               </el-form-item>
 
+              <el-form-item label="MD 预览主题">
+                <el-select :model-value="ttsStore.mdTheme" @change="(v: string) => ttsStore.setMdTheme(v)" style="width: 200px;">
+                  <el-option label="🟢 墨绿极简" value="default" />
+                  <el-option label="🟣 蓝紫知性" value="purple" />
+                  <el-option label="🟠 暖橙活力" value="orange" />
+                  <el-option label="🔴 红黑经典" value="red" />
+                </el-select>
+              </el-form-item>
+
               <el-form-item :label="t('settings.defaultNotebookPath')">
                 <div class="form-item-content">
                   <div class="path-display">{{ settings.defaultNotePath }}</div>
