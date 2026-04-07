@@ -92,6 +92,11 @@ watch(
 )
 
 watch(
+  () => ttsStore.mdCopyTrigger,
+  () => { copyPreviewHtml() }
+)
+
+watch(
   () => ttsStore.mdMode,
   (mode) => {
     if (mode === 'preview') {
@@ -115,6 +120,54 @@ function handleSelectAll(e: KeyboardEvent) {
     selection?.removeAllRanges()
     selection?.addRange(range)
   }
+}
+
+// 把 DOM 元素的 computed style 内联到 clone 上，用于复制到公众号
+function inlineStyles(source: HTMLElement): HTMLElement {
+  const clone = source.cloneNode(true) as HTMLElement
+  const sourceNodes = source.querySelectorAll('*')
+  const cloneNodes = clone.querySelectorAll('*')
+
+  // 只内联影响排版和颜色的关键属性，避免内联全部导致过于臃肿
+  const INLINE_PROPS = [
+    'color', 'background-color', 'font-size', 'font-weight', 'font-style',
+    'font-family', 'line-height', 'letter-spacing', 'text-align',
+    'border', 'border-left', 'border-bottom', 'border-top',
+    'padding', 'margin', 'border-radius',
+    'list-style-type', 'text-decoration',
+  ]
+
+  sourceNodes.forEach((srcEl, i) => {
+    const cloneEl = cloneNodes[i] as HTMLElement
+    if (!cloneEl) return
+    const computed = window.getComputedStyle(srcEl)
+    const inlined = INLINE_PROPS
+      .map(p => `${p}:${computed.getPropertyValue(p)}`)
+      .join(';')
+    cloneEl.setAttribute('style', inlined)
+  })
+
+  // 内联根元素自身样式
+  const rootComputed = window.getComputedStyle(source)
+  const rootInlined = INLINE_PROPS
+    .map(p => `${p}:${rootComputed.getPropertyValue(p)}`)
+    .join(';')
+  clone.setAttribute('style', rootInlined)
+
+  return clone
+}
+
+function copyPreviewHtml() {
+  const el = previewEl.value
+  if (!el) return false
+  const cloned = inlineStyles(el)
+  const html = cloned.outerHTML
+  const blob = new Blob([html], { type: 'text/html' })
+  const text = el.innerText
+  navigator.clipboard.write([
+    new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([text], { type: 'text/plain' }) })
+  ])
+  return true
 }
 
 </script>

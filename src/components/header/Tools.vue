@@ -1,10 +1,15 @@
 <template>
-  <!-- MD 编辑/预览切换，仅 .md 文件时显示 -->
+  <!-- MD 编辑/预览切换 + 复制全文，仅 .md 文件时显示 -->
   <template v-if="isMdFile">
     <el-tooltip :content="ttsStore.mdMode === 'edit' ? '切换到预览' : '切换到编辑'" class="tool-tooltip">
       <el-button size="small" circle class="tool-btn" @click="toggleMdMode">
         <el-icon v-if="ttsStore.mdMode === 'edit'"><View /></el-icon>
         <el-icon v-else><EditPen /></el-icon>
+      </el-button>
+    </el-tooltip>
+    <el-tooltip v-if="ttsStore.mdMode === 'preview'" content="复制全文（带样式）" class="tool-tooltip">
+      <el-button size="small" circle class="tool-btn" @click="copyAll">
+        <el-icon><CopyDocument /></el-icon>
       </el-button>
     </el-tooltip>
   </template>
@@ -42,9 +47,9 @@ import { useTtsStore } from "@/store/store";
 import { storeToRefs } from "pinia";
 import {removeFile} from '@/libs/fileHandler'
 import {saveContent} from '@/libs/editor'
-import {ElMessageBox} from 'element-plus'
+import {ElMessageBox, ElMessage} from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Clock, QuestionFilled, View, EditPen } from '@element-plus/icons-vue'
+import { Clock, QuestionFilled, View, EditPen, CopyDocument } from '@element-plus/icons-vue'
 //import {  DocumentAdd } from "@element-plus/icons-vue";
 
 //const currShow = ref(0);
@@ -56,6 +61,11 @@ const isMdFile = computed(() => inputs.value.notePath?.endsWith('.md') ?? false)
 
 function toggleMdMode() {
   ttsStore.mdMode = ttsStore.mdMode === 'edit' ? 'preview' : 'edit'
+}
+
+function copyAll() {
+  ttsStore.triggerMdCopy()
+  ElMessage({ message: '已复制（含样式），可直接粘贴到公众号', type: 'success', duration: 2000 })
 }
 
 

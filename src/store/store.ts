@@ -162,6 +162,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       },
       mdMode: 'edit' as 'edit' | 'preview',
       mdTheme: (store.get('mdTheme') as string) || 'default',
+      mdCopyTrigger: 0,
       gitStatus: {
         hasUncommitted: false,
         hasUnpushed: false,
@@ -657,6 +658,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
     setMdTheme(theme: string) {
       this.mdTheme = theme;
       store.set('mdTheme', theme);
+    },
+    triggerMdCopy() {
+      this.mdCopyTrigger++;
     },
 
     // Add a new root store directory
