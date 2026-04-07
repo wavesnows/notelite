@@ -20,6 +20,25 @@
   --md-code-bg: #f6f6f6;
 }
 
+/* 青绿经典（原配色） */
+.md-preview.theme-teal {
+  --md-accent: #009688;
+  --md-accent-light: #e0f2f1;
+  --md-heading-color: #009688;
+  --md-heading-border: #009688;
+  --md-heading-align: center;
+  --md-bold-color: #BF360C;
+  --md-em-color: #009688;
+  --md-blockquote-border: #009688;
+  --md-blockquote-bg: #f0faf9;
+  --md-blockquote-color: #777;
+  --md-link-color: #009688;
+  --md-hr-color: #BF360C;
+  --md-table-header-bg: #009688;
+  --md-table-header-color: #fff;
+  --md-code-bg: #f4f4f4;
+}
+
 /* 蓝紫知性 */
 .md-preview.theme-purple {
   --md-accent: #5B5EA6;

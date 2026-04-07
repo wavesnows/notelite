@@ -161,7 +161,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         showDialog: false,
       },
       mdMode: 'edit' as 'edit' | 'preview',
-      mdTheme: (store.get('mdTheme') as string) || 'default',
+      mdTheme: (store.get('mdTheme') as string) || 'teal',
       mdCopyTrigger: 0,
       gitStatus: {
         hasUncommitted: false,

@@ -96,6 +96,7 @@
 
               <el-form-item label="MD 预览主题">
                 <el-select :model-value="ttsStore.mdTheme" @change="(v: string) => ttsStore.setMdTheme(v)" style="width: 200px;">
+                  <el-option label="🩵 青绿经典（默认）" value="teal" />
                   <el-option label="🟢 墨绿极简" value="default" />
                   <el-option label="🟣 蓝紫知性" value="purple" />
                   <el-option label="🟠 暖橙活力" value="orange" />
