@@ -129,7 +129,17 @@ function readDirGeneric(dirPath: string, options: {
 
   let filter = (file: string) => !file.startsWith('.')
   if (options.includeJson) {
-    filter = (file: string) => !file.startsWith('.') && (path.extname(file) == '.json' || path.extname(file) == '.md' || path.extname(file) == '')
+    filter = (file: string) => {
+      if (file.startsWith('.')) return false
+      const ext = path.extname(file)
+      if (ext === '.json' || ext === '.md') return true
+      // 无扩展名只保留目录，过滤掉无扩展名的普通文件
+      if (ext === '') {
+        const fullPath = path.resolve(dirPath, file)
+        return fs.statSync(fullPath).isDirectory()
+      }
+      return false
+    }
   } else if (options.dirsOnly) {
     filter = (file: string) => !file.startsWith('.') && path.extname(file) == ''
   }
