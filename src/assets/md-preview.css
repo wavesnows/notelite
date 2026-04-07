@@ -214,8 +214,10 @@
   border-spacing: 0;
   font-size: 15px;
   border: 0;
-  margin: 10px auto;
-  width: auto;
+  margin: 10px 0;
+  width: 100%;
+  table-layout: fixed;
+  word-break: break-word;
 }
 
 .md-preview table tr {

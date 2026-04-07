@@ -199,6 +199,7 @@ function copyPreviewHtml() {
 .md-preview {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
 }
 </style>
