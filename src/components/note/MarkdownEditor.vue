@@ -2,7 +2,7 @@
   <div class="md-editor-container">
     <div
       v-show="ttsStore.mdMode === 'edit'"
-      :inert="ttsStore.mdMode === 'preview'"
+      v-bind="ttsStore.mdMode === 'preview' ? { inert: '' } : {}"
       ref="editorEl"
       class="md-codemirror"
     ></div>
