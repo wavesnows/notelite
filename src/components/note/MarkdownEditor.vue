@@ -73,11 +73,7 @@ function initEditor() {
   })
 }
 
-onMounted(async () => {
-  // 每次打开 md 文件时重置为编辑模式，确保编辑器 DOM 存在
-  ttsStore.mdMode = 'edit'
-  window.removeEventListener('keydown', handleSelectAll, true)
-  await nextTick()
+onMounted(() => {
   initEditor()
   loadFile(ttsStore.inputs.notePath)
 })
