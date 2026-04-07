@@ -77,7 +77,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cmView?.destroy()
   cmView = null
-  window.removeEventListener('keydown', handleSelectAll, true)
 })
 
 watch(
@@ -98,33 +97,13 @@ watch(
   () => ttsStore.mdMode,
   (mode) => {
     if (mode === 'preview') {
-      // 用 JS 直接设置 inert，彻底冻结 CodeMirror
-      editorEl.value?.setAttribute('inert', '')
-      window.addEventListener('keydown', handleSelectAll, true)
       setTimeout(() => previewEl.value?.focus(), 0)
     } else {
-      // 移除 inert，恢复 CodeMirror 交互
-      editorEl.value?.removeAttribute('inert')
-      window.removeEventListener('keydown', handleSelectAll, true)
       cmView?.focus()
     }
   }
 )
 
-function handleSelectAll(e: KeyboardEvent) {
-  if (ttsStore.mdMode !== 'preview') return
-  if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-    e.preventDefault()
-    e.stopPropagation()
-    const el = previewEl.value
-    if (!el) return
-    const selection = window.getSelection()
-    const range = document.createRange()
-    range.selectNodeContents(el)
-    selection?.removeAllRanges()
-    selection?.addRange(range)
-  }
-}
 
 // 把 DOM 元素的 computed style 内联到 clone 上，用于复制到公众号
 function inlineStyles(source: HTMLElement): HTMLElement {
