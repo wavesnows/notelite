@@ -128,17 +128,19 @@ function init() {
   // When PTY exits (e.g. user types 'exit'), show message and reset for next open
   ipcRenderer.once('terminal-exited', () => {
     terminal?.write('\r\n\x1b[90m[Process exited]\x1b[0m\r\n')
-    // Tear down so init() can run fresh next time panel is toggled
-    if (outputHandler) {
-      ipcRenderer.removeListener('terminal-output', outputHandler)
-      outputHandler = null
-    }
-    resizeObserver?.disconnect()
-    resizeObserver = null
-    terminal?.dispose()
-    terminal = null
-    fitAddon = null
     initialized = false
+    // Delay teardown to let xterm finish its current render cycle
+    setTimeout(() => {
+      if (outputHandler) {
+        ipcRenderer.removeListener('terminal-output', outputHandler)
+        outputHandler = null
+      }
+      resizeObserver?.disconnect()
+      resizeObserver = null
+      try { terminal?.dispose() } catch (_) {}
+      terminal = null
+      fitAddon = null
+    }, 100)
   })
 
   resizeObserver = new ResizeObserver(() => fitAddon?.fit())
