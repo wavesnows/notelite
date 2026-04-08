@@ -44,7 +44,7 @@ function init() {
     cursorStyle: 'bar',
     fontSize: 13,
     lineHeight: 1.4,
-    fontFamily: '"SF Mono", ui-monospace, Menlo, Monaco, monospace',
+    fontFamily: 'monospace',
     scrollback: 1000,
     allowTransparency: true,
     theme: {
