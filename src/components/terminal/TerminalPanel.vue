@@ -41,11 +41,34 @@ function init() {
 
   terminal = new Terminal({
     cursorBlink: true,
+    cursorStyle: 'bar',
     fontSize: 13,
-    fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+    lineHeight: 1.5,
+    letterSpacing: 0.5,
+    fontFamily: '"JetBrains Mono", "Fira Code", Menlo, Monaco, "Courier New", monospace',
+    fontWeight: '400',
+    allowTransparency: true,
     theme: {
-      background: '#1e1e1e',
-      foreground: '#d4d4d4',
+      background: 'rgba(26, 26, 26, 0)',
+      foreground: '#e0e0e0',
+      cursor: '#61afef',
+      selectionBackground: 'rgba(97,175,239,0.3)',
+      black: '#1a1a1a',
+      red: '#e06c75',
+      green: '#98c379',
+      yellow: '#e5c07b',
+      blue: '#61afef',
+      magenta: '#c678dd',
+      cyan: '#56b6c2',
+      white: '#abb2bf',
+      brightBlack: '#5c6370',
+      brightRed: '#e06c75',
+      brightGreen: '#98c379',
+      brightYellow: '#e5c07b',
+      brightBlue: '#61afef',
+      brightMagenta: '#c678dd',
+      brightCyan: '#56b6c2',
+      brightWhite: '#ffffff',
     },
   })
 
@@ -103,13 +126,17 @@ onBeforeUnmount(() => {
 .terminal-panel {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 210px;
   right: 0;
   height: 280px;
-  background: #1e1e1e;
+  background: rgba(26, 26, 26, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
-  border-top: 1px solid #333;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-left: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px 0 0 0;
   z-index: 1000;
 }
 
@@ -118,8 +145,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 4px 12px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #333;
+  background: rgba(45, 45, 45, 0.6);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   height: 28px;
   flex-shrink: 0;
 }
