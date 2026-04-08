@@ -9,6 +9,7 @@ import Footer from "./components/footer/NoteFooter.vue";
 import HistoryViewer from "./components/history/HistoryViewer.vue";
 import RawJsonEditor from "./components/editor/RawJsonEditor.vue";
 import KeyboardShortcuts from "./components/help/KeyboardShortcuts.vue";
+import TerminalPanel from "./components/terminal/TerminalPanel.vue";
 
 const ttsStore = useTtsStore();
 
@@ -18,6 +19,11 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if ((event.metaKey || event.ctrlKey) && event.key === '?' && !event.shiftKey) {
     event.preventDefault();
     ttsStore.openHelpDialog();
+  }
+  // Ctrl+` to toggle terminal
+  if (event.ctrlKey && event.key === '`') {
+    event.preventDefault();
+    ttsStore.toggleTerminal();
   }
 };
 
@@ -41,7 +47,8 @@ onUnmounted(() => {
         <el-container class="main-footer">
           <div id="result"></div>
           <el-main><HomeMain /></el-main>
-        <el-footer><Footer /></el-footer>
+          <el-footer><Footer /></el-footer>
+          <TerminalPanel v-if="ttsStore.terminal.show" />
         </el-container>
       </el-container>
     </el-container>
