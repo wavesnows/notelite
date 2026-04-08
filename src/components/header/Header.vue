@@ -127,7 +127,7 @@ onUnmounted(() => {
 function openRawEditor() {
   const notePath = ttsStore.cnote.lastPath;
   if (notePath && notePath.endsWith('.md')) {
-    ElMessage.warning('Raw JSON editor is not available for Markdown files');
+    ElMessage.warning(t('tools.rawJsonMdNotSupported'));
     return;
   }
   ttsStore.openRawJsonEditor();

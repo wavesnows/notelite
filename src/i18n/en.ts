@@ -92,6 +92,7 @@ const en = {
       lockEditMode: 'Lock/Edit Mode',
       confirmDelete: 'Are you sure to Delete "{name}"?',
       editRawJson: 'Edit Raw JSON',
+      rawJsonMdNotSupported: 'Raw JSON editor is not available for Markdown files',
       openDevTools: 'Open Developer Tools',
       rawJsonEditor: 'Raw JSON Editor',
       rawJsonWarning: 'Advanced Feature - Use with Caution',

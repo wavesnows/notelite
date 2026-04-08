@@ -92,6 +92,7 @@ const zh = {
       lockEditMode: '锁定/编辑模式',
       confirmDelete: '确定要删除 "{name}" 吗？',
       editRawJson: '编辑原始 JSON',
+      rawJsonMdNotSupported: 'Markdown 文件不支持原始 JSON 编辑器',
       openDevTools: '打开开发者工具',
       rawJsonEditor: '原始 JSON 编辑器',
       rawJsonWarning: '高级功能 - 谨慎使用',
