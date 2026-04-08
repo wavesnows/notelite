@@ -32,6 +32,7 @@ const editorEl = ref<HTMLElement | null>(null)
 const previewEl = ref<HTMLElement | null>(null)
 const content = ref('')
 let cmView: EditorView | null = null
+let saveStatusTimer: ReturnType<typeof setTimeout> | null = null
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
@@ -51,8 +52,17 @@ function loadFile(filePath: string) {
 function saveFile() {
   const filePath = ttsStore.inputs.notePath
   if (!filePath) return
-  fs.writeFileSync(filePath, content.value, 'utf8')
-  ttsStore.scheduleGitStatusCheck()
+  try {
+    fs.writeFileSync(filePath, content.value, 'utf8')
+    // Throttle save status update to avoid flickering on every keystroke
+    if (saveStatusTimer) clearTimeout(saveStatusTimer)
+    saveStatusTimer = setTimeout(() => {
+      ttsStore.setSaveStatus('saved', 'Saved')
+      ttsStore.scheduleGitStatusCheck()
+    }, 1000)
+  } catch (e: any) {
+    ttsStore.setSaveStatus('error', e.message)
+  }
 }
 
 onMounted(() => {
