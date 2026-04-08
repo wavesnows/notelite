@@ -48,10 +48,10 @@ onUnmounted(() => {
           <div id="result"></div>
           <el-main><HomeMain /></el-main>
           <el-footer><Footer /></el-footer>
-          <TerminalPanel v-show="ttsStore.terminal.show" />
         </el-container>
       </el-container>
     </el-container>
+    <TerminalPanel v-show="ttsStore.terminal.show" />
     <HistoryViewer />
     <RawJsonEditor />
     <KeyboardShortcuts />

@@ -101,13 +101,16 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .terminal-panel {
-  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 280px;
   background: #1e1e1e;
   display: flex;
   flex-direction: column;
   border-top: 1px solid #333;
-  flex-shrink: 0;
+  z-index: 1000;
 }
 
 .terminal-toolbar {
