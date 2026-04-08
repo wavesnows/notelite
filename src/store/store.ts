@@ -482,13 +482,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
 
     // Check Git status for current notebook
     async checkGitStatus() {
-      const currentPath = this.notebook.currentPath;
-
-      if (!currentPath) {
-        return;
-      }
-
-      const repoPath = getRepoPath(currentPath);
+      // Prefer repo path from current note, fall back to notebook path
+      const notePath = this.cnote.lastPath;
+      const repoPath = (notePath && getRepoPath(notePath)) || getRepoPath(this.notebook.currentPath);
 
       if (!repoPath) {
         return;

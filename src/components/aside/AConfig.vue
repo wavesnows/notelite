@@ -8,7 +8,7 @@
         </el-button>
       </el-tooltip>
       <el-tooltip class="box-item" :content="t('toolbar.gitSync')" placement="top-start">
-        <el-dropdown @command="handleGit" v-show="notebook.bookType != 'local'">
+        <el-dropdown @command="handleGit" v-show="isInGitRepo">
           <el-button type="success" size="small" circle class="circle-btn">
             <el-icon><Suitcase /></el-icon>
           </el-button>
@@ -192,6 +192,7 @@
   import defaultConf from "@/global/defaultConf";
   import { ipcRenderer } from 'electron';
   import { useI18n } from 'vue-i18n';
+  import { isFileInGitRepo } from '@/libs/gitHistory';
 
 
   const { t, locale } = useI18n();
@@ -199,7 +200,13 @@
   const dialogFormVisible = ref(false)
   var rootFolderName = ref("notes")
   const ttsStore = useTtsStore();
-  var {config, notebook, notestore, settings} = storeToRefs(ttsStore);
+  var {config, notebook, notestore, settings, cnote} = storeToRefs(ttsStore);
+
+  const isInGitRepo = computed(() => {
+    const lastPath = cnote.value.lastPath;
+    if (!lastPath) return false;
+    return isFileInGitRepo(lastPath);
+  });
 
   // Check if GitHub is configured (all fields filled)
   const isGithubConfigured = computed(() => {

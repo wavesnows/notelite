@@ -24,15 +24,17 @@ import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 import { Upload } from '@element-plus/icons-vue';
 import { gitHubPush } from '@/libs/github';
+import { isFileInGitRepo } from '@/libs/gitHistory';
 
 const { t } = useI18n();
 const ttsStore = useTtsStore();
-const { gitStatus, notebook } = storeToRefs(ttsStore);
+const { gitStatus, cnote } = storeToRefs(ttsStore);
 
-// Show indicator for non-local notebooks (github, remote, etc.)
+// Show indicator when current note is inside a git repo
 const showIndicator = computed(() => {
-  const bookType = notebook.value?.bookType;
-  return bookType && bookType !== 'local';
+  const lastPath = cnote.value?.lastPath;
+  if (!lastPath) return false;
+  return isFileInGitRepo(lastPath);
 });
 
 // Check if there are any changes

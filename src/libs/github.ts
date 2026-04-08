@@ -2,6 +2,7 @@ import {showMessage} from './globalLib'
 import { useTtsStore } from "@/store/store";
 import { store } from '@/global/initLocalStore';
 import { ErrorType } from '@/libs/errorHandler';
+import { getRepoPath } from '@/libs/gitHistory';
 import path from 'path';
 import fs from 'fs';
 
@@ -54,15 +55,19 @@ export async function gitHubClone(t: (key: string) => string): Promise<boolean> 
 export async function gitPull(t: (key: string) => string, loclRepo: string = ''): Promise<boolean> {
   const ttsStore = useTtsStore();
 
-  // Validate configuration
-  if (!ttsStore.config.githubRepoName) {
-    ttsStore.setPushStatus(t('github.configMissing'), 'error');
-    return false;
-  }
-
-  let repo = ttsStore.config.githubRepoName;
   if (loclRepo === '') {
-    loclRepo = path.join(store.get("savePath"), "repos", repo);
+    // Try to find repo from current note path first
+    const notePath = ttsStore.cnote.lastPath;
+    if (notePath) {
+      const repoFromNote = getRepoPath(notePath);
+      if (repoFromNote) {
+        loclRepo = repoFromNote;
+      }
+    }
+    // Fall back to notebook path
+    if (!loclRepo) {
+      loclRepo = getRepoPath(ttsStore.notebook.currentPath) || ttsStore.notebook.currentPath;
+    }
   }
 
   // Check if directory exists
@@ -115,8 +120,9 @@ export async function gitPull(t: (key: string) => string, loclRepo: string = '')
 export async function gitHubPush(t: (key: string) => string): Promise<boolean> {
   const ttsStore = useTtsStore();
 
-  // Use current notebook path for consistency with checkGitStatus
-  const repoDir = ttsStore.notebook.currentPath;
+  // Use repo path from current note, falling back to notebook path
+  const notePath = ttsStore.cnote.lastPath;
+  const repoDir = (notePath && getRepoPath(notePath)) || getRepoPath(ttsStore.notebook.currentPath) || ttsStore.notebook.currentPath;
 
   if (!repoDir) {
     ttsStore.setPushStatus(t('github.configMissing'), 'error');
@@ -147,7 +153,8 @@ export async function gitHubPush(t: (key: string) => string): Promise<boolean> {
 
     // Check if there are commits to push
     if (status.ahead > 0 || status.files.length > 0) {
-      await git.push(['-u', 'origin', 'main']);
+      const branch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+      await git.push(['-u', 'origin', branch]);
       console.log('Push succeeded');
       ttsStore.setPushStatus(t('github.pushSuccess'), 'success');
 
