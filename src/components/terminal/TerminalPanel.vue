@@ -12,6 +12,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
+import { WebglAddon } from 'xterm-addon-webgl'
 import { ipcRenderer } from 'electron'
 import { useTtsStore } from '@/store/store'
 import path from 'path'
@@ -42,9 +43,9 @@ function init() {
   terminal = new Terminal({
     cursorBlink: true,
     cursorStyle: 'bar',
-    fontSize: 15,
-    lineHeight: 1.3,
-    fontFamily: 'Menlo, monospace',
+    fontSize: 14,
+    lineHeight: 1.5,
+    fontFamily: '"SF Mono", Menlo, monospace',
     scrollback: 1000,
     allowTransparency: true,
     theme: {
@@ -74,6 +75,11 @@ function init() {
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(terminalEl.value)
+
+  try {
+    const webgl = new WebglAddon()
+    terminal.loadAddon(webgl)
+  } catch (_) {}
 
   fitAddon.fit()
 
