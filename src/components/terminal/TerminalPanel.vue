@@ -43,9 +43,9 @@ function init() {
   terminal = new Terminal({
     cursorBlink: true,
     cursorStyle: 'bar',
-    fontSize: 13,
-    lineHeight: 1.4,
-    fontFamily: 'monospace',
+    fontSize: 15,
+    lineHeight: 1.3,
+    fontFamily: 'Menlo, monospace',
     scrollback: 1000,
     allowTransparency: true,
     theme: {
