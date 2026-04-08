@@ -15,6 +15,10 @@
         </div>
       </div>
       <div class="right-section">
+        <!-- Terminal toggle button -->
+        <div class="terminal-btn" @click="ttsStore.toggleTerminal()" :class="{ active: ttsStore.terminal.show }" title="Toggle Terminal">
+          <span>⌨</span>
+        </div>
         <!-- Save status indicator -->
         <div v-if="ttsStore.saveStatus.status !== 'idle'" class="save-status" :class="ttsStore.saveStatus.status">
           <el-icon v-if="ttsStore.saveStatus.status === 'saving'" class="rotating"><Loading /></el-icon>
@@ -226,6 +230,26 @@
 
   .rotating {
     animation: rotate 1s linear infinite;
+  }
+
+  .terminal-btn {
+    cursor: pointer;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: #909399;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .terminal-btn:hover {
+    background: rgba(0,0,0,0.08);
+    color: #303133;
+  }
+
+  .terminal-btn.active {
+    background: #409eff;
+    color: #fff;
   }
   </style>
   

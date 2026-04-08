@@ -240,7 +240,7 @@ ipcMain.on('terminal-open', (event, cwd: string) => {
     ptyProcess = null;
   }
 
-  const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || 'zsh');
+  const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || '/bin/zsh');
   const validCwd = cwd && require('fs').existsSync(cwd) ? cwd : os.homedir();
 
   ptyProcess = pty.spawn(shell, [], {
