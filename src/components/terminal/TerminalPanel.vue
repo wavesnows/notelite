@@ -97,15 +97,16 @@ function init() {
   ipcRenderer.send('terminal-open', getCwd())
 }
 
-// Init only when panel becomes visible for the first time
-// (v-show keeps component mounted even when hidden, so onMounted fires too early)
+// Init when panel becomes visible.
+// immediate: true handles hot-reload case where show is already true on mount.
 watch(
   () => ttsStore.terminal.show,
   (visible) => {
     if (visible && !initialized) {
       setTimeout(init, 50)
     }
-  }
+  },
+  { immediate: true }
 )
 
 onBeforeUnmount(() => {
