@@ -12,7 +12,6 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
-import { WebglAddon } from 'xterm-addon-webgl'
 import { ipcRenderer } from 'electron'
 import { useTtsStore } from '@/store/store'
 import path from 'path'
@@ -76,11 +75,6 @@ function init() {
   terminal.loadAddon(fitAddon)
   terminal.open(terminalEl.value)
 
-  try {
-    const webgl = new WebglAddon()
-    terminal.loadAddon(webgl)
-  } catch (_) {}
-
   fitAddon.fit()
 
   terminal.onData((data) => {
@@ -143,7 +137,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   border-top: 1px solid rgba(255,255,255,0.1);
   border-left: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px 0 0 0;
+  border-radius: 4px 4px 0 0;
+  border-right: 1px solid rgba(255,255,255,0.1);
   z-index: 1000;
 }
 
@@ -154,6 +149,7 @@ onBeforeUnmount(() => {
   padding: 4px 12px;
   background: rgba(45, 45, 45, 0.6);
   border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px 4px 0 0;
   height: 28px;
   flex-shrink: 0;
 }
