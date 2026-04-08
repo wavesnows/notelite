@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
   position: fixed;
   bottom: 0;
   left: 210px;
-  right: 12px;
+  right: 8px;
   height: 280px;
   background: rgba(26, 26, 26, 0.88);
   backdrop-filter: blur(8px);
