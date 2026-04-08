@@ -21,7 +21,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { Compartment } from '@codemirror/state'
+import { Compartment, EditorState } from '@codemirror/state'
 import MarkdownIt from 'markdown-it'
 import { useTtsStore } from '@/store/store'
 import '@/assets/md-preview.css'
@@ -35,6 +35,7 @@ const content = ref('')
 let cmView: EditorView | null = null
 let saveStatusTimer: ReturnType<typeof setTimeout> | null = null
 const lineWrapCompartment = new Compartment()
+const readOnlyCompartment = new Compartment()
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
@@ -75,6 +76,7 @@ onMounted(() => {
       markdown(),
       oneDark,
       lineWrapCompartment.of(ttsStore.mdEditor.lineWrap ? EditorView.lineWrapping : []),
+      readOnlyCompartment.of(EditorState.readOnly.of(ttsStore.readOnly)),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           content.value = update.state.doc.toString()
@@ -92,6 +94,15 @@ onBeforeUnmount(() => {
   cmView?.destroy()
   cmView = null
 })
+
+watch(
+  () => ttsStore.readOnly,
+  (val) => {
+    cmView?.dispatch({
+      effects: readOnlyCompartment.reconfigure(EditorState.readOnly.of(val))
+    })
+  }
+)
 
 watch(
   () => ttsStore.mdEditor.lineWrap,
