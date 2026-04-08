@@ -12,6 +12,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
+import { CanvasAddon } from 'xterm-addon-canvas'
 import { ipcRenderer } from 'electron'
 import { useTtsStore } from '@/store/store'
 import path from 'path'
@@ -75,6 +76,7 @@ function init() {
   terminal.loadAddon(fitAddon)
   terminal.open(terminalEl.value)
 
+  terminal.loadAddon(new CanvasAddon())
   fitAddon.fit()
 
   terminal.onData((data) => {
