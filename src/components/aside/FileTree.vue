@@ -135,7 +135,7 @@ import {getNoteLabel} from "@/libs/noteUtil"
 import { useTtsStore, editorInstance, Tree } from "@/store/store"
 import { readDir,readNotes} from "@/libs/fileHandler"
 import {updateTreeMenu} from "@/libs/treeMenu"
-import {remove, removeFolder} from "@/libs/fileHandler"
+import {remove, removeFolder, renameFile} from "@/libs/fileHandler"
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
