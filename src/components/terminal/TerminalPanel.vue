@@ -46,6 +46,7 @@ function init() {
     fontSize: 14,
     lineHeight: 1.5,
     fontFamily: '"SF Mono", Menlo, monospace',
+    fontWeight: '300',
     scrollback: 1000,
     allowTransparency: true,
     theme: {
