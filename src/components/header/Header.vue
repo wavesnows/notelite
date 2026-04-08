@@ -81,6 +81,7 @@ import GitStatusIndicator from "./GitStatusIndicator.vue"
 import Breadcrumb from "../note/Breadcrumb.vue"
 import { ref, onMounted, onUnmounted } from "vue";
 import { useTtsStore } from "@/store/store";
+import { ElMessage } from 'element-plus';
 import { Document } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 
@@ -122,8 +123,13 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
 });
 
-// Open raw JSON editor
+// Open raw JSON editor (only for .json files)
 function openRawEditor() {
+  const notePath = ttsStore.cnote.lastPath;
+  if (notePath && notePath.endsWith('.md')) {
+    ElMessage.warning('Raw JSON editor is not available for Markdown files');
+    return;
+  }
   ttsStore.openRawJsonEditor();
 }
 </script>
