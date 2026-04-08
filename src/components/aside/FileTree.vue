@@ -24,7 +24,20 @@
     >
     <template #default="{ node, data }">
         <div class="custom-tree-node" @contextmenu.prevent="handleContextMenu(node, $event)">
-          <span class="el-dropdown-link">{{ node.label }}</span>
+          <input
+            v-if="editingPath === data.path"
+            class="rename-input"
+            v-model="editingName"
+            @keyup.enter="confirmRename(data)"
+            @keyup.esc="cancelRename"
+            @blur="confirmRename(data)"
+            ref="renameInputRef"
+          />
+          <span
+            v-else
+            class="el-dropdown-link"
+            @dblclick.stop="startRename(data)"
+          >{{ node.label }}</span>
           <span class="node-actions">
             <!-- Star icon for favorites -->
             <el-icon
@@ -114,7 +127,7 @@
 import fs from 'fs'
 import {join} from "path"
 import { storeToRefs } from "pinia"
-import {ref, watch,getCurrentInstance, onMounted} from 'vue'
+import {ref, watch, nextTick, getCurrentInstance, onMounted} from 'vue'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import {ElTree, ElMessage,ElMessageBox, ElPopconfirm} from 'element-plus'
 import { Search, InfoFilled, Star, StarFilled, Document, Folder, Delete, Position, RemoveFilled } from "@element-plus/icons-vue"
@@ -134,6 +147,39 @@ const treeRef = ref<InstanceType<typeof ElTree>>()
 const dialogFormVisible = ref(false)
 const formLabelWidth = '120px';
 const expandedKeys = ref<string[]>([]);
+
+const editingPath = ref('')
+const editingName = ref('')
+const renameInputRef = ref<HTMLInputElement | null>(null)
+
+function startRename(data: Tree) {
+  if (data.isFolder) return
+  editingPath.value = data.path
+  editingName.value = data.label
+  nextTick(() => {
+    renameInputRef.value?.select()
+  })
+}
+
+function confirmRename(data: Tree) {
+  if (!editingPath.value) return
+  const newName = editingName.value.trim()
+  if (newName && newName !== data.label) {
+    // Update store state so renameFile() picks it up
+    ttsStore.cnote.destTitle = newName
+    ttsStore.cnote.title = data.label
+    ttsStore.inputs.notePath = data.path
+    renameFile()
+    data.label = newName
+  }
+  editingPath.value = ''
+  editingName.value = ''
+}
+
+function cancelRename() {
+  editingPath.value = ''
+  editingName.value = ''
+}
 
 var show = ref(false);
 
@@ -371,7 +417,10 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     }
 
     fs.readFile(itemdata.path, 'utf8', (err:any, data:any) => {
-    if (err) throw err;
+    if (err) {
+      console.error('Failed to read file:', err)
+      return
+    }
     data = data.trim().replace('\n','')
     if(data == "")
     {
@@ -384,9 +433,13 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
       ttsStore.editerData = emptyData;
     }
     else{
-      const jsonData = JSON.parse(data);
-      ttsStore.editerData = jsonData;
-      console.log('json data :'+ jsonData)
+      try {
+        const jsonData = JSON.parse(data);
+        ttsStore.editerData = jsonData;
+        console.log('json data :'+ jsonData)
+      } catch (e) {
+        console.error('Failed to parse note JSON:', e)
+      }
     }
 
   })}
@@ -514,6 +567,19 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
 .star-icon:hover {
   transform: scale(1.2);
   transition: transform 0.2s;
+}
+
+.rename-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  border: 1px solid #409eff;
+  border-radius: 3px;
+  padding: 0 4px;
+  height: 20px;
+  outline: none;
+  background: #fff;
+  color: #303133;
 }
 
   </style>

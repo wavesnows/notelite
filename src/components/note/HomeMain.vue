@@ -1,12 +1,7 @@
 <template>
   <div class="main">
-    <template v-if="hasNote">
-      <div class="title-container">
-        <Title />
-      </div>
-      <MarkdownEditor v-if="isMdFile" />
-      <Editor v-else v-model="inputs.noteValue" :initialData="inputs.noteValue" ref="editor" />
-    </template>
+    <MarkdownEditor v-if="hasNote && isMdFile" />
+    <Editor v-else-if="hasNote" v-model="inputs.noteValue" :initialData="inputs.noteValue" ref="editor" />
     <Welcome v-else />
   </div>
 </template>
@@ -17,7 +12,6 @@ import { useTtsStore } from '@/store/store'
 import { storeToRefs } from 'pinia'
 import Editor from '../note/Editor.vue'
 import MarkdownEditor from '../note/MarkdownEditor.vue'
-import Title from '../note/Title.vue'
 import Welcome from '../note/Welcome.vue'
 
 const store = useTtsStore()
@@ -37,9 +31,5 @@ const hasNote = computed(() => !!cnote.value.lastPath)
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-}
-
-.title-container {
-  flex-shrink: 0;
 }
 </style>
