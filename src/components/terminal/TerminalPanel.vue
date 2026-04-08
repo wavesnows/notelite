@@ -43,10 +43,9 @@ function init() {
     cursorBlink: true,
     cursorStyle: 'bar',
     fontSize: 13,
-    lineHeight: 1.5,
-    letterSpacing: 0.5,
-    fontFamily: '"JetBrains Mono", "Fira Code", Menlo, Monaco, "Courier New", monospace',
-    fontWeight: '400',
+    lineHeight: 1.4,
+    fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+    scrollback: 1000,
     allowTransparency: true,
     theme: {
       background: 'rgba(26, 26, 26, 0)',
@@ -174,5 +173,15 @@ onBeforeUnmount(() => {
 .terminal-body {
   flex: 1;
   overflow: hidden;
+  padding: 6px 10px;
+  box-sizing: border-box;
+}
+
+.terminal-body :deep(.xterm) {
+  height: 100%;
+}
+
+.terminal-body :deep(.xterm-viewport) {
+  border-radius: 0;
 }
 </style>
