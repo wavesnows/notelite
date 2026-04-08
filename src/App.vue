@@ -48,7 +48,7 @@ onUnmounted(() => {
           <div id="result"></div>
           <el-main><HomeMain /></el-main>
           <el-footer><Footer /></el-footer>
-          <TerminalPanel v-if="ttsStore.terminal.show" />
+          <TerminalPanel v-show="ttsStore.terminal.show" />
         </el-container>
       </el-container>
     </el-container>
@@ -102,6 +102,7 @@ body {
 .main-footer {
   height: 100%;
   display: flex;
+  flex-direction: column;
 }
 .el-button {
   -webkit-app-region: no-drag;

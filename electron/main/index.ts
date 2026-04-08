@@ -140,11 +140,14 @@ async function createWindow() {
 
 app.whenReady().then(createWindow);
 
-app.on("window-all-closed", () => {
+app.on("before-quit", () => {
   if (ptyProcess) {
     try { ptyProcess.kill(); } catch (_) {}
     ptyProcess = null;
   }
+});
+
+app.on("window-all-closed", () => {
   win = null;
   if (process.platform !== "darwin") app.quit();
 });

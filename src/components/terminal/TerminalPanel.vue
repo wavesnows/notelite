@@ -25,6 +25,7 @@ let terminal: Terminal | null = null
 let fitAddon: FitAddon | null = null
 let resizeObserver: ResizeObserver | null = null
 let initialized = false
+let outputHandler: ((_event: any, data: string) => void) | null = null
 
 function getCwd(): string {
   const lastPath = ttsStore.cnote.lastPath
@@ -61,9 +62,10 @@ function init() {
     ipcRenderer.send('terminal-resize', cols, rows)
   })
 
-  ipcRenderer.on('terminal-output', (_event, data: string) => {
+  outputHandler = (_event: any, data: string) => {
     terminal?.write(data)
-  })
+  }
+  ipcRenderer.on('terminal-output', outputHandler)
 
   resizeObserver = new ResizeObserver(() => {
     fitAddon?.fit()
@@ -78,7 +80,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  ipcRenderer.removeAllListeners('terminal-output')
+  if (outputHandler) {
+    ipcRenderer.removeListener('terminal-output', outputHandler)
+    outputHandler = null
+  }
   resizeObserver?.disconnect()
   terminal?.dispose()
   terminal = null
@@ -132,6 +137,5 @@ onBeforeUnmount(() => {
 .terminal-body {
   flex: 1;
   overflow: hidden;
-  padding: 4px 8px;
 }
 </style>
