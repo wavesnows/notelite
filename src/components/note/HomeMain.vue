@@ -26,10 +26,9 @@ const isMdFile = computed(() => {
   height: 100%;
   margin-top: 0px;
   scroll-behavior: smooth;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   display: flex;
   justify-content: space-between;
   overflow-y: auto;
-  padding-bottom: 20px;
 }
 </style>
