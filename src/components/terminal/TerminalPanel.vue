@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { ipcRenderer } from 'electron'
@@ -75,9 +75,16 @@ function init() {
   ipcRenderer.send('terminal-open', getCwd())
 }
 
-onMounted(() => {
-  setTimeout(init, 50)
-})
+// Init only when panel becomes visible for the first time
+// (v-show keeps component mounted even when hidden, so onMounted fires too early)
+watch(
+  () => ttsStore.terminal.show,
+  (visible) => {
+    if (visible && !initialized) {
+      setTimeout(init, 50)
+    }
+  }
+)
 
 onBeforeUnmount(() => {
   if (outputHandler) {
