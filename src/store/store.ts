@@ -186,6 +186,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
       },
       terminal: {
         show: false,
+      },
+      mdEditor: {
+        lineWrap: true,
       }
     };
   },

@@ -7,6 +7,11 @@
         <el-icon v-else><EditPen /></el-icon>
       </el-button>
     </el-tooltip>
+    <el-tooltip v-if="ttsStore.mdMode === 'edit'" :content="ttsStore.mdEditor.lineWrap ? '关闭自动折行' : '开启自动折行'" class="tool-tooltip">
+      <el-button size="small" circle class="tool-btn" @click="ttsStore.mdEditor.lineWrap = !ttsStore.mdEditor.lineWrap" :type="ttsStore.mdEditor.lineWrap ? 'primary' : ''">
+        <el-icon><Minus /></el-icon>
+      </el-button>
+    </el-tooltip>
     <el-tooltip v-if="ttsStore.mdMode === 'preview'" content="复制全文（带样式）" class="tool-tooltip">
       <el-button size="small" circle class="tool-btn" @click="copyAll">
         <el-icon><CopyDocument /></el-icon>
@@ -49,7 +54,7 @@ import {removeFile} from '@/libs/fileHandler'
 import {saveContent} from '@/libs/editor'
 import {ElMessageBox, ElMessage} from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Clock, QuestionFilled, View, EditPen, CopyDocument } from '@element-plus/icons-vue'
+import { Clock, QuestionFilled, View, EditPen, CopyDocument, Minus } from '@element-plus/icons-vue'
 //import {  DocumentAdd } from "@element-plus/icons-vue";
 
 //const currShow = ref(0);
