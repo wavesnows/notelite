@@ -159,6 +159,7 @@ const en = {
       file: 'File',
       size: 'Size',
       modified: 'Modified',
+      words: 'Words',
       justNow: 'Just now',
       minutesAgo: '{count} min ago',
       hoursAgo: '{count} hr ago',

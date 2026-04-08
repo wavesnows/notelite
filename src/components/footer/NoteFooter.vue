@@ -13,6 +13,10 @@
           <span class="label">{{ t('statusBar.modified') }}:</span>
           <span class="value">{{ formatDate(fileInfo.modified) }}</span>
         </div>
+        <div class="status-item" v-if="wordCount !== null">
+          <span class="label">{{ t('statusBar.words') }}:</span>
+          <span class="value">{{ wordCount }}</span>
+        </div>
       </div>
       <div class="right-section">
         <!-- Terminal toggle button -->
@@ -38,7 +42,7 @@
   </template>
 
   <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, watch, ref } from 'vue';
   import { useTtsStore } from "@/store/store";
   import { storeToRefs } from "pinia";
   import { useI18n } from 'vue-i18n';
@@ -49,6 +53,58 @@
   const { t } = useI18n();
   const ttsStore = useTtsStore();
   const { config, cnote } = storeToRefs(ttsStore);
+
+  const wordCount = ref<number | null>(null)
+
+  function countWords(filePath: string): number | null {
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8')
+      if (filePath.endsWith('.md')) {
+        // 中文字符 + 英文单词数
+        const chinese = (content.match(/[\u4e00-\u9fa5]/g) || []).length
+        const english = (content.replace(/[\u4e00-\u9fa5]/g, ' ').match(/\b\w+\b/g) || []).length
+        return chinese + english
+      } else {
+        // EditorJS JSON：提取所有 block 的文本
+        const data = JSON.parse(content)
+        const text = (data.blocks || [])
+          .map((b: any) => {
+            if (typeof b.data?.text === 'string') return b.data.text.replace(/<[^>]+>/g, '')
+            if (Array.isArray(b.data?.items)) return b.data.items.join(' ')
+            return ''
+          })
+          .join(' ')
+        const chinese = (text.match(/[\u4e00-\u9fa5]/g) || []).length
+        const english = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/\b\w+\b/g) || []).length
+        return chinese + english
+      }
+    } catch {
+      return null
+    }
+  }
+
+  watch(
+    () => cnote.value.lastPath,
+    (filePath) => {
+      if (filePath && fs.existsSync(filePath)) {
+        wordCount.value = countWords(filePath)
+      } else {
+        wordCount.value = null
+      }
+    },
+    { immediate: true }
+  )
+
+  // Re-count after save
+  watch(
+    () => ttsStore.saveStatus.status,
+    (status) => {
+      if (status === 'saved') {
+        const filePath = cnote.value.lastPath
+        if (filePath) wordCount.value = countWords(filePath)
+      }
+    }
+  )
 
   const fileInfo = computed(() => {
     const filePath = cnote.value.lastPath;

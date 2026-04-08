@@ -159,6 +159,7 @@ const zh = {
       file: '文件',
       size: '大小',
       modified: '修改时间',
+      words: '字数',
       justNow: '刚刚',
       minutesAgo: '{count} 分钟前',
       hoursAgo: '{count} 小时前',
