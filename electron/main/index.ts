@@ -3,6 +3,8 @@ import { release } from "os";
 import { join } from "path";
 
 import logger from "../utils/log";
+import os from 'os';
+const pty = require('node-pty');
 
 // Initialize electron-store for window state
 const ElectronStore = require("electron-store");
@@ -34,6 +36,7 @@ export const ROOT_PATH = {
 };
 
 let win: BrowserWindow | null = null;
+let ptyProcess: any = null;
 // Here, you can also use other preload
 const preload = join(__dirname, "../preload/index.js");
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin
@@ -138,6 +141,10 @@ async function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
+  if (ptyProcess) {
+    try { ptyProcess.kill(); } catch (_) {}
+    ptyProcess = null;
+  }
   win = null;
   if (process.platform !== "darwin") app.quit();
 });
@@ -220,4 +227,46 @@ ipcMain.on('open-dialog', (event) => {
       event.sender.send('selected-directory', result.filePaths);
     }
   });
+});
+
+// Terminal IPC handlers
+ipcMain.on('terminal-open', (event, cwd: string) => {
+  // Kill existing PTY if any
+  if (ptyProcess) {
+    try { ptyProcess.kill(); } catch (_) {}
+    ptyProcess = null;
+  }
+
+  const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || 'zsh');
+  const validCwd = cwd && require('fs').existsSync(cwd) ? cwd : os.homedir();
+
+  ptyProcess = pty.spawn(shell, [], {
+    name: 'xterm-color',
+    cols: 80,
+    rows: 24,
+    cwd: validCwd,
+    env: process.env,
+  });
+
+  ptyProcess.onData((data: string) => {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('terminal-output', data);
+    }
+  });
+
+  ptyProcess.onExit(() => {
+    ptyProcess = null;
+  });
+});
+
+ipcMain.on('terminal-input', (_event, data: string) => {
+  if (ptyProcess) {
+    ptyProcess.write(data);
+  }
+});
+
+ipcMain.on('terminal-resize', (_event, cols: number, rows: number) => {
+  if (ptyProcess) {
+    ptyProcess.resize(cols, rows);
+  }
 });
