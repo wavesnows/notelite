@@ -12,6 +12,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
+import { WebglAddon } from 'xterm-addon-webgl'
 import { ipcRenderer } from 'electron'
 import { useTtsStore } from '@/store/store'
 import path from 'path'
@@ -74,6 +75,15 @@ function init() {
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(terminalEl.value)
+
+  // WebGL renderer for pixel-perfect character spacing
+  try {
+    const webgl = new WebglAddon()
+    terminal.loadAddon(webgl)
+  } catch (_) {
+    // Fall back to canvas renderer if WebGL unavailable
+  }
+
   fitAddon.fit()
 
   terminal.onData((data) => {
