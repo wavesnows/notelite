@@ -6,8 +6,13 @@
   },
   "files": [
     "dist",
-    "dist-electron"
+    "dist-electron",
+    "node_modules/node-pty/**"
   ],
+  "asarUnpack": [
+    "node_modules/node-pty/**"
+  ],
+  "npmRebuild": false,
   "mac": {
     "icon": "build/icon.icns",
     "target": [
