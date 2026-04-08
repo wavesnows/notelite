@@ -127,13 +127,12 @@ const showHelp = () => {
 
 <style scoped>
 .welcome-container {
-  height: 100%;
+  min-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
-  overflow-y: auto;
 }
 
 .welcome-content {
