@@ -127,8 +127,8 @@ function init() {
 
   // When PTY exits (e.g. user types 'exit'), show message and reset for next open
   ipcRenderer.once('terminal-exited', () => {
-    terminal?.write('\r\n\x1b[90m[Process exited]\x1b[0m\r\n')
     initialized = false
+    ttsStore.closeTerminal()
     // Delay teardown to let xterm finish its current render cycle
     setTimeout(() => {
       if (outputHandler) {
