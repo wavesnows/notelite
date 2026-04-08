@@ -56,14 +56,20 @@
 
   const wordCount = ref<number | null>(null)
 
+  // 中文字符 + 中文标点，每个算1；英文按单词算
+  const CJK_RE = /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g
+
+  function countText(text: string): number {
+    const cjk = (text.match(CJK_RE) || []).length
+    const english = (text.replace(CJK_RE, ' ').match(/\b\w+\b/g) || []).length
+    return cjk + english
+  }
+
   function countWords(filePath: string): number | null {
     try {
       const content = fs.readFileSync(filePath, 'utf-8')
       if (filePath.endsWith('.md')) {
-        // 中文字符 + 英文单词数
-        const chinese = (content.match(/[\u4e00-\u9fa5]/g) || []).length
-        const english = (content.replace(/[\u4e00-\u9fa5]/g, ' ').match(/\b\w+\b/g) || []).length
-        return chinese + english
+        return countText(content)
       } else {
         // EditorJS JSON：提取所有 block 的文本
         const data = JSON.parse(content)
@@ -74,9 +80,7 @@
             return ''
           })
           .join(' ')
-        const chinese = (text.match(/[\u4e00-\u9fa5]/g) || []).length
-        const english = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/\b\w+\b/g) || []).length
-        return chinese + english
+        return countText(text)
       }
     } catch {
       return null
