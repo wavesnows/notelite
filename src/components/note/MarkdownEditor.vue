@@ -52,6 +52,7 @@ function saveFile() {
   const filePath = ttsStore.inputs.notePath
   if (!filePath) return
   fs.writeFileSync(filePath, content.value, 'utf8')
+  ttsStore.scheduleGitStatusCheck()
 }
 
 onMounted(() => {
