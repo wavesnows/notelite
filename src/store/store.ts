@@ -79,7 +79,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       },
       inputs: {
         noteTitle:"Title",
-        notePath:store.get("lastPath"),
+        notePath: validLastPath,
         noteValue: "",
         itemData:<Tree>{}
       },
@@ -129,19 +129,8 @@ export const useTtsStore = defineStore(DFConf.appName, {
       },
       settings: {
         currentStore: store.get('currentStore') || defaultDir,
-        currentbook:store.get('currentNoteBookObj'),
-        needUpdateTree:false,
-     //   defaultNoteInit:store.get("defaultNoteInit")? true:false,
-        savePath: store.get("savePath") || defaultDir,
-      //  store.set("defaultStorePath",this.notestore.currentStore);
+        currentbook: store.get('currentNoteBookObj'),
         defaultNotePath: store.get("defaultNotePath") || defaultNotebookPath,
-        drawer:false,
-        githubEnable:false,
-        githubRepoName:store.get("GithubRepoName"),
-        githubUsername:store.get("GithubUsername"),
-        githubToken:store.get("GithubToken"),
-        formConfigJson: store.get("FormConfig"),
-        updateNotification: store.get("updateNotification"),
       },
       search: {
         query: "",
@@ -193,6 +182,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
         debounceMs: 500, // 500ms debounce for tree refresh
       },
       helpDialog: {
+        show: false,
+      },
+      terminal: {
         show: false,
       }
     };
@@ -620,6 +612,27 @@ export const useTtsStore = defineStore(DFConf.appName, {
       }
     },
 
+    // Clear all pending timers (call on app/component unmount)
+    clearAllTimers() {
+      this.stopAutoSave();
+      if (this.treeRefresh.timeout) {
+        clearTimeout(this.treeRefresh.timeout);
+        this.treeRefresh.timeout = null;
+      }
+      if (this.gitStatus.checkTimeout) {
+        clearTimeout(this.gitStatus.checkTimeout);
+        this.gitStatus.checkTimeout = null;
+      }
+      if (this.pushStatus.timeout) {
+        clearTimeout(this.pushStatus.timeout);
+        this.pushStatus.timeout = null;
+      }
+      if (this.saveStatus.timeout) {
+        clearTimeout(this.saveStatus.timeout);
+        this.saveStatus.timeout = null;
+      }
+    },
+
     // Open help dialog
     openHelpDialog() {
       this.helpDialog.show = true;
@@ -628,6 +641,16 @@ export const useTtsStore = defineStore(DFConf.appName, {
     // Close help dialog
     closeHelpDialog() {
       this.helpDialog.show = false;
+    },
+
+    toggleTerminal() {
+      this.terminal.show = !this.terminal.show;
+    },
+    openTerminal() {
+      this.terminal.show = true;
+    },
+    closeTerminal() {
+      this.terminal.show = false;
     },
 
     // Expand tree to show a specific path
