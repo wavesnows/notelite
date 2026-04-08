@@ -125,6 +125,22 @@ function init() {
   outputHandler = (_event: any, data: string) => terminal?.write(data)
   ipcRenderer.on('terminal-output', outputHandler)
 
+  // When PTY exits (e.g. user types 'exit'), show message and reset for next open
+  ipcRenderer.once('terminal-exited', () => {
+    terminal?.write('\r\n\x1b[90m[Process exited]\x1b[0m\r\n')
+    // Tear down so init() can run fresh next time panel is toggled
+    if (outputHandler) {
+      ipcRenderer.removeListener('terminal-output', outputHandler)
+      outputHandler = null
+    }
+    resizeObserver?.disconnect()
+    resizeObserver = null
+    terminal?.dispose()
+    terminal = null
+    fitAddon = null
+    initialized = false
+  })
+
   resizeObserver = new ResizeObserver(() => fitAddon?.fit())
   resizeObserver.observe(terminalEl.value)
 

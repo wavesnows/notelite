@@ -259,6 +259,9 @@ ipcMain.on('terminal-open', (event, cwd: string) => {
 
   ptyProcess.onExit(() => {
     ptyProcess = null;
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('terminal-exited');
+    }
   });
 });
 
