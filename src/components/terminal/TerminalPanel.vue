@@ -1,8 +1,15 @@
 <template>
-  <div class="terminal-panel">
+  <div class="terminal-panel" :style="{ height: panelHeight + 'px' }">
+    <!-- Drag handle -->
+    <div class="terminal-resize-handle" @mousedown="startDrag"></div>
     <div class="terminal-toolbar">
       <span class="terminal-title">Terminal</span>
-      <button class="terminal-close" @click="ttsStore.closeTerminal()">✕</button>
+      <div class="toolbar-actions">
+        <button class="toolbar-btn" @click="setSize('sm')" :class="{ active: currentSize === 'sm' }" title="小">▁</button>
+        <button class="toolbar-btn" @click="setSize('md')" :class="{ active: currentSize === 'md' }" title="中">▄</button>
+        <button class="toolbar-btn" @click="setSize('lg')" :class="{ active: currentSize === 'lg' }" title="大">█</button>
+        <button class="terminal-close" @click="ttsStore.closeTerminal()">✕</button>
+      </div>
     </div>
     <div ref="terminalEl" class="terminal-body"></div>
   </div>
@@ -22,6 +29,41 @@ import 'xterm/css/xterm.css'
 const ttsStore = useTtsStore()
 const terminalEl = ref<HTMLElement | null>(null)
 
+const SIZES = { sm: 180, md: 280, lg: 450 }
+const panelHeight = ref(SIZES.md)
+const currentSize = ref<'sm' | 'md' | 'lg' | 'custom'>('md')
+
+function setSize(size: 'sm' | 'md' | 'lg') {
+  currentSize.value = size
+  panelHeight.value = SIZES[size]
+  setTimeout(() => fitAddon?.fit(), 50)
+}
+
+// Drag to resize
+let dragStartY = 0
+let dragStartHeight = 0
+
+function startDrag(e: MouseEvent) {
+  dragStartY = e.clientY
+  dragStartHeight = panelHeight.value
+  currentSize.value = 'custom'
+  window.addEventListener('mousemove', onDrag)
+  window.addEventListener('mouseup', stopDrag)
+}
+
+function onDrag(e: MouseEvent) {
+  const delta = dragStartY - e.clientY
+  const newHeight = Math.min(Math.max(dragStartHeight + delta, 150), window.innerHeight * 0.8)
+  panelHeight.value = Math.round(newHeight)
+  fitAddon?.fit()
+}
+
+function stopDrag() {
+  window.removeEventListener('mousemove', onDrag)
+  window.removeEventListener('mouseup', stopDrag)
+  setTimeout(() => fitAddon?.fit(), 50)
+}
+
 let terminal: Terminal | null = null
 let fitAddon: FitAddon | null = null
 let resizeObserver: ResizeObserver | null = null
@@ -30,9 +72,7 @@ let outputHandler: ((_event: any, data: string) => void) | null = null
 
 function getCwd(): string {
   const lastPath = ttsStore.cnote.lastPath
-  if (lastPath) {
-    return path.dirname(lastPath)
-  }
+  if (lastPath) return path.dirname(lastPath)
   return os.homedir()
 }
 
@@ -76,44 +116,30 @@ function init() {
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(terminalEl.value)
-
   terminal.loadAddon(new CanvasAddon())
   fitAddon.fit()
 
-  terminal.onData((data) => {
-    ipcRenderer.send('terminal-input', data)
-  })
+  terminal.onData((data) => ipcRenderer.send('terminal-input', data))
+  terminal.onResize(({ cols, rows }) => ipcRenderer.send('terminal-resize', cols, rows))
 
-  terminal.onResize(({ cols, rows }) => {
-    ipcRenderer.send('terminal-resize', cols, rows)
-  })
-
-  outputHandler = (_event: any, data: string) => {
-    terminal?.write(data)
-  }
+  outputHandler = (_event: any, data: string) => terminal?.write(data)
   ipcRenderer.on('terminal-output', outputHandler)
 
-  resizeObserver = new ResizeObserver(() => {
-    fitAddon?.fit()
-  })
+  resizeObserver = new ResizeObserver(() => fitAddon?.fit())
   resizeObserver.observe(terminalEl.value)
 
   ipcRenderer.send('terminal-open', getCwd())
 }
 
-// Init when panel becomes visible.
-// immediate: true handles hot-reload case where show is already true on mount.
 watch(
   () => ttsStore.terminal.show,
-  (visible) => {
-    if (visible && !initialized) {
-      setTimeout(init, 50)
-    }
-  },
+  (visible) => { if (visible && !initialized) setTimeout(init, 50) },
   { immediate: true }
 )
 
 onBeforeUnmount(() => {
+  window.removeEventListener('mousemove', onDrag)
+  window.removeEventListener('mouseup', stopDrag)
   if (outputHandler) {
     ipcRenderer.removeListener('terminal-output', outputHandler)
     outputHandler = null
@@ -132,7 +158,6 @@ onBeforeUnmount(() => {
   bottom: 0;
   left: 210px;
   right: 0;
-  height: 280px;
   background: rgba(26, 26, 26, 0.88);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -140,9 +165,25 @@ onBeforeUnmount(() => {
   flex-direction: column;
   border-top: 1px solid rgba(255,255,255,0.1);
   border-left: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px 4px 0 0;
   border-right: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px 4px 0 0;
   z-index: 1000;
+  user-select: none;
+}
+
+.terminal-resize-handle {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+  z-index: 10;
+}
+
+.terminal-resize-handle:hover {
+  background: rgba(97, 175, 239, 0.3);
+  border-radius: 4px 4px 0 0;
 }
 
 .terminal-toolbar {
@@ -163,18 +204,48 @@ onBeforeUnmount(() => {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: all 0.15s;
+}
+
+.toolbar-btn:hover {
+  color: #ccc;
+  background: rgba(255,255,255,0.08);
+}
+
+.toolbar-btn.active {
+  color: #61afef;
+  background: rgba(97,175,239,0.15);
+}
+
 .terminal-close {
   background: none;
   border: none;
-  color: #999;
+  color: #666;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   padding: 0 4px;
   line-height: 1;
+  margin-left: 4px;
+  transition: color 0.15s;
 }
 
 .terminal-close:hover {
-  color: #fff;
+  color: #e06c75;
 }
 
 .terminal-body {
@@ -182,6 +253,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   padding: 6px 10px;
   box-sizing: border-box;
+  user-select: text;
 }
 
 .terminal-body :deep(.xterm) {
