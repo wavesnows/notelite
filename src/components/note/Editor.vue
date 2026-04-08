@@ -1,44 +1,19 @@
 <template>
   <div class="editor-container">
-    <Welcome v-if="!hasNote" />
-    <template v-else>
-      <div class="title-container">
-        <Title></Title>
-      </div>
-      <div ref="editor" class="editor"></div>
-    </template>
+    <div ref="editor" class="editor"></div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
+import {ref, onMounted, onUnmounted, watch} from 'vue'
 import EditorJS from "@editorjs/editorjs";
 import { useTtsStore } from "@/store/store";
 import { initEditor, saveContent} from "@/libs/editor";
-import { storeToRefs } from "pinia";
-import Title from './Title.vue'
-import Welcome from './Welcome.vue'
 
 const ttsStore = useTtsStore();
-
-// Check if there's a note to display
-const hasNote = computed(() => {
-  return ttsStore.cnote.lastPath && ttsStore.cnote.lastPath.length > 0;
-});
-//var {editerData,readOnly,inputs} = storeToRefs(ttsStore);
 const editor = ref<HTMLElement | null>(null);
 
 var editorInstance:EditorJS;
-
-// Watch for note changes - initialize editor when switching from welcome to note
-watch(hasNote, async (newVal, oldVal) => {
-  if (newVal && !oldVal && !editorInstance) {
-    // Switching from welcome to note - initialize editor
-    await new Promise(resolve => setTimeout(resolve, 100)); // Wait for DOM
-    editorInstance = initEditor(editor);
-    ttsStore.editorInstance = editorInstance;
-  }
-});
 
 watch(
   () => ttsStore.readOnly, (newValue, oldValue) => {
@@ -72,11 +47,8 @@ watch(
 )
 
 onMounted(() => {
-  // Only initialize editor if there's a note
-  if (hasNote.value) {
-    editorInstance = initEditor(editor)
-    ttsStore.editorInstance = editorInstance;
-  }
+  editorInstance = initEditor(editor)
+  ttsStore.editorInstance = editorInstance;
 
   // Start auto-save
   ttsStore.startAutoSave();
@@ -111,12 +83,19 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // Stop auto-save timer
-  ttsStore.stopAutoSave();
+  // Stop all timers
+  ttsStore.clearAllTimers();
+
+  // Destroy EditorJS instance to prevent memory leaks
+  if (editorInstance) {
+    editorInstance.destroy();
+    ttsStore.editorInstance = undefined as any;
+  }
 
   // Cleanup event listeners
   if ((window as any).__editorCleanup) {
     (window as any).__editorCleanup();
+    delete (window as any).__editorCleanup;
   }
 })
 </script>
