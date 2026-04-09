@@ -432,9 +432,9 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.treeMenu.node = node;
     ttsStore.treeMenu.treeData = itemdata
     ttsStore.inputs.itemData = itemdata
-    ttsStore.inputs.notePath = itemdata.path;
     console.log(itemdata)
    if(!itemdata.isFolder && fs.existsSync(itemdata.path)){
+    ttsStore.inputs.notePath = itemdata.path;
     ttsStore.cnote.title = itemdata.label;
     ttsStore.cnote.destTitle = itemdata.label;
     ttsStore.cnote.lastPath = itemdata.path;
