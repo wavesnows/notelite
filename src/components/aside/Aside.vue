@@ -13,10 +13,6 @@
           <el-icon><StarFilled /></el-icon>
           <span></span>
         </el-menu-item>
-        <el-menu-item index="refresh" @click.stop="refreshTree" style="margin-top: auto;">
-          <el-icon :class="{ spinning: refreshing }"><Refresh /></el-icon>
-          <span></span>
-        </el-menu-item>
       <!-- <el-menu-item index="3">
           <el-icon><Files /></el-icon>
           <span></span>
@@ -32,25 +28,17 @@
   </template>
   
   <script setup lang="ts">
-  import { ref } from 'vue';
   import { useTtsStore } from "@/store/store";
   import { storeToRefs } from "pinia";
   import AConf from "./AConfig.vue";
-  import { StarFilled, Refresh } from '@element-plus/icons-vue';
+  import { StarFilled } from '@element-plus/icons-vue';
 
   const ttsStore = useTtsStore();
   const { page, config } = storeToRefs(ttsStore);
-  const refreshing = ref(false);
 
   const menuChange = (index: any) => {
-    if (index === 4 || index === 'refresh') return;
+    if (index === 4) return;
     ttsStore.page.asideIndex = index.toString();
-  };
-
-  const refreshTree = () => {
-    refreshing.value = true;
-    ttsStore.refreshTreeData();
-    setTimeout(() => { refreshing.value = false; }, 600);
   };
   </script>
   
@@ -88,13 +76,5 @@
     margin-bottom: 0px;
   }
 
-  .spinning {
-    animation: spin 0.6s linear;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
   </style>
   

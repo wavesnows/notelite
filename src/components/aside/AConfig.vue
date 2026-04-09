@@ -36,6 +36,11 @@
       <el-icon ><Setting /></el-icon>
     </el-button>
     </el-tooltip>
+    <el-tooltip class="box-item" content="刷新目录" placement="top-start">
+      <el-button type="info" size="small" circle class="circle-btn" @click="refreshTree">
+        <el-icon :class="{ spinning: refreshing }"><Refresh /></el-icon>
+      </el-button>
+    </el-tooltip>
     </el-button-group>
     </div>
     <!--Left Panel End-->
@@ -179,6 +184,7 @@
     
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
+  import { Refresh } from '@element-plus/icons-vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
@@ -189,6 +195,13 @@
   import {initDefaultNotebook} from "@/libs/noteUtil"
   import { readDir, readOneDir,readNotes} from "@/libs/fileHandler"
   import { Select, Plus, Download, Upload } from "@element-plus/icons-vue";
+
+  const refreshing = ref(false);
+  const refreshTree = () => {
+    refreshing.value = true;
+    ttsStore.refreshTreeData();
+    setTimeout(() => { refreshing.value = false; }, 600);
+  };
   import defaultConf from "@/global/defaultConf";
   import { ipcRenderer } from 'electron';
   import { useI18n } from 'vue-i18n';
@@ -507,6 +520,15 @@
     border: none;
     margin-top: 10px;
     background-color: gray;
+  }
+
+  .spinning {
+    animation: spin 0.6s linear;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   /* Git dropdown menu styling */
