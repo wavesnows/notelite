@@ -88,7 +88,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         node:<Node>{},
         treeData:<Tree>{},
         currentNode:<any>{},
-        expandedKeys:null,
+        expandedKeys:(store.get('expandedKeys') as string[]) || null,
         newFolderName:DFConf.newFolderName,
       },
       favorites: {
@@ -200,6 +200,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
       store.set("lastPath", this.cnote.lastPath);
       store.set("title", this.cnote.title);
       store.set('editerData', this.editerData);
+      if (this.treeMenu.expandedKeys) {
+        store.set('expandedKeys', this.treeMenu.expandedKeys);
+      }
     },
     setSavePath() {
       store.set("savePath", this.config.savePath);

@@ -41,6 +41,9 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
   window.removeEventListener('focus', handleFocus);
+  // Save expanded state on exit
+  window.dispatchEvent(new CustomEvent('save-tree-expanded-state'));
+  ttsStore.setLastEditNote();
 });
 
 </script>
