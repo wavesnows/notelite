@@ -27,12 +27,18 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 };
 
+const handleFocus = () => {
+  ttsStore.scheduleTreeRefresh();
+};
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('focus', handleFocus);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('focus', handleFocus);
 });
 
 </script>
