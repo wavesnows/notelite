@@ -222,15 +222,18 @@ watch(
   () => ttsStore.treeMenu.data,
   () => {
     const keys = ttsStore.treeMenu.expandedKeys;
-    if (keys && keys.length > 0) {
-      nextTick(() => {
-        keys.forEach((key: string) => {
+    if (!keys || keys.length === 0) return;
+    nextTick(() => {
+      if (!treeRef.value) return;
+      keys.forEach((key: string) => {
+        try {
           const node = treeRef.value?.getNode(key);
           if (node) node.expand();
-        });
+        } catch (_) {}
       });
-    }
-  }
+    });
+  },
+  { deep: false }
 )
 
 
