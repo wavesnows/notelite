@@ -39,11 +39,6 @@
       <el-icon><Clock /></el-icon>
     </el-button>
   </el-tooltip>
-  <el-tooltip :content="t('help.keyboardShortcuts')" class="tool-tooltip">
-    <el-button size="small" circle class="tool-btn" @click="openHelp">
-      <el-icon><QuestionFilled /></el-icon>
-    </el-button>
-  </el-tooltip>
 </template>
 <script setup lang="ts">
 
@@ -54,7 +49,7 @@ import {removeFile} from '@/libs/fileHandler'
 import {saveContent} from '@/libs/editor'
 import {ElMessageBox, ElMessage} from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Clock, QuestionFilled, View, EditPen, CopyDocument, Minus } from '@element-plus/icons-vue'
+import { Clock, View, EditPen, CopyDocument, Minus } from '@element-plus/icons-vue'
 //import {  DocumentAdd } from "@element-plus/icons-vue";
 
 //const currShow = ref(0);
@@ -109,9 +104,6 @@ function openHistory() {
   ttsStore.openHistoryViewer();
 }
 
-function openHelp() {
-  ttsStore.openHelpDialog();
-}
 </script>
   
 <style scoped>

@@ -54,6 +54,16 @@
           <el-icon><Document /></el-icon>
         </el-button>
       </el-tooltip>
+      <el-tooltip :content="t('help.keyboardShortcuts')" placement="bottom">
+        <el-button
+          size="small"
+          circle
+          class="circle-btn"
+          @click="ttsStore.openHelpDialog()"
+        >
+          <el-icon><QuestionFilled /></el-icon>
+        </el-button>
+      </el-tooltip>
     </div>
     <!-- <Title></Title> -->
    <!-- <Logo />-->
@@ -82,7 +92,7 @@ import Breadcrumb from "../note/Breadcrumb.vue"
 import { ref, onMounted, onUnmounted } from "vue";
 import { useTtsStore } from "@/store/store";
 import { ElMessage } from 'element-plus';
-import { Document } from '@element-plus/icons-vue';
+import { Document, QuestionFilled } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 
 const { ipcRenderer } = require("electron");
