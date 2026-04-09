@@ -33,11 +33,18 @@
             @blur="confirmRename(data)"
             ref="renameInputRef"
           />
-          <span
+          <el-tooltip
             v-else
-            class="el-dropdown-link"
-            @dblclick.stop="startRename(data)"
-          >{{ node.label }}</span>
+            :content="node.label"
+            placement="right"
+            :show-after="800"
+            :hide-after="0"
+          >
+            <span
+              class="el-dropdown-link"
+              @dblclick.stop="startRename(data)"
+            >{{ node.label }}</span>
+          </el-tooltip>
           <span class="node-actions">
             <!-- Star icon for favorites -->
             <el-icon
