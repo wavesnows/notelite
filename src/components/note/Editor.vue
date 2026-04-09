@@ -35,6 +35,7 @@ watch(
           await editorInstance.clear()
         } else {
           console.log('Non-empty blocks - using render()')
+          await editorInstance.isReady
           await editorInstance.render(newv)
         }
       } catch (error) {
