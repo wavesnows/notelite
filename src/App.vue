@@ -28,6 +28,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 const handleFocus = () => {
+  // Emit event so FileTree can save expanded state before refresh
+  window.dispatchEvent(new CustomEvent('save-tree-expanded-state'));
   ttsStore.scheduleTreeRefresh();
 };
 

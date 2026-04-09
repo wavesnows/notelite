@@ -134,7 +134,7 @@
 import fs from 'fs'
 import {join} from "path"
 import { storeToRefs } from "pinia"
-import {ref, watch, nextTick, getCurrentInstance, onMounted} from 'vue'
+import {ref, watch, nextTick, getCurrentInstance, onMounted, onUnmounted} from 'vue'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import {ElTree, ElMessage,ElMessageBox, ElPopconfirm} from 'element-plus'
 import { Search, InfoFilled, Star, StarFilled, Document, Folder, Delete, Position, RemoveFilled } from "@element-plus/icons-vue"
@@ -198,7 +198,6 @@ function saveExpandedState() {
     const store = treeRef.value.store;
     const expanded: string[] = [];
 
-    // Traverse all nodes and collect expanded ones
     function traverse(node: any) {
       if (node.expanded && node.key) {
         expanded.push(node.key);
@@ -213,8 +212,26 @@ function saveExpandedState() {
     }
 
     expandedKeys.value = expanded;
+    // Also save to store so refreshTreeData can preserve it
+    ttsStore.treeMenu.expandedKeys = expanded;
   }
 }
+
+// Restore expanded state after tree data refresh
+watch(
+  () => ttsStore.treeMenu.data,
+  () => {
+    const keys = ttsStore.treeMenu.expandedKeys;
+    if (keys && keys.length > 0) {
+      nextTick(() => {
+        keys.forEach((key: string) => {
+          const node = treeRef.value?.getNode(key);
+          if (node) node.expand();
+        });
+      });
+    }
+  }
+)
 
 
 
@@ -333,12 +350,14 @@ watch(
   }
 )
 
-onMounted(()=>{
-console.log('页面初始化完成');
-      // 调用其他函数或方法
-      cancelEvent();
-    }
-)
+onMounted(() => {
+  cancelEvent();
+  window.addEventListener('save-tree-expanded-state', saveExpandedState);
+})
+
+onUnmounted(() => {
+  window.removeEventListener('save-tree-expanded-state', saveExpandedState);
+})
 
 function cancelEvent(){
 
