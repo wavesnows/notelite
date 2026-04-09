@@ -356,6 +356,22 @@ watch(
 onMounted(() => {
   cancelEvent();
   window.addEventListener('save-tree-expanded-state', saveExpandedState);
+
+  // Restore expanded state from last session
+  const keys = ttsStore.treeMenu.expandedKeys;
+  if (keys && keys.length > 0) {
+    nextTick(() => {
+      setTimeout(() => {
+        if (!treeRef.value) return;
+        keys.forEach((key: string) => {
+          try {
+            const node = treeRef.value?.getNode(key);
+            if (node) node.expand();
+          } catch (_) {}
+        });
+      }, 100);
+    });
+  }
 })
 
 onUnmounted(() => {
