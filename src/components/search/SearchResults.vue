@@ -6,7 +6,7 @@
     :close-on-click-modal="true"
     @close="handleClose"
   >
-    <div class="search-results">
+    <div class="search-results" ref="listEl" @scroll="handleScroll">
       <!-- Empty state -->
       <el-empty
         v-if="!ttsStore.search.isSearching && ttsStore.search.results.length === 0"
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Results list -->
-      <div v-else class="results-list" ref="listEl" @scroll="handleScroll">
+      <div v-else class="results-list">
         <div
           v-for="(result, index) in ttsStore.search.results"
           :key="index"
