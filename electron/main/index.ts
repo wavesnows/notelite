@@ -243,12 +243,29 @@ ipcMain.on('terminal-open', (event, cwd: string) => {
   const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || '/bin/zsh');
   const validCwd = cwd && require('fs').existsSync(cwd) ? cwd : os.homedir();
 
-  ptyProcess = pty.spawn(shell, [], {
+  // Augment PATH with common locations missing in Electron's env
+  const extraPaths = [
+    '/opt/homebrew/bin',
+    '/opt/homebrew/sbin',
+    '/usr/local/bin',
+    '/usr/local/sbin',
+    '/usr/bin',
+    '/bin',
+    '/usr/sbin',
+    '/sbin',
+  ].join(':');
+  const env = {
+    ...process.env,
+    PATH: `${extraPaths}:${process.env.PATH || ''}`,
+    TERM: 'xterm-256color',
+  };
+
+  ptyProcess = pty.spawn(shell, ['-l'], {
     name: 'xterm-color',
     cols: 80,
     rows: 24,
     cwd: validCwd,
-    env: process.env,
+    env,
   });
 
   ptyProcess.onData((data: string) => {
