@@ -43,7 +43,17 @@
             <span
               class="el-dropdown-link"
               @dblclick.stop="startRename(data)"
-            >{{ node.label }}</span>
+            >
+              <span class="node-icon">
+                <template v-if="data.isFolder">
+                  {{ node.expanded ? '📂' : '📁' }}
+                </template>
+                <template v-else>
+                  {{ data.path.endsWith('.md') ? '📝' : '📄' }}
+                </template>
+              </span>
+              {{ node.label }}
+            </span>
           </el-tooltip>
           <span class="node-actions">
             <!-- Star icon for favorites -->
@@ -613,6 +623,13 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
 .star-icon:hover {
   transform: scale(1.2);
   transition: transform 0.2s;
+}
+
+.node-icon {
+  margin-right: 3px;
+  font-size: 12px;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .rename-input {
