@@ -2,11 +2,13 @@ import defaultConf from './defaultConf'
 import {initDefaultNotebook} from "@/libs/noteUtil"
 import path from 'path';
 import os from 'os';
+import fs from 'fs';
 
 const Store = require('electron-store');
 export const store = new Store();
 const homeDir = os.homedir();
 const defaultDir = path.join(homeDir, defaultConf.appName);
+const defaultNotebookPath = path.join(defaultDir, defaultConf.defaultRepoPath, defaultConf.defaultRepoName);
 
 initDefaultNotebook(defaultDir)
 
@@ -24,16 +26,23 @@ export default function initStore() {
     store.set("savePath", defaultDir);
   }
 
-  // Initialize currentStore (same as savePath)
+  // Initialize currentStore
   if (!store.has("currentStore")) {
     store.set("currentStore", defaultDir);
   }
 
   // Initialize default notebook path
-  const defaultNotebookPath = path.join(defaultDir, defaultConf.defaultRepoPath, defaultConf.defaultRepoName);
   if (!store.has("currentNotebookPath")) {
     store.set("currentNotebookPath", defaultNotebookPath);
+  } else {
+    // If stored path no longer exists, reset to default
+    const stored = store.get("currentNotebookPath") as string;
+    if (stored && !fs.existsSync(stored)) {
+      console.warn('currentNotebookPath not found, resetting to default:', stored);
+      store.set("currentNotebookPath", defaultNotebookPath);
+    }
   }
+
   if (!store.has("defaultNotePath")) {
     store.set("defaultNotePath", defaultNotebookPath);
   }
@@ -50,18 +59,17 @@ export default function initStore() {
     );
   }
 
-  // Initialize rootStores array with current store if not set
+  // Initialize rootStores — filter out any undefined or non-existent entries
+  const currentStore = store.get("currentStore") as string || defaultDir;
   if (!store.has("rootStores")) {
-    const currentStore = store.get("currentStore") || defaultDir;
     store.set("rootStores", [currentStore]);
   } else {
-    // Ensure currentStore is in rootStores (migration safety)
-    const currentStore = store.get("currentStore") || defaultDir;
-    const rootStores: string[] = store.get("rootStores") || [];
+    const rootStores: string[] = (store.get("rootStores") as string[] || [])
+      .filter((p: string) => p && typeof p === 'string');
     if (!rootStores.includes(currentStore)) {
       rootStores.push(currentStore);
-      store.set("rootStores", rootStores);
     }
+    store.set("rootStores", rootStores);
   }
 }
 

@@ -60,59 +60,66 @@ const createNote = async () => {
   const fs = await import('fs')
   const path = await import('path')
 
+  // Ensure notebook directory exists
+  const notebookPath = ttsStore.notebook.currentPath
+  if (!fs.existsSync(notebookPath)) {
+    try {
+      fs.mkdirSync(notebookPath, { recursive: true })
+    } catch (error) {
+      console.error('Failed to create notebook directory:', error)
+      return
+    }
+  }
+
   // Check if there are any folders
   if (ttsStore.treeMenu.data.length === 0) {
-    // No folders exist, create a default folder first
     const folderName = 'notes'
-    const folderPath = path.join(ttsStore.notebook.currentPath, folderName)
+    const folderPath = path.join(notebookPath, folderName)
 
     try {
-      fs.mkdirSync(folderPath)
-      console.log('Created default folder:', folderPath)
-
-      // Refresh tree data to show new folder
+      fs.mkdirSync(folderPath, { recursive: true })
       ttsStore.refreshTreeData()
-
-      // Wait a bit for tree to update
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Wait for tree to update
+      await new Promise(resolve => setTimeout(resolve, 200))
     } catch (error) {
       console.error('Failed to create folder:', error)
       return
     }
   }
 
-  // Now create a note in the first folder
-  if (ttsStore.treeMenu.data.length > 0) {
-    const firstFolder = ttsStore.treeMenu.data[0]
-    const noteName = 'Welcome'
-    const notePath = path.join(firstFolder.path, noteName + '.json')
+  // Re-read tree data to get latest state
+  const treeData = ttsStore.treeMenu.data
+  if (treeData.length === 0) {
+    console.error('No folders available after creation')
+    return
+  }
 
-    // Create empty note file
-    const emptyEditorData = {
-      time: Date.now(),
-      blocks: [],
-      version: "2.26.5"
-    }
+  const firstFolder = treeData[0]
+  const noteName = 'Welcome'
+  const notePath = path.join(firstFolder.path, noteName + '.json')
 
-    try {
-      fs.writeFileSync(notePath, JSON.stringify(emptyEditorData, null, 2), 'utf8')
-      console.log('Created note:', notePath)
+  const emptyEditorData = {
+    time: Date.now(),
+    blocks: [
+      { type: "header", data: { text: "Welcome to YesnoteLite 👋", level: 1 } },
+      { type: "paragraph", data: { text: "Start writing your notes here." } }
+    ],
+    version: "2.26.5"
+  }
 
-      // Refresh tree and open the note
-      ttsStore.refreshTreeData()
+  try {
+    fs.writeFileSync(notePath, JSON.stringify(emptyEditorData, null, 2), 'utf8')
+    ttsStore.refreshTreeData()
+    await new Promise(resolve => setTimeout(resolve, 200))
 
-      // Wait for tree to update
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      // Open the note
-      ttsStore.inputs.notePath = notePath
-      ttsStore.cnote.title = noteName
-      ttsStore.cnote.destTitle = noteName
-      ttsStore.cnote.lastPath = notePath
-      ttsStore.editerData = emptyEditorData
-    } catch (error) {
-      console.error('Failed to create note:', error)
-    }
+    ttsStore.inputs.notePath = notePath
+    ttsStore.cnote.title = noteName
+    ttsStore.cnote.destTitle = noteName
+    ttsStore.cnote.lastPath = notePath
+    ttsStore.editerData = emptyEditorData
+    ttsStore.setLastEditNote()
+  } catch (error) {
+    console.error('Failed to create note:', error)
   }
 }
 

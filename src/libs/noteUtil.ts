@@ -44,14 +44,28 @@ export function isFolderEmpty(dir:string):boolean{
 }
 
 export function initDefaultNotebook(dir:string):string{
-    const { copyFileSync, ensureDirSync, statSync, existsSync } = loadFse();
+    const { ensureDirSync, statSync, existsSync, writeFileSync } = loadFse();
     let str:string = ''
     let localNotePath = path.join(dir,defaultConf.defaultRepoPath,defaultConf.defaultRepoName,"notes");
     let hasDefaultNoteBook = existsSync(localNotePath) && statSync(localNotePath).isDirectory()
     if(!existsSync(dir)||existsSync(dir)&&isFolderEmpty(dir)){
-        ensureDirSync(localNotePath);
-        copyFileSync(path.join(path.resolve(process.cwd()),'src/assets/Note.json'),path.join(localNotePath,'demo.json'))
-        str = "create default note book"
+        try {
+            ensureDirSync(localNotePath);
+            // Create a demo note with valid EditorJS structure (no asset file dependency)
+            const demoNote = JSON.stringify({
+                time: Date.now(),
+                blocks: [
+                    { type: "header", data: { text: "Welcome to YesnoteLite 👋", level: 1 } },
+                    { type: "paragraph", data: { text: "This is your first note. Start writing!" } }
+                ],
+                version: "2.26.5"
+            }, null, 2);
+            writeFileSync(path.join(localNotePath, 'demo.json'), demoNote, 'utf8');
+            str = "create default note book"
+        } catch (e: any) {
+            str = "init failed: " + e.message;
+            console.error('Failed to init default notebook:', e);
+        }
     }
     else if(hasDefaultNoteBook){
         str = "default note folder is already there. "
