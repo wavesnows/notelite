@@ -6,7 +6,7 @@ import Node from 'element-plus/es/components/tree/src/model/node'
 import {updateTreeMenu} from "@/libs/treeMenu"
 import {showMessage} from '@/libs/globalLib'
 
-  export function renameFile(){
+  export function renameFile(): boolean {
     //  saveContent(editor,ttsStore);
      // ttsStore.treeMenu.data = readDir();
     let ttsStore = useTtsStore()
@@ -18,12 +18,15 @@ import {showMessage} from '@/libs/globalLib'
     if(ttsStore.inputs.notePath != destPath){
       const oldPath = ttsStore.inputs.notePath;
 
+      let copyOk = false
       try{
         fs.copyFileSync(ttsStore.inputs.notePath,destPath,fs.constants.COPYFILE_EXCL)
+        copyOk = true
       }
       catch(e:any){
         showMessage(e.message, 'warning')
       }
+      if (!copyOk) return false
       fs.rmSync(ttsStore.inputs.notePath)
 
       // Update favorites paths if the file was pinned or starred
@@ -43,7 +46,7 @@ import {showMessage} from '@/libs/globalLib'
       ttsStore.cnote.title = ttsStore.cnote.destTitle;
       ttsStore.scheduleTreeRefresh() // reload file with debounce
     }
-    return ;
+    return true;
   }
 
 
@@ -56,7 +59,7 @@ import {showMessage} from '@/libs/globalLib'
     ttsStore.inputs.notePath =  node.data.path
     console.log("----"+node.data.path)
     try {
-      fs.rmdirSync(node.data.path,{recursive: true}) 
+      fs.rmSync(node.data.path, { recursive: true, force: true })
       showMessage('Remove success!', 'success')
          //'success' | 'warning' | 'info' | 'error'
     } catch (error) {
@@ -82,7 +85,12 @@ import {showMessage} from '@/libs/globalLib'
       ttsStore.toggleStar(filePath);
     }
 
-    fs.rmSync(ttsStore.inputs.notePath)
+    try {
+      fs.rmSync(ttsStore.inputs.notePath)
+      showMessage('Remove success!', 'success')
+    } catch (error) {
+      showMessage(error as string, 'error')
+    }
   }
 
 

@@ -256,28 +256,37 @@ ipcMain.on('terminal-open', (event, cwd: string) => {
     ptyProcess = null;
   }
 
-  const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || '/bin/zsh');
+  const isWindows = process.platform === 'win32';
+  const shell = isWindows
+    ? 'powershell.exe'
+    : (process.env.SHELL || (process.platform === 'darwin' ? '/bin/zsh' : '/bin/bash'));
+  const shellArgs = isWindows ? [] : ['-l'];
   const validCwd = cwd && require('fs').existsSync(cwd) ? cwd : os.homedir();
 
-  // Augment PATH with common locations missing in Electron's env
-  const extraPaths = [
-    '/opt/homebrew/bin',
-    '/opt/homebrew/sbin',
-    '/usr/local/bin',
-    '/usr/local/sbin',
-    '/usr/bin',
-    '/bin',
-    '/usr/sbin',
-    '/sbin',
-  ].join(':');
-  const env = {
-    ...process.env,
-    PATH: `${extraPaths}:${process.env.PATH || ''}`,
-    TERM: 'xterm-256color',
-  };
+  // Augment PATH with common locations missing in Electron's env (Unix only)
+  let env: NodeJS.ProcessEnv;
+  if (isWindows) {
+    env = { ...process.env };
+  } else {
+    const extraPaths = [
+      '/opt/homebrew/bin',
+      '/opt/homebrew/sbin',
+      '/usr/local/bin',
+      '/usr/local/sbin',
+      '/usr/bin',
+      '/bin',
+      '/usr/sbin',
+      '/sbin',
+    ].join(':');
+    env = {
+      ...process.env,
+      PATH: `${extraPaths}:${process.env.PATH || ''}`,
+      TERM: 'xterm-256color',
+    };
+  }
 
-  ptyProcess = pty.spawn(shell, ['-l'], {
-    name: 'xterm-color',
+  ptyProcess = pty.spawn(shell, shellArgs, {
+    name: isWindows ? 'windows-terminal' : 'xterm-color',
     cols: 80,
     rows: 24,
     cwd: validCwd,
