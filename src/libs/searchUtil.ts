@@ -205,53 +205,88 @@ function searchMdFile(filePath: string, query: string): SearchResult[] {
   return results;
 }
 
-async function searchDirectory(dirPath: string, query: string, results: SearchResult[], limit: number): Promise<void> {
-  if (results.length >= limit) return;
+/**
+ * Async generator that yields matching SearchResult one by one,
+ * walking the directory tree lazily. Caller can stop consuming at any time.
+ */
+async function* walkSearch(dirPath: string, query: string): AsyncGenerator<SearchResult> {
+  if (!fs.existsSync(dirPath)) return;
 
+  let items: string[];
   try {
-    if (!fs.existsSync(dirPath)) return;
+    items = fs.readdirSync(dirPath);
+  } catch {
+    return;
+  }
 
-    const items = fs.readdirSync(dirPath);
+  for (const item of items) {
+    if (item.startsWith('.')) continue;
 
-    for (const item of items) {
-      if (results.length >= limit) break;
-      if (item.startsWith('.')) continue;
+    const itemPath = path.join(dirPath, item);
+    let stat: fs.Stats;
+    try { stat = fs.statSync(itemPath); } catch { continue; }
 
-      const itemPath = path.join(dirPath, item);
-      const stat = fs.statSync(itemPath);
-
-      if (stat.isDirectory()) {
-        await searchDirectory(itemPath, query, results, limit);
-      } else if (stat.isFile() && item.endsWith('.json')) {
-        results.push(...searchFile(itemPath, query));
-      } else if (stat.isFile() && item.endsWith('.md')) {
-        results.push(...searchMdFile(itemPath, query));
-      }
-
-      // Yield to event loop every 20 files to avoid blocking UI
-      if (results.length % 20 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
+    if (stat.isDirectory()) {
+      yield* walkSearch(itemPath, query);
+    } else if (stat.isFile() && item.endsWith('.json')) {
+      for (const r of searchFile(itemPath, query)) yield r;
+    } else if (stat.isFile() && item.endsWith('.md')) {
+      for (const r of searchMdFile(itemPath, query)) yield r;
     }
-  } catch (error) {
-    console.error(`Error searching directory ${dirPath}:`, error);
+
+    // Yield to event loop periodically
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
 }
 
+const PAGE_SIZE = 20;
+
 /**
- * Main search function
+ * SearchSession — holds the generator and allows incremental loading.
+ * Call loadMore() to get the next batch of results.
  */
-export async function searchNotes(notebookPath: string, query: string, limit: number = 50): Promise<SearchResult[]> {
-  if (!query || query.trim().length === 0) {
-    return [];
+export class SearchSession {
+  private gen: AsyncGenerator<SearchResult> | null = null;
+  private _done = false;
+  readonly results: SearchResult[] = [];
+
+  get done() { return this._done; }
+
+  start(notebookPath: string, query: string) {
+    this.gen = walkSearch(notebookPath, query.trim());
+    this._done = false;
+    this.results.length = 0;
   }
 
-  const results: SearchResult[] = [];
-  await searchDirectory(notebookPath, query.trim(), results, limit);
+  async loadMore(): Promise<SearchResult[]> {
+    if (!this.gen || this._done) return [];
 
-  // Sort by score (highest first), truncate to limit
-  results.sort((a, b) => b.score - a.score);
-  return results.slice(0, limit);
+    const batch: SearchResult[] = [];
+    for (let i = 0; i < PAGE_SIZE; i++) {
+      const { value, done } = await this.gen.next();
+      if (done) { this._done = true; break; }
+      if (value) batch.push(value);
+    }
+
+    this.results.push(...batch);
+    return batch;
+  }
+
+  stop() {
+    this.gen = null;
+    this._done = true;
+  }
+}
+
+// Legacy function kept for compatibility
+export async function searchNotes(notebookPath: string, query: string, limit: number = 50): Promise<SearchResult[]> {
+  if (!query || query.trim().length === 0) return [];
+  const session = new SearchSession();
+  session.start(notebookPath, query);
+  while (!session.done && session.results.length < limit) {
+    await session.loadMore();
+  }
+  return session.results.slice(0, limit);
 }
 
 /**

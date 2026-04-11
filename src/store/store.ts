@@ -6,7 +6,7 @@ import type Node from 'element-plus/es/components/tree/src/model/node'
 import DFConf from "@/global/defaultConf";
 import {store as defaultStore} from "@/global/initLocalStore";
 import {readNotes} from "@/libs/fileHandler"
-import {searchNotes, type SearchResult} from "@/libs/searchUtil"
+import {SearchSession, type SearchResult} from "@/libs/searchUtil"
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -136,8 +136,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
         query: "",
         results: <SearchResult[]>[],
         isSearching: false,
+        isLoadingMore: false,
         showResults: false,
-        maxResults: (store.get('searchMaxResults') as number) || 50,
+        session: null as SearchSession | null,
       },
       history: {
         showDrawer: false,
@@ -263,24 +264,51 @@ export const useTtsStore = defineStore(DFConf.appName, {
         return;
       }
 
+      // Stop previous session
+      if (this.search.session) {
+        this.search.session.stop();
+      }
+
       this.search.isSearching = true;
       this.search.query = query;
+      this.search.results = [];
+
+      const session = new SearchSession();
+      session.start(this.notebook.currentPath, query);
+      this.search.session = session;
 
       try {
-        const results = await searchNotes(this.notebook.currentPath, query, this.search.maxResults);
-        this.search.results = results;
+        await session.loadMore();
+        this.search.results = [...session.results];
         this.search.showResults = true;
       } catch (error) {
         console.error('Search error:', error);
-        this.search.results = [];
       } finally {
         this.search.isSearching = false;
       }
     },
+
+    async loadMoreSearchResults() {
+      const session = this.search.session;
+      if (!session || session.done || this.search.isLoadingMore) return;
+
+      this.search.isLoadingMore = true;
+      try {
+        await session.loadMore();
+        this.search.results = [...session.results];
+      } finally {
+        this.search.isLoadingMore = false;
+      }
+    },
     clearSearch() {
+      if (this.search.session) {
+        this.search.session.stop();
+        this.search.session = null;
+      }
       this.search.query = "";
       this.search.results = [];
       this.search.showResults = false;
+      this.search.isLoadingMore = false;
     },
     togglePin(path: string) {
       const index = this.favorites.pinned.indexOf(path);

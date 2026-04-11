@@ -20,7 +20,7 @@
       </div>
 
       <!-- Results list -->
-      <div v-else class="results-list">
+      <div v-else class="results-list" ref="listEl" @scroll="handleScroll">
         <div
           v-for="(result, index) in ttsStore.search.results"
           :key="index"
@@ -35,13 +35,21 @@
           <div class="result-context" v-html="highlightedContext(result)"></div>
           <div class="result-path">{{ result.filePath }}</div>
         </div>
+        <!-- Load more indicator -->
+        <div v-if="ttsStore.search.isLoadingMore" class="load-more-indicator">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载更多...</span>
+        </div>
+        <div v-else-if="ttsStore.search.session?.done && ttsStore.search.results.length > 0" class="all-loaded">
+          共 {{ ttsStore.search.results.length }} 条结果
+        </div>
       </div>
     </div>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Document, Loading } from '@element-plus/icons-vue';
 import { useTtsStore } from '@/store/store';
 import { highlightMatches, type SearchResult } from '@/libs/searchUtil';
@@ -50,6 +58,16 @@ import fs from 'fs';
 
 const { t } = useI18n();
 const ttsStore = useTtsStore();
+const listEl = ref<HTMLElement | null>(null);
+
+function handleScroll() {
+  const el = listEl.value;
+  if (!el) return;
+  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
+  if (nearBottom && !ttsStore.search.isLoadingMore && !ttsStore.search.session?.done) {
+    ttsStore.loadMoreSearchResults();
+  }
+}
 
 const dialogVisible = computed({
   get: () => ttsStore.search.showResults,
@@ -184,5 +202,22 @@ const handleClose = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.load-more-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: #909399;
+  font-size: 13px;
+}
+
+.all-loaded {
+  text-align: center;
+  padding: 12px;
+  color: #c0c4cc;
+  font-size: 12px;
 }
 </style>
