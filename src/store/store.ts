@@ -137,6 +137,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         results: <SearchResult[]>[],
         isSearching: false,
         showResults: false,
+        maxResults: (store.get('searchMaxResults') as number) || 50,
       },
       history: {
         showDrawer: false,
@@ -266,7 +267,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       this.search.query = query;
 
       try {
-        const results = searchNotes(this.notebook.currentPath, query);
+        const results = await searchNotes(this.notebook.currentPath, query, this.search.maxResults);
         this.search.results = results;
         this.search.showResults = true;
       } catch (error) {

@@ -57,6 +57,8 @@ const en = {
       saveFailed: 'Save failed! Please try again',
       languageSwitched: 'Language switched to English',
       notebookSwitched: 'Switched to notebook: {name}',
+      searchMaxResults: 'Max search results',
+      searchMaxResultsHint: 'Default 50, range 10-200',
       gitNotFound: 'Git not installed',
       gitNotFoundDesc: 'Install Git to unlock sync, version history and remote backup features.',
       installGit: 'Install Git',

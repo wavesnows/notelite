@@ -205,52 +205,53 @@ function searchMdFile(filePath: string, query: string): SearchResult[] {
   return results;
 }
 
-function searchDirectory(dirPath: string, query: string, results: SearchResult[] = []): SearchResult[] {
+async function searchDirectory(dirPath: string, query: string, results: SearchResult[], limit: number): Promise<void> {
+  if (results.length >= limit) return;
+
   try {
-    if (!fs.existsSync(dirPath)) {
-      return results;
-    }
+    if (!fs.existsSync(dirPath)) return;
 
     const items = fs.readdirSync(dirPath);
 
-    items.forEach(item => {
-      // Skip hidden files and folders
-      if (item.startsWith('.')) return;
+    for (const item of items) {
+      if (results.length >= limit) break;
+      if (item.startsWith('.')) continue;
 
       const itemPath = path.join(dirPath, item);
       const stat = fs.statSync(itemPath);
 
       if (stat.isDirectory()) {
-        searchDirectory(itemPath, query, results);
+        await searchDirectory(itemPath, query, results, limit);
       } else if (stat.isFile() && item.endsWith('.json')) {
         results.push(...searchFile(itemPath, query));
       } else if (stat.isFile() && item.endsWith('.md')) {
         results.push(...searchMdFile(itemPath, query));
       }
-    });
+
+      // Yield to event loop every 20 files to avoid blocking UI
+      if (results.length % 20 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
   } catch (error) {
     console.error(`Error searching directory ${dirPath}:`, error);
   }
-
-  return results;
 }
 
 /**
  * Main search function
  */
-export function searchNotes(notebookPath: string, query: string): SearchResult[] {
+export async function searchNotes(notebookPath: string, query: string, limit: number = 50): Promise<SearchResult[]> {
   if (!query || query.trim().length === 0) {
     return [];
   }
 
-  // Search from notebookPath directly — supports both old (with /notes subdir)
-  // and new (direct root) notebook structures
-  const results = searchDirectory(notebookPath, query.trim());
+  const results: SearchResult[] = [];
+  await searchDirectory(notebookPath, query.trim(), results, limit);
 
-  // Sort by score (highest first)
+  // Sort by score (highest first), truncate to limit
   results.sort((a, b) => b.score - a.score);
-
-  return results;
+  return results.slice(0, limit);
 }
 
 /**

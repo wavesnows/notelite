@@ -99,6 +99,18 @@
                 </div>
               </el-form-item>
 
+              <el-form-item :label="t('settings.searchMaxResults')">
+                <el-input-number
+                  v-model="ttsStore.search.maxResults"
+                  :min="10"
+                  :max="200"
+                  :step="10"
+                  style="width: 120px;"
+                  @change="(v: number) => { store.set('searchMaxResults', v) }"
+                />
+                <span style="margin-left: 8px; font-size: 12px; color: #909399;">{{ t('settings.searchMaxResultsHint') }}</span>
+              </el-form-item>
+
               <el-form-item label="MD 预览主题">
                 <el-select :model-value="ttsStore.mdTheme" @change="(v: string) => ttsStore.setMdTheme(v)" style="width: 200px;">
                   <el-option label="🩵 青绿经典（默认）" value="teal" />
@@ -201,6 +213,7 @@
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
   import { Refresh } from '@element-plus/icons-vue'
+  import { store } from '@/global/initLocalStore'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
