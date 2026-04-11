@@ -73,6 +73,9 @@ const tooltipContent = computed(() => {
 
   if (gitStatus.value.hasUncommitted) {
     parts.push(t('git.uncommittedChanges', { count: gitStatus.value.filesChanged }));
+    if (gitStatus.value.changedFiles?.length > 0) {
+      gitStatus.value.changedFiles.forEach((f: string) => parts.push(`  ${f}`));
+    }
   }
 
   if (gitStatus.value.hasUnpushed) {

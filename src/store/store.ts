@@ -158,6 +158,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         ahead: 0,
         behind: 0,
         filesChanged: 0,
+        changedFiles: [] as string[],
         isChecking: false,
         checkTimeout: null as any,
       },
@@ -505,6 +506,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         this.gitStatus.ahead = status.ahead;
         this.gitStatus.behind = status.behind;
         this.gitStatus.filesChanged = status.filesChanged;
+        this.gitStatus.changedFiles = status.changedFiles;
       } catch (error) {
         console.error('Failed to check git status:', error);
       } finally {

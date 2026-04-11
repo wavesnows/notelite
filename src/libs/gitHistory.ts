@@ -198,6 +198,7 @@ export async function getGitStatus(repoPath: string): Promise<{
   ahead: number;
   behind: number;
   filesChanged: number;
+  changedFiles: string[];
 }> {
   const git = simpleGit(repoPath);
 
@@ -210,6 +211,7 @@ export async function getGitStatus(repoPath: string): Promise<{
       ahead: status.ahead,
       behind: status.behind,
       filesChanged: status.files.length,
+      changedFiles: status.files.map((f: any) => `${f.working_dir !== ' ' ? f.working_dir : f.index} ${f.path}`),
     };
   } catch (error) {
     console.error('Failed to get git status:', error);
@@ -219,6 +221,7 @@ export async function getGitStatus(repoPath: string): Promise<{
       ahead: 0,
       behind: 0,
       filesChanged: 0,
+      changedFiles: [],
     };
   }
 }
