@@ -23,7 +23,7 @@ const { page, config } = storeToRefs(ttsStore);
 
 const MIN_WIDTH = 120;
 const MAX_WIDTH = 400;
-const width = ref(175);
+const width = ref(200);
 
 let dragStartX = 0;
 let dragStartWidth = 0;

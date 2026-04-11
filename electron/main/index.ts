@@ -45,7 +45,7 @@ const indexHtml = join(ROOT_PATH.dist, "index.html");
 
 // Default window state
 const defaultWindowState = {
-  width: 1300,
+  width: 1200,
   height: 800,
   x: undefined as number | undefined,
   y: undefined as number | undefined,
@@ -83,8 +83,8 @@ async function createWindow() {
     height: windowState.height,
     x: windowState.x,
     y: windowState.y,
-    minWidth: 1200,
-    minHeight: 700,
+    minWidth: 900,
+    minHeight: 600,
 
     title: "Main window",
     icon: join(ROOT_PATH.public, "favicon.ico"),
