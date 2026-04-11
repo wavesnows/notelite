@@ -1,5 +1,5 @@
 <template>
-  <div class="terminal-panel" :style="{ height: panelHeight + 'px' }">
+  <div class="terminal-panel" :style="{ height: panelHeight + 'px', left: panelLeft + 'px' }">
     <!-- Drag handle -->
     <div class="terminal-resize-handle" @mousedown="startDrag"></div>
     <div class="terminal-toolbar">
@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { CanvasAddon } from 'xterm-addon-canvas'
@@ -28,6 +28,7 @@ import 'xterm/css/xterm.css'
 
 const ttsStore = useTtsStore()
 const terminalEl = ref<HTMLElement | null>(null)
+const panelLeft = computed(() => 35 + ttsStore.layout.bsideWidth)
 
 const SIZES = { sm: 180, md: 280, lg: 450 }
 const panelHeight = ref(SIZES.md)
@@ -174,7 +175,7 @@ onBeforeUnmount(() => {
 .terminal-panel {
   position: fixed;
   bottom: 0;
-  left: 210px;
+  left: 235px; /* overridden by inline style */
   right: 0;
   background: rgba(26, 26, 26, 0.88);
   backdrop-filter: blur(8px);

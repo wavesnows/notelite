@@ -189,6 +189,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
       terminal: {
         show: false,
       },
+      layout: {
+        bsideWidth: 200, // synced from Bside for terminal positioning
+      },
       mdEditor: {
         lineWrap: true,
       }

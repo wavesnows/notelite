@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useTtsStore } from "@/store/store";
 import { storeToRefs } from "pinia";
 import FileTree from "./FileTree.vue"
@@ -25,6 +25,10 @@ const MIN_WIDTH = 120;
 const MAX_WIDTH = 400;
 const width = ref(200);
 
+onMounted(() => {
+  ttsStore.layout.bsideWidth = width.value;
+});
+
 let dragStartX = 0;
 let dragStartWidth = 0;
 
@@ -38,6 +42,7 @@ function startDrag(e: MouseEvent) {
 function onDrag(e: MouseEvent) {
   const delta = e.clientX - dragStartX;
   width.value = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragStartWidth + delta));
+  ttsStore.layout.bsideWidth = width.value;
 }
 
 function stopDrag() {
