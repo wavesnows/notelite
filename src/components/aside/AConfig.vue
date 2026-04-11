@@ -201,7 +201,6 @@
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
   import { Refresh } from '@element-plus/icons-vue'
-  import { store } from '@/global/initLocalStore'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
