@@ -57,6 +57,9 @@ const zh = {
       saveFailed: '保存失败！请重试',
       languageSwitched: '语言已切换为中文',
       notebookSwitched: '已切换到笔记本: {name}',
+      gitNotFound: '未检测到 Git',
+      gitNotFoundDesc: '安装 Git 后可解锁同步、版本历史和远程备份功能。',
+      installGit: '安装 Git',
     },
     fileTree: {
       filterPlaceholder: '过滤关键词',

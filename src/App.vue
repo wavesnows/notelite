@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
+const { ipcRenderer } = require('electron');
 import { useTtsStore } from "@/store/store";
 import Header from "./components/header/Header.vue";
 import Aside from "./components/aside/Aside.vue";
@@ -36,6 +37,14 @@ const handleFocus = () => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('focus', handleFocus);
+
+  // Get git availability from main process
+  ipcRenderer.invoke('get-git-available').then((available: boolean) => {
+    ttsStore.gitAvailable = available;
+  });
+  ipcRenderer.on('git-available', (_: any, available: boolean) => {
+    ttsStore.gitAvailable = available;
+  });
 });
 
 onUnmounted(() => {

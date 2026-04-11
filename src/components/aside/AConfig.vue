@@ -8,7 +8,7 @@
         </el-button>
       </el-tooltip>
       <el-tooltip class="box-item" :content="t('toolbar.gitSync')" placement="top-start">
-        <el-dropdown @command="handleGit" v-show="isInGitRepo">
+        <el-dropdown @command="handleGit" v-show="isInGitRepo && ttsStore.gitAvailable">
           <el-button type="success" size="small" circle class="circle-btn">
             <el-icon><Suitcase /></el-icon>
           </el-button>
@@ -131,6 +131,22 @@
             </div>-->
           </el-tab-pane>
           <el-tab-pane :label="t('settings.remoteSetting')">
+            <el-alert
+              v-if="!ttsStore.gitAvailable"
+              type="warning"
+              :closable="false"
+              style="margin-bottom: 16px;"
+            >
+              <template #title>
+                {{ t('settings.gitNotFound') }}
+              </template>
+              <template #default>
+                <p style="margin: 4px 0;">{{ t('settings.gitNotFoundDesc') }}</p>
+                <el-button size="small" type="primary" link @click="openGitInstallPage">
+                  {{ t('settings.installGit') }} →
+                </el-button>
+              </template>
+            </el-alert>
             <el-form :model="config" label-width="120px" label-position="top">
               <el-form-item :label="t('settings.githubUsername')">
                 <el-input
@@ -197,6 +213,12 @@
   import { Select, Plus, Download, Upload } from "@element-plus/icons-vue";
 
   const refreshing = ref(false);
+
+  function openGitInstallPage() {
+    const { shell } = require('electron');
+    shell.openExternal('https://git-scm.com/downloads');
+  }
+
   const refreshTree = () => {
     refreshing.value = true;
     ttsStore.refreshTreeData();

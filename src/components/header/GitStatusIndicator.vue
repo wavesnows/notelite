@@ -30,8 +30,10 @@ const { t } = useI18n();
 const ttsStore = useTtsStore();
 const { gitStatus, cnote } = storeToRefs(ttsStore);
 
-// Show indicator when current note is inside a git repo
+
+// Show indicator when current note is inside a git repo and git is available
 const showIndicator = computed(() => {
+  if (!ttsStore.gitAvailable) return false;
   const lastPath = cnote.value?.lastPath;
   if (!lastPath) return false;
   return isFileInGitRepo(lastPath);

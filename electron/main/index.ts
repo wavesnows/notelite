@@ -1,10 +1,23 @@
 import { app, BrowserWindow, shell, ipcMain, dialog } from "electron";
 import { release } from "os";
 import { join } from "path";
+import { execSync } from "child_process";
 
 import logger from "../utils/log";
 import os from 'os';
 const pty = require('node-pty');
+
+// Detect if git is available
+function detectGit(): boolean {
+  try {
+    execSync('git --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const gitAvailable = detectGit();
 
 // Initialize electron-store for window state
 const ElectronStore = require("electron-store");
@@ -129,6 +142,7 @@ async function createWindow() {
   // Test actively push message to the Electron-Renderer
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
+    win?.webContents.send("git-available", gitAvailable);
   });
 
   // Make all links open with the browser, not with the application
@@ -221,6 +235,8 @@ ipcMain.on("openDevTools", async (event, arg) => {
     win.webContents.openDevTools({ mode: "undocked", activate: true });
   }
 });
+
+ipcMain.handle('get-git-available', () => gitAvailable);
 
 ipcMain.on('open-dialog', (event) => {
   dialog.showOpenDialog({

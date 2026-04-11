@@ -57,6 +57,9 @@ const en = {
       saveFailed: 'Save failed! Please try again',
       languageSwitched: 'Language switched to English',
       notebookSwitched: 'Switched to notebook: {name}',
+      gitNotFound: 'Git not installed',
+      gitNotFoundDesc: 'Install Git to unlock sync, version history and remote backup features.',
+      installGit: 'Install Git',
     },
     fileTree: {
       filterPlaceholder: 'Filter keyword',
