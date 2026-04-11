@@ -65,20 +65,23 @@ const highlightedContext = (result: SearchResult) => {
 };
 
 const handleResultClick = (result: SearchResult) => {
-  // Load the note
   try {
-    if (fs.existsSync(result.filePath)) {
+    if (!fs.existsSync(result.filePath)) return;
+
+    ttsStore.cnote.title = result.fileName;
+    ttsStore.cnote.lastPath = result.filePath;
+    ttsStore.inputs.notePath = result.filePath;
+    ttsStore.setLastEditNote();
+
+    if (result.filePath.endsWith('.md')) {
+      // MarkdownEditor loads via watch on notePath
+    } else {
       const data = fs.readFileSync(result.filePath, 'utf8');
       const jsonData = JSON.parse(data);
-
-      ttsStore.cnote.title = result.fileName;
-      ttsStore.cnote.lastPath = result.filePath;
-      ttsStore.inputs.notePath = result.filePath;
       ttsStore.editerData = jsonData;
-
-      // Close search dialog
-      ttsStore.clearSearch();
     }
+
+    ttsStore.clearSearch();
   } catch (error) {
     console.error('Error loading note:', error);
   }

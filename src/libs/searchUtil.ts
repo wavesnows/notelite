@@ -181,6 +181,30 @@ function searchFile(filePath: string, query: string): SearchResult[] {
 /**
  * Recursively search all notes in a directory
  */
+function searchMdFile(filePath: string, query: string): SearchResult[] {
+  const results: SearchResult[] = [];
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (!content || content.trim().length === 0) return results;
+
+    const fileName = path.basename(filePath, '.md');
+    const lowerQuery = query.toLowerCase();
+
+    if (content.toLowerCase().includes(lowerQuery)) {
+      const score = calculateScore(content, query, fileName);
+      results.push({
+        filePath,
+        fileName,
+        matchedText: content.substring(0, 200),
+        context: createContext(content, query),
+        blockType: 'markdown',
+        score,
+      });
+    }
+  } catch (_) {}
+  return results;
+}
+
 function searchDirectory(dirPath: string, query: string, results: SearchResult[] = []): SearchResult[] {
   try {
     if (!fs.existsSync(dirPath)) {
@@ -197,12 +221,11 @@ function searchDirectory(dirPath: string, query: string, results: SearchResult[]
       const stat = fs.statSync(itemPath);
 
       if (stat.isDirectory()) {
-        // Recursively search subdirectories
         searchDirectory(itemPath, query, results);
       } else if (stat.isFile() && item.endsWith('.json')) {
-        // Search JSON files
-        const fileResults = searchFile(itemPath, query);
-        results.push(...fileResults);
+        results.push(...searchFile(itemPath, query));
+      } else if (stat.isFile() && item.endsWith('.md')) {
+        results.push(...searchMdFile(itemPath, query));
       }
     });
   } catch (error) {
@@ -220,8 +243,9 @@ export function searchNotes(notebookPath: string, query: string): SearchResult[]
     return [];
   }
 
-  const notesPath = path.join(notebookPath, 'notes');
-  const results = searchDirectory(notesPath, query.trim());
+  // Search from notebookPath directly — supports both old (with /notes subdir)
+  // and new (direct root) notebook structures
+  const results = searchDirectory(notebookPath, query.trim());
 
   // Sort by score (highest first)
   results.sort((a, b) => b.score - a.score);
