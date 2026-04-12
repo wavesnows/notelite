@@ -16,6 +16,10 @@ const en = {
       noResults: 'No results found',
       searching: 'Searching...',
     },
+    recent: {
+      title: 'Recent',
+      empty: 'No recently opened files',
+    },
     favorites: {
       pin: 'Pin Note',
       unpin: 'Unpin Note',

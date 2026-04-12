@@ -16,6 +16,10 @@ const zh = {
       noResults: '未找到结果',
       searching: '搜索中...',
     },
+    recent: {
+      title: '最近访问',
+      empty: '暂无最近访问的文件',
+    },
     favorites: {
       pin: '置顶笔记',
       unpin: '取消置顶',

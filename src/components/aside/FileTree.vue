@@ -466,6 +466,7 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.cnote.lastPath = itemdata.path;
     ttsStore.treeMenu.currentNode = treeRef.value?.getCurrentNode()
     ttsStore.setLastEditNote()
+    ttsStore.addRecentFile(itemdata.path, itemdata.label)
 
     if (itemdata.path.endsWith('.md')) {
       // MarkdownEditor handles loading via watch on notePath

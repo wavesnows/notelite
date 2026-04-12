@@ -84,11 +84,14 @@ const openNote = (note: {path: string, label: string}) => {
       ttsStore.cnote.title = note.label
       ttsStore.cnote.destTitle = note.label
       ttsStore.cnote.lastPath = note.path
+      ttsStore.addRecentFile(note.path, note.label)
 
       data = data.trim().replace('\n', '')
       if (data === "") {
         console.log('empty file')
-        ttsStore.editorInstance.clear()
+        if (ttsStore.editorInstance) {
+          ttsStore.editorInstance.clear()
+        }
       } else {
         try {
           const jsonData = JSON.parse(data)

@@ -2,8 +2,9 @@
   <div class="aside" :style="{ width: width + 'px' }">
     <FileTree v-if="ttsStore.page.asideIndex == '1'"/>
     <Favorites v-if="ttsStore.page.asideIndex == '2'"/>
-    <Common v-if="ttsStore.page.asideIndex == '3'"/>
-    <Lan v-if="ttsStore.page.asideIndex == '4'"/>
+    <RecentFiles v-if="ttsStore.page.asideIndex == '3'"/>
+    <Common v-if="ttsStore.page.asideIndex == '4'"/>
+    <Lan v-if="ttsStore.page.asideIndex == '5'"/>
     <!-- Drag handle -->
     <div class="resize-handle" @mousedown="startDrag"></div>
   </div>
@@ -15,6 +16,7 @@ import { useTtsStore } from "@/store/store";
 import { storeToRefs } from "pinia";
 import FileTree from "./FileTree.vue"
 import Favorites from "./Favorites.vue"
+import RecentFiles from "./RecentFiles.vue"
 import Common from "./Common.vue";
 import Lan from "./Lan.vue"
 

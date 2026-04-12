@@ -95,6 +95,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         pinned: store.get('pinnedNotes') || [],
         starred: store.get('starredNotes') || [],
       },
+      recentFiles: (store.get('recentFiles') as Array<{path: string, label: string, time: number}>) || [],
       menu:{
         current:"",
         curentData:<Tree>{}
@@ -309,6 +310,17 @@ export const useTtsStore = defineStore(DFConf.appName, {
       this.search.results = [];
       this.search.showResults = false;
       this.search.isLoadingMore = false;
+    },
+    addRecentFile(filePath: string, label: string) {
+      // Remove existing entry for same path
+      this.recentFiles = this.recentFiles.filter((f: any) => f.path !== filePath);
+      // Add to front
+      this.recentFiles.unshift({ path: filePath, label, time: Date.now() });
+      // Keep max 50
+      if (this.recentFiles.length > 50) {
+        this.recentFiles = this.recentFiles.slice(0, 50);
+      }
+      store.set('recentFiles', this.recentFiles);
     },
     togglePin(path: string) {
       const index = this.favorites.pinned.indexOf(path);
