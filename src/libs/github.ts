@@ -26,9 +26,9 @@ export async function gitHubClone(t: (key: string) => string): Promise<boolean> 
 
   const name = ttsStore.config.githubUsername;
   const repo = ttsStore.config.githubRepoName;
-  const notePath = ttsStore.config.savePath;
   const gitUrl = `https://github.com/${name}/${repo}.git`;
-  const localPath = path.join(notePath, "repos", repo);
+  // Use current active root store, not the initial savePath
+  const localPath = path.join(ttsStore.notestore.currentStore, "repos", repo);
 
   console.log('Cloning to:', localPath);
   ttsStore.setPushStatus(t('github.cloning'), 'loading');
