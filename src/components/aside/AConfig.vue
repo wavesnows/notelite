@@ -211,6 +211,27 @@
   async function cloneRepo() {
     if (!canClone.value) return;
     const repoName = cloneRepoName.value.trim();
+
+    // Warn if switching to multi mode and root has non-repos/ content
+    if (cloneMode.value === 'multi') {
+      const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
+      if (!fs.existsSync(reposPath)) {
+        // Root has no repos/ yet — check if it has other content
+        const items = fs.readdirSync(ttsStore.notestore.currentStore).filter((f: string) => !f.startsWith('.'));
+        if (items.length > 0) {
+          try {
+            await ElMessageBox.confirm(
+              '当前根目录下已有内容，切换为多笔记本模式后，这些内容将不会显示在笔记本列表中。确定继续吗？',
+              '提示',
+              { confirmButtonText: '继续', cancelButtonText: '取消', type: 'warning' }
+            );
+          } catch {
+            return; // User cancelled
+          }
+        }
+      }
+    }
+
     const prevRepo = config.value.githubRepoName;
     config.value.githubRepoName = repoName;
     cloning.value = true;
