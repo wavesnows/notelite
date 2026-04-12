@@ -136,7 +136,7 @@
               </el-form-item>
               <el-form-item :label="t('settings.cloneMode')">
                 <el-radio-group v-model="cloneMode" style="display: flex; flex-direction: column; gap: 8px; -webkit-app-region: no-drag;">
-                  <el-radio label="multi" :disabled="isDirectMode">{{ t('settings.cloneModeMulti') }}</el-radio>
+                  <el-radio label="multi">{{ t('settings.cloneModeMulti') }}</el-radio>
                   <el-radio label="direct">{{ t('settings.cloneModeDirect') }}</el-radio>
                 </el-radio-group>
               </el-form-item>
@@ -197,19 +197,6 @@
   const canClone = computed(() =>
     !!(config.value.githubUsername && config.value.githubToken && cloneRepoName.value.trim())
   );
-
-  // Check if current root is in direct mode (no repos/ subdir)
-  const isDirectMode = computed(() => {
-    const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
-    return !fs.existsSync(reposPath);
-  });
-
-  // When drawer opens or root changes, set default clone mode
-  function updateCloneMode() {
-    if (isDirectMode.value) {
-      cloneMode.value = 'direct';
-    }
-  }
 
   const cloneTargetPath = computed(() => {
     const repoName = cloneRepoName.value || 'repo-name';
@@ -273,7 +260,6 @@
 
   function onDrawerOpen() {
     buildNotebookOptions();
-    updateCloneMode();
   }
 
   const isInGitRepo = computed(() => {
