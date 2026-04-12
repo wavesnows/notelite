@@ -54,6 +54,7 @@ const zh = {
       cloneBtn: '克隆',
       cloneTo: '克隆到',
       cloneMode: '克隆模式',
+      cloneMultiModeWarning: '当前根目录下已有内容，切换为多笔记本模式后，这些内容将不会显示在笔记本列表中。确定继续吗？',
       cloneModeMulti: '作为独立笔记本（repos/）',
       cloneModeDirect: '加入当前笔记本',
       githubUsername: 'GitHub 用户名',

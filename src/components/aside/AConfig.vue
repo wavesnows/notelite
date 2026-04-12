@@ -226,9 +226,9 @@
         if (items.length > 0) {
           try {
             await ElMessageBox.confirm(
-              '当前根目录下已有内容，切换为多笔记本模式后，这些内容将不会显示在笔记本列表中。确定继续吗？',
-              '提示',
-              { confirmButtonText: '继续', cancelButtonText: '取消', type: 'warning' }
+              t('settings.cloneMultiModeWarning'),
+              t('common.confirm'),
+              { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'warning' }
             );
           } catch {
             return; // User cancelled

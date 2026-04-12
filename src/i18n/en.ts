@@ -54,6 +54,7 @@ const en = {
       cloneBtn: 'Clone',
       cloneTo: 'Clone to',
       cloneMode: 'Clone mode',
+      cloneMultiModeWarning: 'The current root directory has existing content. After switching to multi-notebook mode, this content will no longer be visible in the notebook list. Continue?',
       cloneModeMulti: 'As separate notebook (repos/)',
       cloneModeDirect: 'Into current notebook',
       githubUsername: 'GitHub User Name',
