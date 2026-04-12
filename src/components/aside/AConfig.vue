@@ -245,16 +245,16 @@
       if (success) {
         cloneRepoName.value = '';
         buildNotebookOptions();
+        ElMessage({ message: t('github.cloneSuccess'), type: 'success' });
         if (cloneMode.value === 'multi') {
-          // Auto switch to the cloned notebook
           const githubNotebook = { value: repoName, label: repoName, type: 'github', rootDir: ttsStore.notestore.currentStore };
           saveHander(githubNotebook);
         } else {
-          // Refresh tree to show cloned repo in current notebook
           ttsStore.refreshTreeData();
         }
       } else {
         config.value.githubRepoName = prevRepo;
+        ElMessage({ message: t('github.cloneFailed') + ': ' + t('github.repoNotFound'), type: 'error' });
       }
     } finally {
       cloning.value = false;

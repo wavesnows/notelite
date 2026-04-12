@@ -142,6 +142,8 @@ const zh = {
       pushing: '正在推送更改...',
       switchedToRemote: '已切换到远程笔记本',
       authFailed: '认证失败，请检查 Token',
+      repoNotFound: '仓库不存在，请检查仓库名称',
+      repoAlreadyExists: '仓库已在本地存在',
       networkError: '网络错误，请检查连接',
       conflictError: '检测到合并冲突',
       pushRejected: '推送被拒绝，请先拉取',

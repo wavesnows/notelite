@@ -142,6 +142,8 @@ const en = {
       pushing: 'Pushing changes...',
       switchedToRemote: 'Switched to remote notebook',
       authFailed: 'Authentication failed. Check token',
+      repoNotFound: 'Repository not found, please check the repo name',
+      repoAlreadyExists: 'Repository already cloned locally',
       networkError: 'Network error. Check connection',
       conflictError: 'Merge conflict detected',
       pushRejected: 'Push rejected. Pull first',

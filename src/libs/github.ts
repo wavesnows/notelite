@@ -43,7 +43,18 @@ export async function gitHubClone(t: (key: string) => string, mode: 'multi' | 'd
     console.log('Clone finished');
     return true;
   } catch(error: any) {
-    ttsStore.setPushStatus(t('github.cloneFailed') + ': ' + error.message, 'error');
+    const msg = error.message || '';
+    let friendlyMsg: string;
+    if (msg.includes('not found') || msg.includes('Repository not found') || msg.includes('does not exist')) {
+      friendlyMsg = t('github.repoNotFound');
+    } else if (msg.includes('Authentication failed') || msg.includes('auth')) {
+      friendlyMsg = t('github.authFailed');
+    } else if (msg.includes('already exists')) {
+      friendlyMsg = t('github.repoAlreadyExists');
+    } else {
+      friendlyMsg = msg.split('\n')[0].substring(0, 80);
+    }
+    ttsStore.setPushStatus(t('github.cloneFailed') + ': ' + friendlyMsg, 'error');
     console.error('Clone failed:', error);
     return false;
   }
