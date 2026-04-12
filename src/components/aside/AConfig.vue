@@ -111,26 +111,36 @@
                 <el-button size="small" type="primary" link @click="openGitInstallPage">{{ t('settings.installGit') }} →</el-button>
               </template>
             </el-alert>
+
+            <!-- GitHub 账号配置 -->
+            <div class="section-title">{{ t('settings.githubAccount') }}</div>
             <el-form :model="config" label-width="120px" label-position="top">
-              <el-form-item :label="t('settings.localPath')">
-                <div class="form-item-content">
-                  <div class="path-display">{{ notestore.currentStore }}</div>
-                  <el-button class="action-button" :prefix-icon="Select" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
-                </div>
-              </el-form-item>
               <el-form-item :label="t('settings.githubUsername')">
                 <el-input v-model="config.githubUsername" :placeholder="t('settings.githubUsernamePlaceholder')" @change="saveGitHubConfig" />
               </el-form-item>
               <el-form-item :label="t('settings.githubToken')">
                 <el-input v-model="config.githubToken" type="password" show-password :placeholder="t('settings.githubTokenPlaceholder')" @change="saveGitHubConfig" />
               </el-form-item>
+            </el-form>
+
+            <!-- 克隆仓库 -->
+            <div class="section-title" style="margin-top: 16px;">{{ t('settings.cloneRepo') }}</div>
+            <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.githubRepoName')">
-                <el-input v-model="config.githubRepoName" :placeholder="t('settings.githubRepoPlaceholder')" @change="saveGitHubConfig" />
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                  <el-input v-model="cloneRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="flex: 1;" />
+                  <el-button type="primary" @click="cloneRepo" :disabled="!canClone" :loading="cloning">
+                    {{ t('settings.cloneBtn') }}
+                  </el-button>
+                </div>
+              </el-form-item>
+              <el-form-item :label="t('settings.cloneTo')">
+                <div class="path-display">{{ notestore.currentStore }}</div>
+                <div style="font-size: 12px; color: #909399; margin-top: 4px;">
+                  → {{ notestore.currentStore }}/repos/{{ cloneRepoName || 'repo-name' }}
+                </div>
               </el-form-item>
             </el-form>
-            <div class="form-actions">
-              <el-button class="action-button" @click="initClick" :disabled="!isGithubConfigured">{{ t('settings.initFromGitHub') }}</el-button>
-            </div>
           </el-tab-pane>
 
         </el-tabs>
@@ -177,6 +187,35 @@
   const { config, notebook, notestore, settings, cnote } = storeToRefs(ttsStore);
 
   const refreshing = ref(false);
+  const cloneRepoName = ref('');
+  const cloning = ref(false);
+
+  const canClone = computed(() =>
+    !!(config.value.githubUsername && config.value.githubToken && cloneRepoName.value.trim())
+  );
+
+  async function cloneRepo() {
+    if (!canClone.value) return;
+    const repoName = cloneRepoName.value.trim();
+    // Temporarily set repoName in config for gitHubClone to use
+    const prevRepo = config.value.githubRepoName;
+    config.value.githubRepoName = repoName;
+    cloning.value = true;
+    try {
+      const success = await gitHubClone(t);
+      if (success) {
+        cloneRepoName.value = '';
+        buildNotebookOptions();
+        // Auto switch to the cloned notebook
+        const githubNotebook = { value: repoName, label: repoName, type: 'github', rootDir: ttsStore.notestore.currentStore };
+        saveHander(githubNotebook);
+      } else {
+        config.value.githubRepoName = prevRepo;
+      }
+    } finally {
+      cloning.value = false;
+    }
+  }
 
   // Notebook options — computed lazily only when drawer opens, not reactive to every store change
   const notebookOptions = ref<{ label: string; options: any[] }[]>([]);
@@ -211,10 +250,6 @@
     return isFileInGitRepo(lastPath);
   });
 
-  const isGithubConfigured = computed(() => {
-    return !!(config.value.githubUsername && config.value.githubToken && config.value.githubRepoName);
-  });
-
   function openGitInstallPage() {
     const { shell } = require('electron');
     shell.openExternal('https://git-scm.com/downloads');
@@ -238,15 +273,6 @@
       buildNotebookOptions();
     });
   };
-
-  async function initClick() {
-    const success = await gitHubClone(t);
-    if (success && ttsStore.config.githubRepoName) {
-      const githubNotebook = { value: ttsStore.config.githubRepoName, label: ttsStore.config.githubRepoName, type: 'github' };
-      saveHander(githubNotebook);
-      ElMessage({ message: t('github.switchedToRemote'), type: 'success' });
-    }
-  }
 
   function popHandler() {
     ttsStore.config.drawer = true;
@@ -458,5 +484,14 @@
 
 :deep(.el-form-item__label) {
   font-weight: 600;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #606266;
+  padding: 0 0 8px 0;
+  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 12px;
 }
 </style>
