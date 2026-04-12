@@ -27,12 +27,7 @@
       </el-dropdown>
       </el-tooltip>
     <el-tooltip class="box-item" :content="t('toolbar.setting')" placement="top-start">
-    <el-button
-      type="info"
-      size="small"
-      circle
-      class="circle-btn"
-      @click="popHandler">
+    <el-button type="info" size="small" circle class="circle-btn" @click="popHandler">
       <el-icon ><Setting /></el-icon>
     </el-button>
     </el-tooltip>
@@ -44,28 +39,27 @@
     </el-button-group>
     </div>
     <!--Left Panel End-->
+
     <!--Config Drawer Start-->
-    <el-drawer v-model="config.drawer" direction="rtl" size="50%" :close-on-click-modal="true">
+    <el-drawer v-model="config.drawer" direction="rtl" size="50%" :close-on-click-modal="true" @open="onDrawerOpen">
       <template #header>
         <h3>{{ t('settings.title') }}</h3>
       </template>
       <template #default>
         <el-tabs tab-position="left" style="height: 100%" class="demo-tabs">
-          <el-tab-pane :label="t('settings.globalSetting')">
-            <el-form  v-model="config" label-width="120px" label-position="top">
 
-              <el-form-item :label="t('settings.languageLabel')">
-                <el-select v-model="config.language" @change="changeLanguage">
-                  <el-option :label="t('settings.english')" value="en_US" />
-                  <el-option :label="t('settings.chinese')" value="zh_CN" />
+          <!-- Tab 1: 笔记本 -->
+          <el-tab-pane :label="t('settings.notebookTab')">
+            <el-form label-width="120px" label-position="top">
+              <el-form-item :label="t('settings.currentNotebook')">
+                <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" @change="saveHander">
+                  <el-option-group v-for="group in notebookOptions" :key="group.label" :label="group.label">
+                    <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
+                  </el-option-group>
                 </el-select>
               </el-form-item>
-
-              <el-form-item :label="t('settings.localPath')">
-                <div class="form-item-content">
-                  <div class="path-display">{{ notestore.currentStore }}</div>
-                  <el-button class="action-button" :prefix-icon="Select" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
-                </div>
+              <el-form-item :label="t('settings.notebookPath')">
+                <div class="path-display">{{ notebook.currentPath }}</div>
               </el-form-item>
               <el-form-item label="根目录列表">
                 <div class="root-stores-list">
@@ -77,28 +71,31 @@
                   >
                     <span class="root-store-path" :title="storeDir">{{ storeDir.split('/').pop() || storeDir }}</span>
                     <div class="root-store-actions">
-                      <el-button
-                        v-if="storeDir !== notestore.currentStore"
-                        size="small"
-                        type="primary"
-                        link
-                        @click="switchRootStore(storeDir)"
-                      >切换</el-button>
-                      <el-button
-                        v-if="notestore.rootStores.length > 1"
-                        size="small"
-                        type="danger"
-                        link
-                        @click="removeRootStore(storeDir)"
-                      >移除</el-button>
+                      <el-button v-if="storeDir !== notestore.currentStore" size="small" type="primary" link @click="switchRootStore(storeDir)">切换</el-button>
+                      <el-button v-if="notestore.rootStores.length > 1" size="small" type="danger" link @click="removeRootStore(storeDir)">移除</el-button>
                     </div>
                   </div>
-                  <el-button size="small" @click="addRootStore" style="margin-top: 8px;">
-                    + 添加根目录
-                  </el-button>
+                  <el-button size="small" @click="addRootStore" style="margin-top: 8px;">+ 添加根目录</el-button>
                 </div>
               </el-form-item>
+              <el-form-item :label="t('settings.defaultNotebookPath')">
+                <div class="form-item-content">
+                  <div class="path-display">{{ settings.defaultNotePath }}</div>
+                  <el-button class="action-button" :prefix-icon="Select" @click="initCommonBook">{{ t('settings.initDefaultNotebook') }}</el-button>
+                </div>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
 
+          <!-- Tab 2: 外观 -->
+          <el-tab-pane :label="t('settings.appearanceTab')">
+            <el-form label-width="120px" label-position="top">
+              <el-form-item :label="t('settings.languageLabel')">
+                <el-select v-model="config.language" @change="changeLanguage">
+                  <el-option :label="t('settings.english')" value="en_US" />
+                  <el-option :label="t('settings.chinese')" value="zh_CN" />
+                </el-select>
+              </el-form-item>
               <el-form-item label="MD 预览主题">
                 <el-select :model-value="ttsStore.mdTheme" @change="(v: string) => ttsStore.setMdTheme(v)" style="width: 200px;">
                   <el-option label="🩵 青绿经典（默认）" value="teal" />
@@ -108,111 +105,122 @@
                   <el-option label="🔴 红黑经典" value="red" />
                 </el-select>
               </el-form-item>
-
-              <el-form-item :label="t('settings.defaultNotebookPath')">
-                <div class="form-item-content">
-                  <div class="path-display">{{ settings.defaultNotePath }}</div>
-                  <el-button class="action-button" :prefix-icon="Select" @click="initCommonBook">{{ t('settings.initDefaultNotebook') }}</el-button>
-                </div>
-              </el-form-item>
-              <el-form-item :label="t('settings.currentNotebook')">
-              <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" @change="saveHander" >
-                <el-option-group v-for="group in options" :key="group.label" :label="group.label">
-                  <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
-                </el-option-group>
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="t('settings.notebookPath')">
-              <div class="path-display">{{ notebook.currentPath }}</div>
-            </el-form-item>
             </el-form>
-           <!-- <div style="flex: auto">
-              <el-button style="float: right;"  type="success" @click="initCommonBook">Initial Default Noetbook</el-button>
-            </div>-->
           </el-tab-pane>
+
+          <!-- Tab 3: 同步 -->
           <el-tab-pane :label="t('settings.remoteSetting')">
-            <el-alert
-              v-if="!ttsStore.gitAvailable"
-              type="warning"
-              :closable="false"
-              style="margin-bottom: 16px;"
-            >
-              <template #title>
-                {{ t('settings.gitNotFound') }}
-              </template>
+            <el-alert v-if="!ttsStore.gitAvailable" type="warning" :closable="false" style="margin-bottom: 16px;">
+              <template #title>{{ t('settings.gitNotFound') }}</template>
               <template #default>
                 <p style="margin: 4px 0;">{{ t('settings.gitNotFoundDesc') }}</p>
-                <el-button size="small" type="primary" link @click="openGitInstallPage">
-                  {{ t('settings.installGit') }} →
-                </el-button>
+                <el-button size="small" type="primary" link @click="openGitInstallPage">{{ t('settings.installGit') }} →</el-button>
               </template>
             </el-alert>
             <el-form :model="config" label-width="120px" label-position="top">
+              <el-form-item :label="t('settings.localPath')">
+                <div class="form-item-content">
+                  <div class="path-display">{{ notestore.currentStore }}</div>
+                  <el-button class="action-button" :prefix-icon="Select" @click="openDialog">{{ t('settings.changeDefaultPath') }}</el-button>
+                </div>
+              </el-form-item>
               <el-form-item :label="t('settings.githubUsername')">
-                <el-input
-                  v-model="config.githubUsername"
-                  :placeholder="t('settings.githubUsernamePlaceholder')"
-                  @change="saveGitHubConfig"
-                />
+                <el-input v-model="config.githubUsername" :placeholder="t('settings.githubUsernamePlaceholder')" @change="saveGitHubConfig" />
               </el-form-item>
               <el-form-item :label="t('settings.githubToken')">
-                <el-input
-                  v-model="config.githubToken"
-                  type="password"
-                  show-password
-                  :placeholder="t('settings.githubTokenPlaceholder')"
-                  @change="saveGitHubConfig"
-                />
+                <el-input v-model="config.githubToken" type="password" show-password :placeholder="t('settings.githubTokenPlaceholder')" @change="saveGitHubConfig" />
               </el-form-item>
               <el-form-item :label="t('settings.githubRepoName')">
-                <el-input
-                  v-model="config.githubRepoName"
-                  :placeholder="t('settings.githubRepoPlaceholder')"
-                  @change="saveGitHubConfig"
-                />
+                <el-input v-model="config.githubRepoName" :placeholder="t('settings.githubRepoPlaceholder')" @change="saveGitHubConfig" />
               </el-form-item>
             </el-form>
             <div class="form-actions">
               <el-button class="action-button" @click="initClick" :disabled="!isGithubConfigured">{{ t('settings.initFromGitHub') }}</el-button>
             </div>
           </el-tab-pane>
+
         </el-tabs>
       </template>
     </el-drawer>
     <!--Config Drawer End-->
-    <!--Create Note Folder Dialog Start -->
-    <el-dialog v-model="dialogFormVisible" :title="t('dialog.addRootFolder')">
-    <el-form :model="ttsStore.menu">
-      <el-form-item :label="t('dialog.typeFolderName')" :label-width="formLabelWidth">
-        <el-input v-model="rootFolderName" autocomplete="off" />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="addRootFolder" >{{ t('common.ok') }}</el-button>
-      </span>
-    </template>
-  </el-dialog>
 
- <!--Create Note Folder Dialog End -->
+    <!--Create Note Folder Dialog-->
+    <el-dialog v-model="dialogFormVisible" :title="t('dialog.addRootFolder')">
+      <el-form :model="ttsStore.menu">
+        <el-form-item :label="t('dialog.typeFolderName')" :label-width="formLabelWidth">
+          <el-input v-model="rootFolderName" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogFormVisible = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="addRootFolder">{{ t('common.ok') }}</el-button>
+        </span>
+      </template>
+    </el-dialog>
 </template>
-    
+
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
-  import { Refresh } from '@element-plus/icons-vue'
+  import { Refresh, Setting, Plus, Download, Upload, Select, Suitcase } from '@element-plus/icons-vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
-  import {gitHubClone, gitPull, gitHubPush} from "@/libs/github"
+  import { gitHubClone, gitPull, gitHubPush } from "@/libs/github"
   import fs from 'fs'
-  import {join} from "path";
-  import type Node from 'element-plus/es/components/tree/src/model/node'
-  import {initDefaultNotebook} from "@/libs/noteUtil"
-  import { readDir, readOneDir,readNotes} from "@/libs/fileHandler"
-  import { Select, Plus, Download, Upload } from "@element-plus/icons-vue";
+  import { join } from "path";
+  import { initDefaultNotebook } from "@/libs/noteUtil"
+  import { readOneDir } from "@/libs/fileHandler"
+  import defaultConf from "@/global/defaultConf";
+  import { ipcRenderer } from 'electron';
+  import { useI18n } from 'vue-i18n';
+  import { isFileInGitRepo } from '@/libs/gitHistory';
+
+  const { t, locale } = useI18n();
+  const formLabelWidth = '140px';
+  const dialogFormVisible = ref(false)
+  const rootFolderName = ref("notes")
+  const ttsStore = useTtsStore();
+  const { config, notebook, notestore, settings, cnote } = storeToRefs(ttsStore);
 
   const refreshing = ref(false);
+
+  // Notebook options — computed lazily only when drawer opens, not reactive to every store change
+  const notebookOptions = ref<{ label: string; options: any[] }[]>([]);
+
+  function buildNotebookOptions() {
+    const groups: { label: string; options: any[] }[] = [];
+    for (const rootDir of ttsStore.notestore.rootStores) {
+      const reposPath = join(rootDir, defaultConf.defaultRepoPath);
+      const hasRepos = fs.existsSync(reposPath) && fs.statSync(reposPath).isDirectory();
+      const dirName = rootDir.split('/').pop() || rootDir;
+      if (hasRepos) {
+        const allNotebooks = readOneDir(reposPath);
+        if (allNotebooks.length === 0) continue;
+        groups.push({ label: dirName, options: allNotebooks.map((nb: any) => ({ ...nb, rootDir })) });
+      } else {
+        groups.push({
+          label: dirName,
+          options: [{ label: dirName, value: dirName, path: rootDir, type: 'direct', rootDir }],
+        });
+      }
+    }
+    notebookOptions.value = groups;
+  }
+
+  function onDrawerOpen() {
+    buildNotebookOptions();
+  }
+
+  const isInGitRepo = computed(() => {
+    const lastPath = cnote.value.lastPath;
+    if (!lastPath) return false;
+    return isFileInGitRepo(lastPath);
+  });
+
+  const isGithubConfigured = computed(() => {
+    return !!(config.value.githubUsername && config.value.githubToken && config.value.githubRepoName);
+  });
 
   function openGitInstallPage() {
     const { shell } = require('electron');
@@ -224,114 +232,41 @@
     ttsStore.refreshTreeData();
     setTimeout(() => { refreshing.value = false; }, 600);
   };
-  import defaultConf from "@/global/defaultConf";
-  import { ipcRenderer } from 'electron';
-  import { useI18n } from 'vue-i18n';
-  import { isFileInGitRepo } from '@/libs/gitHistory';
-
-
-  const { t, locale } = useI18n();
-  const formLabelWidth = '140px';
-  const dialogFormVisible = ref(false)
-  var rootFolderName = ref("notes")
-  const ttsStore = useTtsStore();
-  var {config, notebook, notestore, settings, cnote} = storeToRefs(ttsStore);
-
-  const isInGitRepo = computed(() => {
-    const lastPath = cnote.value.lastPath;
-    if (!lastPath) return false;
-    return isFileInGitRepo(lastPath);
-  });
-
-  // Check if GitHub is configured (all fields filled)
-  const isGithubConfigured = computed(() => {
-    return !!(config.value.githubUsername &&
-              config.value.githubToken &&
-              config.value.githubRepoName);
-  });
-
-  const options = computed(() => {
-    const groups: { label: string; options: any[] }[] = [];
-
-    for (const rootDir of ttsStore.notestore.rootStores) {
-      const reposPath = join(rootDir, defaultConf.defaultRepoPath);
-      const hasRepos = fs.existsSync(reposPath) && fs.statSync(reposPath).isDirectory();
-      const dirName = rootDir.split('/').pop() || rootDir;
-
-      if (hasRepos) {
-        // 老逻辑：repos/ 子目录下的笔记本列表
-        const allNotebooks = readOneDir(reposPath);
-        if (allNotebooks.length === 0) continue;
-        const notebooksWithRoot = allNotebooks.map((nb: any) => ({ ...nb, rootDir }));
-        groups.push({ label: dirName, options: notebooksWithRoot });
-      } else {
-        // 新逻辑：整个根目录直接作为一个笔记本
-        groups.push({
-          label: dirName,
-          options: [{
-            label: dirName,
-            value: dirName,
-            path: rootDir,
-            type: 'direct',
-            rootDir,
-          }],
-        });
-      }
-    }
-
-    return groups;
-  });
 
   const openDialog = () => {
     ipcRenderer.removeAllListeners('selected-directory');
     ipcRenderer.send('open-dialog');
-    console.log('store::'+ttsStore.notestore.currentStore)
     ipcRenderer.once('selected-directory', (event, path) => {
-      console.log(path);
       config.value.savePath = path[0];
       ttsStore.notestore.currentStore = path[0];
       ttsStore.addRootStore(path[0]);
-      ttsStore.notebook.currentPath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-      ttsStore.settings.defaultNotePath = join(path[0],defaultConf.defaultRepoPath,defaultConf.defaultRepoName)
-      getNoteBookList(join(path[0],defaultConf.defaultRepoPath))
+      ttsStore.notebook.currentPath = join(path[0], defaultConf.defaultRepoPath, defaultConf.defaultRepoName);
+      ttsStore.settings.defaultNotePath = join(path[0], defaultConf.defaultRepoPath, defaultConf.defaultRepoName);
+      buildNotebookOptions();
     });
   };
 
- 
-
-  async function initClick(){
+  async function initClick() {
     const success = await gitHubClone(t);
-    // 克隆成功后自动切换到 GitHub 笔记本
     if (success && ttsStore.config.githubRepoName) {
-      const githubNotebook = {
-        value: ttsStore.config.githubRepoName,
-        label: ttsStore.config.githubRepoName,
-        type: 'github',
-      };
+      const githubNotebook = { value: ttsStore.config.githubRepoName, label: ttsStore.config.githubRepoName, type: 'github' };
       saveHander(githubNotebook);
-      ElMessage({
-        message: t('github.switchedToRemote'),
-        type: 'success',
-      });
+      ElMessage({ message: t('github.switchedToRemote'), type: 'success' });
     }
   }
 
-  function initCommonBook(){
-    let str = initDefaultNotebook(ttsStore.config.savePath as string);
+  function initCommonBook() {
+    const str = initDefaultNotebook(ttsStore.config.savePath as string);
     ElMessage(str);
   }
 
-  function popHandler(){
-    ttsStore.config.drawer = true
+  function popHandler() {
+    ttsStore.config.drawer = true;
   }
 
   function saveGitHubConfig() {
-    // Save GitHub config immediately when input changes
     ttsStore.setLocalNotePath();
-    ElMessage({
-      message: t('settings.saveSuccess'),
-      type: 'success',
-    });
+    ElMessage({ message: t('settings.saveSuccess'), type: 'success' });
   }
 
   function addRootStore() {
@@ -340,6 +275,7 @@
     ipcRenderer.once('selected-directory', (_event: any, paths: string[]) => {
       if (paths && paths[0]) {
         ttsStore.addRootStore(paths[0]);
+        buildNotebookOptions();
         ElMessage({ message: '根目录已添加', type: 'success' });
       }
     });
@@ -347,6 +283,7 @@
 
   function removeRootStore(dirPath: string) {
     ttsStore.removeRootStore(dirPath);
+    buildNotebookOptions();
     ElMessage({ message: '根目录已移除', type: 'success' });
   }
 
@@ -355,7 +292,6 @@
     const reposPath = join(dirPath, defaultConf.defaultRepoPath);
     const hasRepos = fs.existsSync(reposPath) && fs.statSync(reposPath).isDirectory();
     if (!hasRepos) {
-      // 无 repos/ 子目录，直接将根目录作为笔记本路径
       ttsStore.notebook.currentPath = dirPath;
       ttsStore.setNoteBookConfig();
     }
@@ -363,282 +299,176 @@
     ElMessage({ message: `已切换到：${dirPath.split('/').pop()}`, type: 'success' });
   }
 
-  const handleCommand = (command: string) => {
-    //ElMessage(`click on item ${command}`)
+  const handleCommand = () => {
     dialogFormVisible.value = true;
-
   }
 
   const changeLanguage = (lang: string) => {
     locale.value = lang;
     ttsStore.setLanguage(lang);
-    ElMessage({
-      message: t('settings.languageSwitched'),
-      type: 'success',
-    });
+    ElMessage({ message: t('settings.languageSwitched'), type: 'success' });
   }
 
-  /*
-
-  const handleCommand = (command: any) => {
-    ttsStore.treeMenu.treeData = command.data as Tree;
-    ttsStore.treeMenu.node = command.node as Node;
-    ElMessage(`click on item ${command.type}`)
-    switch (command.type) {
-      case 'file':
-        append(command.data)
-        break;
-      case 'folder':
-        dialogFormVisible.value = true; 
-        break;
-      case 'removeitem':
-      ElMessageBox.confirm('Are you sure to delete this file?','Delete')
-        .then(()=>{
-         // removeFolder() 
-         remove(command.node, command.data)
-        }
-        )
-        .catch(() => {
-      // catch error
-        })
-        break;
-      case 'remove':
-        ElMessageBox.confirm('Are you sure to Delete this Folder?','Delete')
-        .then(()=>{
-          removeFolder() 
-        }
-        )
-        .catch(() => {
-      // catch error
-        })
-        break;
-      default:
-        break;
-    }
+  const handleGit = async (command: string) => {
+    if (command === 'pull') await gitPull(t);
+    else if (command === 'push') await gitHubPush(t);
+    else ElMessage("Do nothing");
   }
 
-*/
-
-
-  const handleGit = async (command:string) =>{
-    if(command == 'pull'){
-      await gitPull(t)
-      console.log("Git Pull")
-    }
-    else if(command == 'push'){
-     // await githubPush()
-      await gitHubPush(t);
-      console.log("Git Push");
-    }
-    else{
-      ElMessage("Do nothings")
-    }
-  }
-
-
-
-    const addRootFolder = () =>{
-        dialogFormVisible.value = false;
-        let foldername  = rootFolderName.value;
-        let path = join(ttsStore.notebook.currentPath, foldername)
-        const newChild:Tree = {label: foldername, path: path, isFolder:true, isLeaf: true}
-        if(ttsStore.treeMenu.data.length <= 5){
-          try{
-            fs.mkdirSync(join(ttsStore.notebook.currentPath,foldername));
-            ttsStore.treeMenu.data.push(newChild)
-          }
-          catch(error){
-            ElMessage({
-            message: error as string,
-            grouping: true,
-            type: 'error',
-          })
-          }
-        }
-        else
-        {
-          ElMessage({
-            message: 'We only allow 6 folders at most!',
-            grouping: true,
-            type: 'warning',
-          })
-        }
-
-       //'success' | 'warning' | 'info' | 'error'
-       // ttsStore.treeMenu.data = readNotes(ttsStore.notebook.currentPath)
- 
-  }
-
-    async function saveHander(value:any){
-      ttsStore.settings.currentbook = value;
-      // Update active root store if notebook belongs to a different root
-      if (value.rootDir && value.rootDir !== ttsStore.notestore.currentStore) {
-        ttsStore.setActiveStore(value.rootDir);
+  const addRootFolder = () => {
+    dialogFormVisible.value = false;
+    const foldername = rootFolderName.value;
+    const path = join(ttsStore.notebook.currentPath, foldername);
+    const newChild: Tree = { label: foldername, path, isFolder: true, isLeaf: true };
+    if (ttsStore.treeMenu.data.length <= 5) {
+      try {
+        fs.mkdirSync(join(ttsStore.notebook.currentPath, foldername));
+        ttsStore.treeMenu.data.push(newChild);
+      } catch (error) {
+        ElMessage({ message: error as string, grouping: true, type: 'error' });
       }
-      // direct 类型：根目录本身就是笔记本，不拼 repos/ 子路径
-      const newPath = value.type === 'direct'
-        ? value.rootDir
-        : join(value.rootDir || ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
-      ttsStore.notebook.currentPath = newPath;
-      ttsStore.notebook.bookType = value.type;
-      ttsStore.setNoteBookConfig();
-
-      console.log('Switched to notebook:', value.value);
-      console.log('New notebook path:', newPath);
-
-      // Auto-pull when switching to remote notebook
-      if (value.type === 'github') {
-        console.log('Switching to remote notebook, pulling updates...');
-        await gitPull(t, ttsStore.notebook.currentPath);
-      }
-
-      // Force tree refresh by creating new array reference
-      ttsStore.refreshTreeData();
-
-      // Also set needUpdateTree to trigger any watchers
-      ttsStore.config.needUpdateTree = true;
-
-      ttsStore.startGitStatusCheck(); // Check git status for new notebook
-
-      ElMessage({
-        message: t('settings.notebookSwitched', { name: value.label }),
-        type: 'success',
-      });
-  }
-
-
-    function getNoteBookList(dir = ""){
-     // console.log("start find lists")
-    /*  var op:Array<Object> = readOneDir(dir)
-        const simplifiedUsers = op.map(obj => {
-        return {
-              name: obj['label'],
-              email: obj['value']
-        };
-      });
-      */
-      options[0].options = [...readOneDir(dir)];
+    } else {
+      ElMessage({ message: 'We only allow 6 folders at most!', grouping: true, type: 'warning' });
     }
-  </script>
-    
-  <style scoped>
-  .button-container {
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 20px;
-  }
-  
-  .el-button-group {
-    display: flex;
-    flex-direction: column;
-   
-  }
-  .circle-btn{
-    width: 25px; /* 调整按钮的大小 */
-    height: 25px;
-    border-radius: 50% !important; /* 设置圆角半径 */
-    border: none;
-    margin-top: 10px;
-    background-color: gray;
   }
 
-  .spinning {
-    animation: spin 0.6s linear;
-  }
+  async function saveHander(value: any) {
+    ttsStore.settings.currentbook = value;
+    if (value.rootDir && value.rootDir !== ttsStore.notestore.currentStore) {
+      ttsStore.setActiveStore(value.rootDir);
+    }
+    const newPath = value.type === 'direct'
+      ? value.rootDir
+      : join(value.rootDir || ttsStore.notestore.currentStore, defaultConf.defaultRepoPath, value.value);
+    ttsStore.notebook.currentPath = newPath;
+    ttsStore.notebook.bookType = value.type;
+    ttsStore.setNoteBookConfig();
 
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
+    if (value.type === 'github') await gitPull(t, ttsStore.notebook.currentPath);
 
-  /* Git dropdown menu styling */
-  .git-dropdown :deep(.el-dropdown-menu__item) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-  }
+    ttsStore.refreshTreeData();
+    ttsStore.config.needUpdateTree = true;
+    ttsStore.startGitStatusCheck();
 
-  .git-dropdown :deep(.el-dropdown-menu__item .el-icon) {
-    font-size: 16px;
+    ElMessage({ message: t('settings.notebookSwitched', { name: value.label }), type: 'success' });
   }
+</script>
 
-  /* Form item content layout */
-  .form-item-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
+<style scoped>
+.button-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 20px;
+}
 
-  .path-display {
-    padding: 8px 12px;
-    background-color: #f5f7fa;
-    border-radius: 4px;
-    font-size: 13px;
-    color: #606266;
-    word-break: break-all;
-  }
+.el-button-group {
+  display: flex;
+  flex-direction: column;
+}
 
-  .action-button {
-    width: fit-content;
-    align-self: flex-start;
-  }
+.circle-btn {
+  width: 25px;
+  height: 25px;
+  border-radius: 50% !important;
+  border: none;
+  margin-top: 10px;
+  background-color: gray;
+}
 
-  .root-stores-list {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 4px;
-  }
+.spinning {
+  animation: spin 0.6s linear;
+}
 
-  .root-store-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 10px;
-    border-radius: 4px;
-    background-color: #f5f7fa;
-    font-size: 13px;
-  }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
-  .root-store-item.active {
-    background-color: #ecf5ff;
-    border: 1px solid #b3d8ff;
-  }
+/* Git dropdown menu styling */
+.git-dropdown :deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
 
-  .root-store-path {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #606266;
-  }
+.git-dropdown :deep(.el-dropdown-menu__item .el-icon) {
+  font-size: 16px;
+}
 
-  .root-store-item.active .root-store-path {
-    color: #409eff;
-    font-weight: 600;
-  }
+.form-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
 
-  .root-store-actions {
-    display: flex;
-    gap: 4px;
-    flex-shrink: 0;
-  }
+.path-display {
+  padding: 8px 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #606266;
+  word-break: break-all;
+}
 
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #ebeef5;
-  }
+.action-button {
+  width: fit-content;
+  align-self: flex-start;
+}
 
-  /* Make all form labels bold */
-  :deep(.el-form-item__label) {
-    font-weight: 600;
-  }
+.root-stores-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+}
 
-  </style>
+.root-store-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: #f5f7fa;
+  font-size: 13px;
+}
+
+.root-store-item.active {
+  background-color: #ecf5ff;
+  border: 1px solid #b3d8ff;
+}
+
+.root-store-path {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #606266;
+}
+
+.root-store-item.active .root-store-path {
+  color: #409eff;
+  font-weight: 600;
+}
+
+.root-store-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ebeef5;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 600;
+}
+</style>
