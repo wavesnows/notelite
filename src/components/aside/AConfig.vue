@@ -127,17 +127,17 @@
             <div class="section-title" style="margin-top: 16px;">{{ t('settings.cloneRepo') }}</div>
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.githubRepoName')">
-                <div style="display: flex; gap: 8px; align-items: flex-start;">
-                  <el-input v-model="cloneRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="flex: 1;" />
-                  <el-button type="primary" @click="cloneRepo" :disabled="!canClone" :loading="cloning">
-                    {{ t('settings.cloneBtn') }}
-                  </el-button>
-                </div>
+                <el-input v-model="cloneRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="width: 100%;" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="cloneRepo" :disabled="!canClone" :loading="cloning" style="width: 100%;">
+                  {{ t('settings.cloneBtn') }}
+                </el-button>
               </el-form-item>
               <el-form-item :label="t('settings.cloneMode')">
-                <el-radio-group v-model="cloneMode">
-                  <el-radio value="multi">{{ t('settings.cloneModeMulti') }}</el-radio>
-                  <el-radio value="direct">{{ t('settings.cloneModeDirect') }}</el-radio>
+                <el-radio-group v-model="cloneMode" style="display: flex; flex-direction: column; gap: 8px;">
+                  <el-radio label="multi">{{ t('settings.cloneModeMulti') }}</el-radio>
+                  <el-radio label="direct">{{ t('settings.cloneModeDirect') }}</el-radio>
                 </el-radio-group>
               </el-form-item>
               <el-form-item :label="t('settings.cloneTo')">
