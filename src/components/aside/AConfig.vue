@@ -135,10 +135,24 @@
                 </el-button>
               </el-form-item>
               <el-form-item :label="t('settings.cloneMode')">
-                <el-radio-group v-model="cloneMode" style="display: flex; flex-direction: column; gap: 8px;">
-                  <el-radio label="multi">{{ t('settings.cloneModeMulti') }}</el-radio>
-                  <el-radio label="direct">{{ t('settings.cloneModeDirect') }}</el-radio>
-                </el-radio-group>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div
+                    class="mode-option"
+                    :class="{ active: cloneMode === 'multi' }"
+                    @click="cloneMode = 'multi'"
+                  >
+                    <span class="mode-dot"></span>
+                    {{ t('settings.cloneModeMulti') }}
+                  </div>
+                  <div
+                    class="mode-option"
+                    :class="{ active: cloneMode === 'direct' }"
+                    @click="cloneMode = 'direct'"
+                  >
+                    <span class="mode-dot"></span>
+                    {{ t('settings.cloneModeDirect') }}
+                  </div>
+                </div>
               </el-form-item>
               <el-form-item :label="t('settings.cloneTo')">
                 <div class="path-display">{{ cloneTargetPath }}</div>
@@ -502,6 +516,43 @@
 
 :deep(.el-form-item__label) {
   font-weight: 600;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #606266;
+  border: 1px solid #e4e7ed;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.mode-option:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.mode-option.active {
+  border-color: #409eff;
+  background: #ecf5ff;
+  color: #409eff;
+}
+
+.mode-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  flex-shrink: 0;
+}
+
+.mode-option.active .mode-dot {
+  background: #409eff;
 }
 
 .section-title {
