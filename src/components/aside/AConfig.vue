@@ -52,7 +52,7 @@
           <el-tab-pane :label="t('settings.notebookTab')">
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.currentNotebook')">
-                <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" @change="saveHander">
+                <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" value-key="value" @change="saveHander">
                   <el-option-group v-for="group in notebookOptions" :key="group.label" :label="group.label">
                     <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item" />
                   </el-option-group>
