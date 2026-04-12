@@ -78,12 +78,6 @@
                   <el-button size="small" @click="addRootStore" style="margin-top: 8px;">+ 添加根目录</el-button>
                 </div>
               </el-form-item>
-              <el-form-item :label="t('settings.defaultNotebookPath')">
-                <div class="form-item-content">
-                  <div class="path-display">{{ settings.defaultNotePath }}</div>
-                  <el-button class="action-button" :prefix-icon="Select" @click="initCommonBook">{{ t('settings.initDefaultNotebook') }}</el-button>
-                </div>
-              </el-form-item>
             </el-form>
           </el-tab-pane>
 
@@ -162,14 +156,13 @@
 
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
-  import { Refresh, Setting, Plus, Download, Upload, Select, Suitcase } from '@element-plus/icons-vue'
+  import { Refresh, Setting, Plus, Download, Upload, Suitcase } from '@element-plus/icons-vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
   import { gitHubClone, gitPull, gitHubPush } from "@/libs/github"
   import fs from 'fs'
   import { join } from "path";
-  import { initDefaultNotebook } from "@/libs/noteUtil"
   import { readOneDir } from "@/libs/fileHandler"
   import defaultConf from "@/global/defaultConf";
   import { ipcRenderer } from 'electron';
@@ -253,11 +246,6 @@
       saveHander(githubNotebook);
       ElMessage({ message: t('github.switchedToRemote'), type: 'success' });
     }
-  }
-
-  function initCommonBook() {
-    const str = initDefaultNotebook(ttsStore.config.savePath as string);
-    ElMessage(str);
   }
 
   function popHandler() {
