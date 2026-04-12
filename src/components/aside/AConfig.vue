@@ -134,11 +134,16 @@
                   {{ t('settings.cloneBtn') }}
                 </el-button>
               </el-form-item>
-              <el-form-item :label="t('settings.cloneMode')">
-                <el-radio-group v-model="cloneMode" style="display: flex; flex-direction: column; gap: 8px; -webkit-app-region: no-drag;">
-                  <el-radio label="multi">{{ t('settings.cloneModeMulti') }}</el-radio>
-                  <el-radio label="direct">{{ t('settings.cloneModeDirect') }}</el-radio>
-                </el-radio-group>
+              <el-form-item>
+                <div style="display: flex; align-items: center; gap: 10px; -webkit-app-region: no-drag;">
+                  <el-switch
+                    :model-value="cloneMode === 'multi'"
+                    @change="(v: boolean) => cloneMode = v ? 'multi' : 'direct'"
+                  />
+                  <span style="font-size: 13px; color: #606266;">
+                    {{ cloneMode === 'multi' ? t('settings.cloneModeMulti') : t('settings.cloneModeDirect') }}
+                  </span>
+                </div>
               </el-form-item>
               <el-form-item :label="t('settings.cloneTo')">
                 <div class="path-display">{{ cloneTargetPath }}</div>
