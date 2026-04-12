@@ -134,11 +134,14 @@
                   </el-button>
                 </div>
               </el-form-item>
+              <el-form-item :label="t('settings.cloneMode')">
+                <el-radio-group v-model="cloneMode">
+                  <el-radio value="multi">{{ t('settings.cloneModeMulti') }}</el-radio>
+                  <el-radio value="direct">{{ t('settings.cloneModeDirect') }}</el-radio>
+                </el-radio-group>
+              </el-form-item>
               <el-form-item :label="t('settings.cloneTo')">
-                <div class="path-display">{{ notestore.currentStore }}</div>
-                <div style="font-size: 12px; color: #909399; margin-top: 4px;">
-                  → {{ notestore.currentStore }}/repos/{{ cloneRepoName || 'repo-name' }}
-                </div>
+                <div class="path-display">{{ cloneTargetPath }}</div>
               </el-form-item>
             </el-form>
           </el-tab-pane>
@@ -188,27 +191,42 @@
 
   const refreshing = ref(false);
   const cloneRepoName = ref('');
+  const cloneMode = ref<'multi' | 'direct'>('multi');
   const cloning = ref(false);
 
   const canClone = computed(() =>
     !!(config.value.githubUsername && config.value.githubToken && cloneRepoName.value.trim())
   );
 
+  const cloneTargetPath = computed(() => {
+    const repoName = cloneRepoName.value || 'repo-name';
+    const root = ttsStore.notestore.currentStore;
+    if (cloneMode.value === 'multi') {
+      return `${root}/repos/${repoName}`;
+    } else {
+      return `${root}/${repoName}`;
+    }
+  });
+
   async function cloneRepo() {
     if (!canClone.value) return;
     const repoName = cloneRepoName.value.trim();
-    // Temporarily set repoName in config for gitHubClone to use
     const prevRepo = config.value.githubRepoName;
     config.value.githubRepoName = repoName;
     cloning.value = true;
     try {
-      const success = await gitHubClone(t);
+      const success = await gitHubClone(t, cloneMode.value);
       if (success) {
         cloneRepoName.value = '';
         buildNotebookOptions();
-        // Auto switch to the cloned notebook
-        const githubNotebook = { value: repoName, label: repoName, type: 'github', rootDir: ttsStore.notestore.currentStore };
-        saveHander(githubNotebook);
+        if (cloneMode.value === 'multi') {
+          // Auto switch to the cloned notebook
+          const githubNotebook = { value: repoName, label: repoName, type: 'github', rootDir: ttsStore.notestore.currentStore };
+          saveHander(githubNotebook);
+        } else {
+          // Refresh tree to show cloned repo in current notebook
+          ttsStore.refreshTreeData();
+        }
       } else {
         config.value.githubRepoName = prevRepo;
       }

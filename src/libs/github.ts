@@ -15,7 +15,7 @@ const simpleGit = require('simple-git');
  * @param t - i18n translation function
  * @returns Promise<boolean> - true if clone succeeded, false otherwise
  */
-export async function gitHubClone(t: (key: string) => string): Promise<boolean> {
+export async function gitHubClone(t: (key: string) => string, mode: 'multi' | 'direct' = 'multi'): Promise<boolean> {
   const ttsStore = useTtsStore();
 
   // Validate configuration
@@ -27,8 +27,11 @@ export async function gitHubClone(t: (key: string) => string): Promise<boolean> 
   const name = ttsStore.config.githubUsername;
   const repo = ttsStore.config.githubRepoName;
   const gitUrl = `https://github.com/${name}/${repo}.git`;
-  // Use current active root store, not the initial savePath
-  const localPath = path.join(ttsStore.notestore.currentStore, "repos", repo);
+  const root = ttsStore.notestore.currentStore;
+  // multi: clone to repos/ subdir; direct: clone directly under root
+  const localPath = mode === 'multi'
+    ? path.join(root, "repos", repo)
+    : path.join(root, repo);
 
   console.log('Cloning to:', localPath);
   ttsStore.setPushStatus(t('github.cloning'), 'loading');
