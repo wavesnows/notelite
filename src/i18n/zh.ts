@@ -96,8 +96,15 @@ const zh = {
     },
     dialog: {
       addRootFolder: '添加根文件夹',
+      addToNotebook: '添加到笔记本',
       typeFolderName: '输入文件夹名称',
       folderName: '文件夹名称',
+      folderNamePlaceholder: '输入文件夹名称',
+      localFolder: '本地文件夹',
+      gitRepo: 'Git 仓库',
+      gitConfigRequired: '请先在同步设置中配置 GitHub 用户名和 Token',
+      cloneBtn: '克隆',
+      folderCreated: '文件夹已创建',
     },
     toolbar: {
       addFolder: '添加根文件夹',

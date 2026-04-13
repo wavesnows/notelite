@@ -96,8 +96,15 @@ const en = {
     },
     dialog: {
       addRootFolder: 'Add Root Folder',
+      addToNotebook: 'Add to Notebook',
       typeFolderName: 'Type Folder Name',
       folderName: 'Folder Name',
+      folderNamePlaceholder: 'Enter folder name',
+      localFolder: 'Local Folder',
+      gitRepo: 'Git Repository',
+      gitConfigRequired: 'Please configure GitHub username and token in Sync settings first',
+      cloneBtn: 'Clone',
+      folderCreated: 'Folder created',
     },
     toolbar: {
       addFolder: 'Add Root Folder',

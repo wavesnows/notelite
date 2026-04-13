@@ -184,18 +184,42 @@
     <!--Config Drawer End-->
 
     <!--Create Note Folder Dialog-->
-    <el-dialog v-model="dialogFormVisible" :title="t('dialog.addRootFolder')">
-      <el-form :model="ttsStore.menu">
-        <el-form-item :label="t('dialog.typeFolderName')" :label-width="formLabelWidth">
-          <el-input v-model="rootFolderName" autocomplete="off" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogFormVisible = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" @click="addRootFolder">{{ t('common.ok') }}</el-button>
-        </span>
-      </template>
+    <el-dialog v-model="dialogFormVisible" :title="t('dialog.addToNotebook')" width="420px">
+      <el-tabs v-model="addDialogTab">
+        <!-- Tab 1: 本地文件夹 -->
+        <el-tab-pane :label="t('dialog.localFolder')" name="local">
+          <el-form style="margin-top: 12px;">
+            <el-form-item :label="t('dialog.folderName')" :label-width="formLabelWidth">
+              <el-input v-model="rootFolderName" autocomplete="off" :placeholder="t('dialog.folderNamePlaceholder')" />
+            </el-form-item>
+          </el-form>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+            <el-button @click="dialogFormVisible = false">{{ t('common.cancel') }}</el-button>
+            <el-button type="primary" @click="addRootFolder" :disabled="!rootFolderName.trim()">{{ t('common.ok') }}</el-button>
+          </div>
+        </el-tab-pane>
+
+        <!-- Tab 2: Git 仓库 -->
+        <el-tab-pane :label="t('dialog.gitRepo')" name="git">
+          <el-form style="margin-top: 12px;">
+            <el-form-item :label="t('settings.githubRepoName')" :label-width="formLabelWidth">
+              <el-input v-model="dialogCloneRepoName" autocomplete="off" :placeholder="t('settings.githubRepoPlaceholder')" />
+            </el-form-item>
+          </el-form>
+          <div v-if="!ttsStore.config.githubUsername || !ttsStore.config.githubToken" style="font-size: 12px; color: #e6a23c; margin-bottom: 8px;">
+            {{ t('dialog.gitConfigRequired') }}
+          </div>
+          <div v-else style="font-size: 12px; color: #909399; margin-bottom: 8px;">
+            → {{ ttsStore.notebook.currentPath }}/{{ dialogCloneRepoName || 'repo-name' }}
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <el-button @click="dialogFormVisible = false">{{ t('common.cancel') }}</el-button>
+            <el-button type="primary" @click="addGitRepo" :disabled="!canDialogClone" :loading="dialogCloning">
+              {{ t('dialog.cloneBtn') }}
+            </el-button>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </el-dialog>
 </template>
 
@@ -217,7 +241,36 @@
   const { t, locale } = useI18n();
   const formLabelWidth = '140px';
   const dialogFormVisible = ref(false)
-  const rootFolderName = ref("notes")
+  const addDialogTab = ref('local')
+  const rootFolderName = ref('')
+  const dialogCloneRepoName = ref('')
+  const dialogCloning = ref(false)
+
+  const canDialogClone = computed(() =>
+    !!(config.value.githubUsername && config.value.githubToken && dialogCloneRepoName.value.trim())
+  )
+
+  async function addGitRepo() {
+    if (!canDialogClone.value) return;
+    const repoName = dialogCloneRepoName.value.trim();
+    const prevRepo = config.value.githubRepoName;
+    config.value.githubRepoName = repoName;
+    dialogCloning.value = true;
+    try {
+      const success = await gitHubClone(t, 'direct');
+      if (success) {
+        dialogCloneRepoName.value = '';
+        dialogFormVisible.value = false;
+        ttsStore.refreshTreeData();
+        ElMessage({ message: t('github.cloneSuccess'), type: 'success' });
+      } else {
+        config.value.githubRepoName = prevRepo;
+        ElMessage({ message: t('github.cloneFailed'), type: 'error' });
+      }
+    } finally {
+      dialogCloning.value = false;
+    }
+  }
   const ttsStore = useTtsStore();
   const { config, notebook, notestore, settings, cnote } = storeToRefs(ttsStore);
 
@@ -453,19 +506,16 @@
   }
 
   const addRootFolder = () => {
-    dialogFormVisible.value = false;
-    const foldername = rootFolderName.value;
-    const path = join(ttsStore.notebook.currentPath, foldername);
-    const newChild: Tree = { label: foldername, path, isFolder: true, isLeaf: true };
-    if (ttsStore.treeMenu.data.length <= 5) {
-      try {
-        fs.mkdirSync(join(ttsStore.notebook.currentPath, foldername));
-        ttsStore.treeMenu.data.push(newChild);
-      } catch (error) {
-        ElMessage({ message: error as string, grouping: true, type: 'error' });
-      }
-    } else {
-      ElMessage({ message: 'We only allow 6 folders at most!', grouping: true, type: 'warning' });
+    const foldername = rootFolderName.value.trim();
+    if (!foldername) return;
+    try {
+      fs.mkdirSync(join(ttsStore.notebook.currentPath, foldername));
+      rootFolderName.value = '';
+      dialogFormVisible.value = false;
+      ttsStore.refreshTreeData();
+      ElMessage({ message: t('dialog.folderCreated'), type: 'success' });
+    } catch (error) {
+      ElMessage({ message: error as string, grouping: true, type: 'error' });
     }
   }
 
