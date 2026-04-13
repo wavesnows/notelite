@@ -135,14 +135,34 @@
             <div class="section-title" style="margin-top: 16px;">{{ t('settings.addRemoteRepo') }}</div>
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.githubRepoName')">
-                <el-input v-model="cloneRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="width: 100%;" />
+                <el-input
+                  v-model="cloneRepoName"
+                  :placeholder="t('settings.githubRepoPlaceholder')"
+                  style="width: 100%;"
+                  @blur="checkRepo"
+                  @change="resetRepoCheck"
+                />
               </el-form-item>
-              <el-form-item>
+
+              <!-- 检查状态提示 -->
+              <div v-if="repoCheckStatus === 'checking'" style="font-size: 12px; color: #909399; margin: -8px 0 12px;">
+                ⏳ {{ t('settings.checkingRepo') }}
+              </div>
+              <div v-else-if="repoCheckStatus === 'exists'" style="font-size: 12px; color: #67c23a; margin: -8px 0 12px;">
+                ✓ {{ t('settings.repoExists') }}
+              </div>
+              <div v-else-if="repoCheckStatus === 'not_found'" style="font-size: 12px; color: #e6a23c; margin: -8px 0 12px;">
+                ✦ {{ t('settings.repoWillCreate') }}
+              </div>
+
+              <!-- 公私有：仅在需要创建时显示 -->
+              <el-form-item v-if="repoCheckStatus === 'not_found'">
                 <div style="display: flex; align-items: center; gap: 10px; -webkit-app-region: no-drag;">
                   <el-switch v-model="newRemoteRepoPrivate" />
                   <span style="font-size: 13px; color: #606266;">{{ newRemoteRepoPrivate ? t('settings.repoPrivate') : t('settings.repoPublic') }}</span>
                 </div>
               </el-form-item>
+
               <el-form-item>
                 <div style="display: flex; align-items: center; gap: 10px; -webkit-app-region: no-drag;">
                   <el-switch
@@ -158,8 +178,14 @@
                 <div class="path-display">{{ cloneTargetPath }}</div>
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" @click="cloneRepo" :disabled="!canClone" :loading="cloning" style="width: 100%;">
-                  {{ t('settings.addRepoBtn') }}
+                <el-button
+                  type="primary"
+                  @click="cloneRepo"
+                  :disabled="!canClone || repoCheckStatus === 'checking' || repoCheckStatus === 'auth_error'"
+                  :loading="cloning"
+                  style="width: 100%;"
+                >
+                  {{ repoCheckStatus === 'not_found' ? t('settings.createAndCloneBtn') : t('settings.addRepoBtn') }}
                 </el-button>
               </el-form-item>
             </el-form>
@@ -283,10 +309,26 @@
   const cloneRepoName = ref('');
   const cloneMode = ref<'multi' | 'direct'>('multi');
   const cloning = ref(false);
+  const repoCheckStatus = ref<'idle' | 'checking' | 'exists' | 'not_found' | 'auth_error'>('idle');
 
   const canClone = computed(() =>
     !!(config.value.githubUsername && config.value.githubToken && cloneRepoName.value.trim())
   );
+
+  function resetRepoCheck() {
+    repoCheckStatus.value = 'idle';
+  }
+
+  async function checkRepo() {
+    const name = cloneRepoName.value.trim();
+    if (!name || !config.value.githubUsername || !config.value.githubToken) return;
+    repoCheckStatus.value = 'checking';
+    const result = await checkRepoExists(config.value.githubUsername, config.value.githubToken, name);
+    repoCheckStatus.value = result;
+    if (result === 'auth_error') {
+      ElMessage({ message: t('github.authFailed'), type: 'error' });
+    }
+  }
 
   const cloneTargetPath = computed(() => {
     const repoName = cloneRepoName.value || 'repo-name';
@@ -317,28 +359,12 @@
       }
     }
 
-    // Check if repo exists, confirm creation if not
-    const status = await checkRepoExists(config.value.githubUsername, config.value.githubToken, repoName);
-    console.log('[cloneRepo] checkRepoExists:', status);
-    if (status === 'auth_error') {
-      ElMessage({ message: t('github.authFailed'), type: 'error' });
-      return;
-    }
-    if (status === 'not_found') {
-      try {
-        await ElMessageBox.confirm(
-          t('settings.repoNotFoundCreateConfirm', { name: repoName }),
-          t('common.confirm'),
-          { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'info' }
-        );
-      } catch { return; }
-    }
-
     cloning.value = true;
     try {
       const success = await addRemoteRepo(t, repoName, newRemoteRepoPrivate.value, cloneMode.value);
       if (success) {
         cloneRepoName.value = '';
+        repoCheckStatus.value = 'idle';
         buildNotebookOptions();
         ElMessage({ message: t('github.cloneSuccess'), type: 'success' });
         if (cloneMode.value === 'multi') {
