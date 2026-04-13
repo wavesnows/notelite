@@ -28,27 +28,37 @@ export async function addRemoteRepo(
     return false;
   }
 
-  // Step 1: Try to clone existing repo
-  ttsStore.setPushStatus(t('github.cloning'), 'loading');
-  const prevRepo = ttsStore.config.githubRepoName;
-  ttsStore.config.githubRepoName = repoName;
-
   const root = ttsStore.notestore.currentStore;
   const localPath = mode === 'multi'
     ? path.join(root, "repos", repoName)
     : path.join(root, repoName);
   const gitUrl = `https://github.com/${githubUsername}/${repoName}.git`;
 
+  // Step 1: Check if repo exists via GitHub API
+  ttsStore.setPushStatus(t('github.cloning'), 'loading');
+  let repoExists = false;
   try {
-    await simpleGit().clone(gitUrl, localPath);
-    ttsStore.setPushStatus(t('github.cloneSuccess'), 'success');
-    return true;
-  } catch (cloneErr: any) {
-    const msg = cloneErr.message || '';
-    const notFound = msg.includes('not found') || msg.includes('Repository not found') || msg.includes('does not exist');
-    if (!notFound) {
-      // Other error (auth, network, already exists locally...)
-      ttsStore.config.githubRepoName = prevRepo;
+    await axios.get(
+      `https://api.github.com/repos/${githubUsername}/${repoName}`,
+      { headers: { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+    repoExists = true;
+  } catch (e: any) {
+    if (e.response?.status === 401) {
+      ttsStore.setPushStatus(t('github.authFailed'), 'error');
+      return false;
+    }
+    // 404 = not found, proceed to create
+  }
+
+  if (repoExists) {
+    // Clone existing repo
+    try {
+      await simpleGit().clone(gitUrl, localPath);
+      ttsStore.setPushStatus(t('github.cloneSuccess'), 'success');
+      return true;
+    } catch (cloneErr: any) {
+      const msg = cloneErr.message || '';
       const alreadyExists = msg.includes('already exists') || msg.includes('destination path');
       ttsStore.setPushStatus(
         t('github.cloneFailed') + ': ' + (alreadyExists ? t('github.repoAlreadyExists') : msg.split('\n')[0].substring(0, 80)),
