@@ -131,6 +131,25 @@
               </el-form-item>
             </el-form>
 
+            <!-- 新建远程仓库 -->
+            <div class="section-title" style="margin-top: 16px;">{{ t('settings.createRemoteRepo') }}</div>
+            <el-form label-width="120px" label-position="top">
+              <el-form-item :label="t('settings.githubRepoName')">
+                <el-input v-model="newRemoteRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="width: 100%;" />
+              </el-form-item>
+              <el-form-item>
+                <div style="display: flex; align-items: center; gap: 10px; -webkit-app-region: no-drag;">
+                  <el-switch v-model="newRemoteRepoPrivate" />
+                  <span style="font-size: 13px; color: #606266;">{{ newRemoteRepoPrivate ? t('settings.repoPrivate') : t('settings.repoPublic') }}</span>
+                </div>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="createRemoteRepo" :disabled="!canCreateRemote" :loading="creatingRemote" style="width: 100%;">
+                  {{ t('settings.createAndCloneBtn') }}
+                </el-button>
+              </el-form-item>
+            </el-form>
+
             <!-- 克隆仓库 -->
             <div class="section-title" style="margin-top: 16px;">{{ t('settings.cloneRepo') }}</div>
             <el-form label-width="120px" label-position="top">
@@ -186,7 +205,7 @@
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
-  import { gitHubClone, gitPull, gitHubPush } from "@/libs/github"
+  import { gitHubClone, gitPull, gitHubPush, createAndCloneGitHubRepo } from "@/libs/github"
   import fs from 'fs'
   import { join } from "path";
   import { readOneDir } from "@/libs/fileHandler"
@@ -220,6 +239,38 @@
       ElMessage({ message: t('settings.notebookCreated'), type: 'success' });
     } catch (e: any) {
       ElMessage({ message: e.message, type: 'error' });
+    }
+  }
+
+  const newRemoteRepoName = ref('');
+  const newRemoteRepoPrivate = ref(false);
+  const creatingRemote = ref(false);
+
+  const canCreateRemote = computed(() =>
+    !!(config.value.githubUsername && config.value.githubToken && newRemoteRepoName.value.trim())
+  );
+
+  async function createRemoteRepo() {
+    if (!canCreateRemote.value) return;
+    const repoName = newRemoteRepoName.value.trim();
+    creatingRemote.value = true;
+    try {
+      const success = await createAndCloneGitHubRepo(t, repoName, newRemoteRepoPrivate.value, cloneMode.value);
+      if (success) {
+        newRemoteRepoName.value = '';
+        buildNotebookOptions();
+        ElMessage({ message: t('github.cloneSuccess'), type: 'success' });
+        if (cloneMode.value === 'multi') {
+          const nb = { value: repoName, label: repoName, type: 'github', rootDir: ttsStore.notestore.currentStore };
+          saveHander(nb);
+        } else {
+          ttsStore.refreshTreeData();
+        }
+      } else {
+        ElMessage({ message: t('github.createRepoFailed'), type: 'error' });
+      }
+    } finally {
+      creatingRemote.value = false;
     }
   }
 

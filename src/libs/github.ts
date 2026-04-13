@@ -9,6 +9,56 @@ import fs from 'fs';
 const GitHub = require('github-api');
 const encode = require('encoding');
 const simpleGit = require('simple-git');
+import axios from 'axios';
+
+/**
+ * Create a new GitHub repository and clone it locally
+ */
+export async function createAndCloneGitHubRepo(
+  t: (key: string) => string,
+  repoName: string,
+  isPrivate: boolean,
+  mode: 'multi' | 'direct'
+): Promise<boolean> {
+  const ttsStore = useTtsStore();
+  const { githubUsername, githubToken } = ttsStore.config;
+
+  if (!githubUsername || !githubToken) {
+    ttsStore.setPushStatus(t('github.configMissing'), 'error');
+    return false;
+  }
+
+  ttsStore.setPushStatus(t('github.creatingRepo'), 'loading');
+
+  try {
+    // Step 1: Create repo via GitHub API
+    await axios.post(
+      'https://api.github.com/user/repos',
+      { name: repoName, private: isPrivate, auto_init: true },
+      {
+        headers: {
+          Authorization: `token ${githubToken}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }
+    );
+  } catch (e: any) {
+    const status = e.response?.status;
+    const msg = e.response?.data?.message || e.message;
+    if (status === 422) {
+      ttsStore.setPushStatus(t('github.repoAlreadyExists'), 'error');
+    } else if (status === 401) {
+      ttsStore.setPushStatus(t('github.authFailed'), 'error');
+    } else {
+      ttsStore.setPushStatus(t('github.createRepoFailed') + ': ' + msg, 'error');
+    }
+    return false;
+  }
+
+  // Step 2: Clone locally
+  ttsStore.config.githubRepoName = repoName;
+  return await gitHubClone(t, mode);
+}
 
 /**
  * Clone a GitHub repository to local storage
