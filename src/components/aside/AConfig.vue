@@ -61,6 +61,14 @@
               <el-form-item :label="t('settings.notebookPath')">
                 <div class="path-display">{{ notebook.currentPath }}</div>
               </el-form-item>
+              <el-form-item :label="t('settings.createNotebook')">
+                <div style="display: flex; gap: 8px; width: 100%;">
+                  <el-input v-model="newNotebookName" :placeholder="t('settings.notebookNamePlaceholder')" style="flex: 1;" />
+                  <el-button type="primary" @click="createNotebook" :disabled="!newNotebookName.trim()">
+                    {{ t('common.ok') }}
+                  </el-button>
+                </div>
+              </el-form-item>
               <el-form-item label="根目录列表">
                 <div class="root-stores-list">
                   <div
@@ -195,6 +203,26 @@
   const { config, notebook, notestore, settings, cnote } = storeToRefs(ttsStore);
 
   const refreshing = ref(false);
+  const newNotebookName = ref('');
+
+  function createNotebook() {
+    const name = newNotebookName.value.trim();
+    if (!name) return;
+    const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
+    const notebookPath = join(reposPath, name);
+    try {
+      fs.mkdirSync(notebookPath, { recursive: true });
+      newNotebookName.value = '';
+      buildNotebookOptions();
+      // Auto switch to the new notebook
+      const newNotebook = { value: name, label: name, type: 'local', rootDir: ttsStore.notestore.currentStore };
+      saveHander(newNotebook);
+      ElMessage({ message: t('settings.notebookCreated'), type: 'success' });
+    } catch (e: any) {
+      ElMessage({ message: e.message, type: 'error' });
+    }
+  }
+
   const cloneRepoName = ref('');
   const cloneMode = ref<'multi' | 'direct'>('multi');
   const cloning = ref(false);
