@@ -61,7 +61,7 @@
               <el-form-item :label="t('settings.notebookPath')">
                 <div class="path-display">{{ notebook.currentPath }}</div>
               </el-form-item>
-              <el-form-item :label="t('settings.createNotebook')">
+              <el-form-item v-if="isMultiMode" :label="t('settings.createNotebook')">
                 <div style="display: flex; gap: 8px; width: 100%;">
                   <el-input v-model="newNotebookName" :placeholder="t('settings.notebookNamePlaceholder')" style="flex: 1;" />
                   <el-button type="primary" @click="createNotebook" :disabled="!newNotebookName.trim()">
@@ -290,30 +290,15 @@
   function createNotebook() {
     const name = newNotebookName.value.trim();
     if (!name) return;
-
     const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
-    const isDirectMode = !fs.existsSync(reposPath);
-
-    // direct mode: create under current notebook path (like git clone direct)
-    // multi mode: create under repos/
-    const notebookPath = isDirectMode
-      ? join(ttsStore.notebook.currentPath, name)
-      : join(reposPath, name);
-
+    const notebookPath = join(reposPath, name);
     try {
       fs.mkdirSync(notebookPath, { recursive: true });
       newNotebookName.value = '';
       buildNotebookOptions();
-      if (isDirectMode) {
-        // In direct mode, just refresh the tree — the folder appears in current notebook
-        ttsStore.refreshTreeData();
-        ElMessage({ message: t('settings.notebookCreated'), type: 'success' });
-      } else {
-        // In multi mode, switch to the new notebook
-        const newNotebook = { value: name, label: name, type: 'local', rootDir: ttsStore.notestore.currentStore };
-        saveHander(newNotebook);
-        ElMessage({ message: t('settings.notebookCreated'), type: 'success' });
-      }
+      const newNotebook = { value: name, label: name, type: 'local', rootDir: ttsStore.notestore.currentStore };
+      saveHander(newNotebook);
+      ElMessage({ message: t('settings.notebookCreated'), type: 'success' });
     } catch (e: any) {
       ElMessage({ message: e.message, type: 'error' });
     }
@@ -421,6 +406,11 @@
   function onDrawerOpen() {
     buildNotebookOptions();
   }
+
+  const isMultiMode = computed(() => {
+    const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
+    return fs.existsSync(reposPath);
+  });
 
   const isInGitRepo = computed(() => {
     const lastPath = cnote.value.lastPath;
