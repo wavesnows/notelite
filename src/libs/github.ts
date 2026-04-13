@@ -15,14 +15,19 @@ import axios from 'axios';
  * Add a remote repo: try to clone first, if not found create it then clone.
  */
 export async function checkRepoExists(username: string, token: string, repoName: string): Promise<'exists' | 'not_found' | 'auth_error'> {
+  const headers: any = { Accept: 'application/vnd.github.v3+json' };
+  if (token) headers.Authorization = `token ${token}`;
+
   try {
-    await axios.get(
-      `https://api.github.com/repos/${username}/${repoName}`,
-      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
-    );
+    await axios.get(`https://api.github.com/repos/${username}/${repoName}`, { headers });
     return 'exists';
   } catch (e: any) {
-    if (e.response?.status === 401) return 'auth_error';
+    const status = e.response?.status;
+    // 401: bad token; 403: forbidden (token lacks permission)
+    if (status === 401 || status === 403) {
+      // Only treat as auth error if token was provided
+      return token ? 'auth_error' : 'not_found';
+    }
     return 'not_found';
   }
 }
