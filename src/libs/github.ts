@@ -77,7 +77,6 @@ export async function addRemoteRepo(
       { headers: { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
     );
   } catch (createErr: any) {
-    ttsStore.config.githubRepoName = prevRepo;
     const status = createErr.response?.status;
     const errMsg = createErr.response?.data?.message || createErr.message;
     ttsStore.setPushStatus(
