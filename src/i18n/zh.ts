@@ -54,6 +54,8 @@ const zh = {
       enableGitHub: '启用 GitHub',
       githubAccount: 'GitHub 账号',
       createRemoteRepo: '新建远程仓库',
+      addRemoteRepo: '添加远程仓库',
+      addRepoBtn: '添加',
       createAndCloneBtn: '创建并克隆',
       repoPrivate: '私有',
       repoPublic: '公开',

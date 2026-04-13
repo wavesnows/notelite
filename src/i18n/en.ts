@@ -54,6 +54,8 @@ const en = {
       enableGitHub: 'Enable GitHub',
       githubAccount: 'GitHub Account',
       createRemoteRepo: 'Create Remote Repository',
+      addRemoteRepo: 'Add Remote Repository',
+      addRepoBtn: 'Add',
       createAndCloneBtn: 'Create & Clone',
       repoPrivate: 'Private',
       repoPublic: 'Public',

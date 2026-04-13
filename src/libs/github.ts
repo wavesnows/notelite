@@ -12,6 +12,86 @@ const simpleGit = require('simple-git');
 import axios from 'axios';
 
 /**
+ * Add a remote repo: try to clone first, if not found create it then clone.
+ */
+export async function addRemoteRepo(
+  t: (key: string) => string,
+  repoName: string,
+  isPrivate: boolean,
+  mode: 'multi' | 'direct'
+): Promise<boolean> {
+  const ttsStore = useTtsStore();
+  const { githubUsername, githubToken } = ttsStore.config;
+
+  if (!githubUsername || !githubToken) {
+    ttsStore.setPushStatus(t('github.configMissing'), 'error');
+    return false;
+  }
+
+  // Step 1: Try to clone existing repo
+  ttsStore.setPushStatus(t('github.cloning'), 'loading');
+  const prevRepo = ttsStore.config.githubRepoName;
+  ttsStore.config.githubRepoName = repoName;
+
+  const root = ttsStore.notestore.currentStore;
+  const localPath = mode === 'multi'
+    ? path.join(root, "repos", repoName)
+    : path.join(root, repoName);
+  const gitUrl = `https://github.com/${githubUsername}/${repoName}.git`;
+
+  try {
+    await simpleGit().clone(gitUrl, localPath);
+    ttsStore.setPushStatus(t('github.cloneSuccess'), 'success');
+    return true;
+  } catch (cloneErr: any) {
+    const msg = cloneErr.message || '';
+    const notFound = msg.includes('not found') || msg.includes('Repository not found') || msg.includes('does not exist');
+    if (!notFound) {
+      // Other error (auth, network, already exists locally...)
+      ttsStore.config.githubRepoName = prevRepo;
+      const alreadyExists = msg.includes('already exists') || msg.includes('destination path');
+      ttsStore.setPushStatus(
+        t('github.cloneFailed') + ': ' + (alreadyExists ? t('github.repoAlreadyExists') : msg.split('\n')[0].substring(0, 80)),
+        'error'
+      );
+      return false;
+    }
+  }
+
+  // Step 2: Repo doesn't exist — create it then clone
+  ttsStore.setPushStatus(t('github.creatingRepo'), 'loading');
+  try {
+    await axios.post(
+      'https://api.github.com/user/repos',
+      { name: repoName, private: isPrivate, auto_init: true },
+      { headers: { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+  } catch (createErr: any) {
+    ttsStore.config.githubRepoName = prevRepo;
+    const status = createErr.response?.status;
+    const errMsg = createErr.response?.data?.message || createErr.message;
+    ttsStore.setPushStatus(
+      t('github.createRepoFailed') + ': ' + (status === 401 ? t('github.authFailed') : errMsg),
+      'error'
+    );
+    return false;
+  }
+
+  // Wait a moment for GitHub to initialize the repo
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  try {
+    await simpleGit().clone(gitUrl, localPath);
+    ttsStore.setPushStatus(t('github.cloneSuccess'), 'success');
+    return true;
+  } catch (e: any) {
+    ttsStore.config.githubRepoName = prevRepo;
+    ttsStore.setPushStatus(t('github.cloneFailed') + ': ' + e.message, 'error');
+    return false;
+  }
+}
+
+/**
  * Create a new GitHub repository and clone it locally
  */
 export async function createAndCloneGitHubRepo(

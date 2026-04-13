@@ -131,35 +131,17 @@
               </el-form-item>
             </el-form>
 
-            <!-- 新建远程仓库 -->
-            <div class="section-title" style="margin-top: 16px;">{{ t('settings.createRemoteRepo') }}</div>
+            <!-- 添加远程仓库（自动判断创建或克隆） -->
+            <div class="section-title" style="margin-top: 16px;">{{ t('settings.addRemoteRepo') }}</div>
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.githubRepoName')">
-                <el-input v-model="newRemoteRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="width: 100%;" />
+                <el-input v-model="cloneRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="width: 100%;" />
               </el-form-item>
               <el-form-item>
                 <div style="display: flex; align-items: center; gap: 10px; -webkit-app-region: no-drag;">
                   <el-switch v-model="newRemoteRepoPrivate" />
                   <span style="font-size: 13px; color: #606266;">{{ newRemoteRepoPrivate ? t('settings.repoPrivate') : t('settings.repoPublic') }}</span>
                 </div>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="createRemoteRepo" :disabled="!canCreateRemote" :loading="creatingRemote" style="width: 100%;">
-                  {{ t('settings.createAndCloneBtn') }}
-                </el-button>
-              </el-form-item>
-            </el-form>
-
-            <!-- 克隆仓库 -->
-            <div class="section-title" style="margin-top: 16px;">{{ t('settings.cloneRepo') }}</div>
-            <el-form label-width="120px" label-position="top">
-              <el-form-item :label="t('settings.githubRepoName')">
-                <el-input v-model="cloneRepoName" :placeholder="t('settings.githubRepoPlaceholder')" style="width: 100%;" />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="cloneRepo" :disabled="!canClone" :loading="cloning" style="width: 100%;">
-                  {{ t('settings.cloneBtn') }}
-                </el-button>
               </el-form-item>
               <el-form-item>
                 <div style="display: flex; align-items: center; gap: 10px; -webkit-app-region: no-drag;">
@@ -174,6 +156,11 @@
               </el-form-item>
               <el-form-item :label="t('settings.cloneTo')">
                 <div class="path-display">{{ cloneTargetPath }}</div>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="cloneRepo" :disabled="!canClone" :loading="cloning" style="width: 100%;">
+                  {{ t('settings.addRepoBtn') }}
+                </el-button>
               </el-form-item>
             </el-form>
           </el-tab-pane>
@@ -229,7 +216,7 @@
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
-  import { gitHubClone, gitPull, gitHubPush, createAndCloneGitHubRepo } from "@/libs/github"
+  import { gitPull, gitHubPush, addRemoteRepo } from "@/libs/github"
   import fs from 'fs'
   import { join } from "path";
   import { readOneDir } from "@/libs/fileHandler"
@@ -253,18 +240,15 @@
   async function addGitRepo() {
     if (!canDialogClone.value) return;
     const repoName = dialogCloneRepoName.value.trim();
-    const prevRepo = config.value.githubRepoName;
-    config.value.githubRepoName = repoName;
     dialogCloning.value = true;
     try {
-      const success = await gitHubClone(t, 'direct');
+      const success = await addRemoteRepo(t, repoName, false, 'direct');
       if (success) {
         dialogCloneRepoName.value = '';
         dialogFormVisible.value = false;
         ttsStore.refreshTreeData();
         ElMessage({ message: t('github.cloneSuccess'), type: 'success' });
       } else {
-        config.value.githubRepoName = prevRepo;
         ElMessage({ message: t('github.cloneFailed'), type: 'error' });
       }
     } finally {
@@ -295,38 +279,7 @@
     }
   }
 
-  const newRemoteRepoName = ref('');
   const newRemoteRepoPrivate = ref(false);
-  const creatingRemote = ref(false);
-
-  const canCreateRemote = computed(() =>
-    !!(config.value.githubUsername && config.value.githubToken && newRemoteRepoName.value.trim())
-  );
-
-  async function createRemoteRepo() {
-    if (!canCreateRemote.value) return;
-    const repoName = newRemoteRepoName.value.trim();
-    creatingRemote.value = true;
-    try {
-      const success = await createAndCloneGitHubRepo(t, repoName, newRemoteRepoPrivate.value, cloneMode.value);
-      if (success) {
-        newRemoteRepoName.value = '';
-        buildNotebookOptions();
-        ElMessage({ message: t('github.cloneSuccess'), type: 'success' });
-        if (cloneMode.value === 'multi') {
-          const nb = { value: repoName, label: repoName, type: 'github', rootDir: ttsStore.notestore.currentStore };
-          saveHander(nb);
-        } else {
-          ttsStore.refreshTreeData();
-        }
-      } else {
-        ElMessage({ message: t('github.createRepoFailed'), type: 'error' });
-      }
-    } finally {
-      creatingRemote.value = false;
-    }
-  }
-
   const cloneRepoName = ref('');
   const cloneMode = ref<'multi' | 'direct'>('multi');
   const cloning = ref(false);
@@ -338,11 +291,9 @@
   const cloneTargetPath = computed(() => {
     const repoName = cloneRepoName.value || 'repo-name';
     const root = ttsStore.notestore.currentStore;
-    if (cloneMode.value === 'multi') {
-      return `${root}/repos/${repoName}`;
-    } else {
-      return `${root}/${repoName}`;
-    }
+    return cloneMode.value === 'multi'
+      ? `${root}/repos/${repoName}`
+      : `${root}/${repoName}`;
   });
 
   async function cloneRepo() {
@@ -353,7 +304,6 @@
     if (cloneMode.value === 'multi') {
       const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
       if (!fs.existsSync(reposPath)) {
-        // Root has no repos/ yet — check if it has other content
         const items = fs.readdirSync(ttsStore.notestore.currentStore).filter((f: string) => !f.startsWith('.'));
         if (items.length > 0) {
           try {
@@ -362,18 +312,14 @@
               t('common.confirm'),
               { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'warning' }
             );
-          } catch {
-            return; // User cancelled
-          }
+          } catch { return; }
         }
       }
     }
 
-    const prevRepo = config.value.githubRepoName;
-    config.value.githubRepoName = repoName;
     cloning.value = true;
     try {
-      const success = await gitHubClone(t, cloneMode.value);
+      const success = await addRemoteRepo(t, repoName, newRemoteRepoPrivate.value, cloneMode.value);
       if (success) {
         cloneRepoName.value = '';
         buildNotebookOptions();
@@ -385,8 +331,7 @@
           ttsStore.refreshTreeData();
         }
       } else {
-        config.value.githubRepoName = prevRepo;
-        ElMessage({ message: t('github.cloneFailed') + ': ' + t('github.repoNotFound'), type: 'error' });
+        ElMessage({ message: t('github.cloneFailed'), type: 'error' });
       }
     } finally {
       cloning.value = false;
