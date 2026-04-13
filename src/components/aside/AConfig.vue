@@ -216,7 +216,7 @@
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
   import { storeToRefs } from "pinia";
-  import { gitPull, gitHubPush, addRemoteRepo } from "@/libs/github"
+  import { gitPull, gitHubPush, addRemoteRepo, checkRepoExists } from "@/libs/github"
   import fs from 'fs'
   import { join } from "path";
   import { readOneDir } from "@/libs/fileHandler"
@@ -315,6 +315,23 @@
           } catch { return; }
         }
       }
+    }
+
+    // Check if repo exists, confirm creation if not
+    const status = await checkRepoExists(config.value.githubUsername, config.value.githubToken, repoName);
+    console.log('[cloneRepo] checkRepoExists:', status);
+    if (status === 'auth_error') {
+      ElMessage({ message: t('github.authFailed'), type: 'error' });
+      return;
+    }
+    if (status === 'not_found') {
+      try {
+        await ElMessageBox.confirm(
+          t('settings.repoNotFoundCreateConfirm', { name: repoName }),
+          t('common.confirm'),
+          { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'info' }
+        );
+      } catch { return; }
     }
 
     cloning.value = true;

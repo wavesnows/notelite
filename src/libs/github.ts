@@ -14,6 +14,19 @@ import axios from 'axios';
 /**
  * Add a remote repo: try to clone first, if not found create it then clone.
  */
+export async function checkRepoExists(username: string, token: string, repoName: string): Promise<'exists' | 'not_found' | 'auth_error'> {
+  try {
+    await axios.get(
+      `https://api.github.com/repos/${username}/${repoName}`,
+      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+    return 'exists';
+  } catch (e: any) {
+    if (e.response?.status === 401) return 'auth_error';
+    return 'not_found';
+  }
+}
+
 export async function addRemoteRepo(
   t: (key: string) => string,
   repoName: string,
@@ -38,18 +51,22 @@ export async function addRemoteRepo(
   ttsStore.setPushStatus(t('github.cloning'), 'loading');
   let repoExists = false;
   try {
-    await axios.get(
+    const res = await axios.get(
       `https://api.github.com/repos/${githubUsername}/${repoName}`,
       { headers: { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
     );
+    console.log('[addRemoteRepo] repo exists, status:', res.status);
     repoExists = true;
   } catch (e: any) {
+    console.log('[addRemoteRepo] check error, status:', e.response?.status, e.message);
     if (e.response?.status === 401) {
       ttsStore.setPushStatus(t('github.authFailed'), 'error');
       return false;
     }
-    // 404 = not found, proceed to create
+    // 404 or other = not found, proceed to create
   }
+
+  console.log('[addRemoteRepo] repoExists:', repoExists);
 
   if (repoExists) {
     // Clone existing repo
