@@ -1,5 +1,5 @@
 <template>
-  <div class="main">
+  <div class="main" :class="{ welcome: !hasNote }">
     <MarkdownEditor v-if="hasNote && isMdFile" />
     <Editor v-else-if="hasNote" v-model="inputs.noteValue" :initialData="inputs.noteValue" ref="editor" />
     <Welcome v-else />
@@ -31,5 +31,9 @@ const hasNote = computed(() => !!cnote.value.lastPath)
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+}
+
+.main.welcome {
+  overflow-y: hidden;
 }
 </style>
