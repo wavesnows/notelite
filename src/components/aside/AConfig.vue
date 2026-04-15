@@ -492,6 +492,8 @@
   }
 
   const handleCommand = () => {
+    console.log('[dialog] currentPath:', ttsStore.notebook.currentPath);
+    console.log('[dialog] currentNotebookIsGit:', currentNotebookIsGit.value);
     dialogFormVisible.value = true;
   }
 
