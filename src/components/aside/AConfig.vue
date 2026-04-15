@@ -214,8 +214,8 @@
 
         <!-- Tab 2: Git 仓库 -->
         <el-tab-pane :label="t('dialog.gitRepo')" name="git">
-          <div v-if="currentNotebookIsGit" style="margin-top: 16px;">
-            <el-alert type="info" :closable="false" :title="t('dialog.notebookAlreadyGit')" show-icon />
+          <div v-if="currentNotebookIsGit" style="margin-top: 16px; padding: 12px; background: #ecf5ff; border-radius: 4px; border-left: 4px solid #409eff; font-size: 13px; color: #606266;">
+            ℹ️ {{ t('dialog.notebookAlreadyGit') }}
           </div>
           <template v-else>
           <el-form style="margin-top: 12px;">
@@ -492,8 +492,6 @@
   }
 
   const handleCommand = () => {
-    console.log('[dialog] currentPath:', ttsStore.notebook.currentPath);
-    console.log('[dialog] currentNotebookIsGit:', currentNotebookIsGit.value);
     dialogFormVisible.value = true;
   }
 
