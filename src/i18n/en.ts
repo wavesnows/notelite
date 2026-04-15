@@ -109,6 +109,7 @@ const en = {
       localFolder: 'Local Folder',
       gitRepo: 'Git Repository',
       gitConfigRequired: 'Please configure GitHub username and token in Sync settings first',
+      notebookAlreadyGit: 'Current notebook is already a Git repository. No need to clone a sub-repo.',
       cloneBtn: 'Clone',
       folderCreated: 'Folder created',
     },

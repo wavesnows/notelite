@@ -214,6 +214,10 @@
 
         <!-- Tab 2: Git 仓库 -->
         <el-tab-pane :label="t('dialog.gitRepo')" name="git">
+          <div v-if="currentNotebookIsGit" style="margin-top: 16px;">
+            <el-alert type="info" :closable="false" :title="t('dialog.notebookAlreadyGit')" show-icon />
+          </div>
+          <template v-else>
           <el-form style="margin-top: 12px;">
             <el-form-item :label="t('settings.githubRepoName')" :label-width="formLabelWidth">
               <el-input v-model="dialogCloneRepoName" autocomplete="off" :placeholder="t('settings.githubRepoPlaceholder')" />
@@ -231,6 +235,7 @@
               {{ t('dialog.cloneBtn') }}
             </el-button>
           </div>
+          </template>
         </el-tab-pane>
       </el-tabs>
     </el-dialog>
@@ -410,6 +415,11 @@
   const isMultiMode = computed(() => {
     const reposPath = join(ttsStore.notestore.currentStore, defaultConf.defaultRepoPath);
     return fs.existsSync(reposPath);
+  });
+
+  const currentNotebookIsGit = computed(() => {
+    const gitPath = join(ttsStore.notebook.currentPath, '.git');
+    return fs.existsSync(gitPath);
   });
 
   const isInGitRepo = computed(() => {

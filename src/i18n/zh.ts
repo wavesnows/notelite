@@ -109,6 +109,7 @@ const zh = {
       localFolder: '本地文件夹',
       gitRepo: 'Git 仓库',
       gitConfigRequired: '请先在同步设置中配置 GitHub 用户名和 Token',
+      notebookAlreadyGit: '当前笔记本已经是 Git 仓库，无需再克隆子仓库。',
       cloneBtn: '克隆',
       folderCreated: '文件夹已创建',
     },
