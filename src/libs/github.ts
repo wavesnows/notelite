@@ -14,18 +14,52 @@ import axios from 'axios';
 /**
  * Add a remote repo: try to clone first, if not found create it then clone.
  */
-export async function checkRepoExists(username: string, token: string, repoName: string): Promise<'exists' | 'not_found' | 'auth_error'> {
-  const headers: any = { Accept: 'application/vnd.github.v3+json' };
-  if (token) headers.Authorization = `token ${token}`;
+function getProviderConfig(ttsStore: any) {
+  const provider = ttsStore.config.gitProvider || 'github';
+  if (provider === 'gitee') {
+    return {
+      provider: 'gitee' as const,
+      username: ttsStore.config.giteeUsername,
+      token: ttsStore.config.giteeToken,
+      repoUrl: (username: string, repo: string) => `https://gitee.com/${username}/${repo}.git`,
+      apiCheckUrl: (username: string, repo: string) => `https://gitee.com/api/v5/repos/${username}/${repo}`,
+      apiCreateUrl: () => 'https://gitee.com/api/v5/user/repos',
+      authHeader: (token: string) => ({ 'Content-Type': 'application/json' }),
+      authParam: (token: string) => ({ access_token: token }),
+    };
+  }
+  return {
+    provider: 'github' as const,
+    username: ttsStore.config.githubUsername,
+    token: ttsStore.config.githubToken,
+    repoUrl: (username: string, repo: string) => `https://github.com/${username}/${repo}.git`,
+    apiCheckUrl: (username: string, repo: string) => `https://api.github.com/repos/${username}/${repo}`,
+    apiCreateUrl: () => 'https://api.github.com/user/repos',
+    authHeader: (token: string) => ({ Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }),
+    authParam: (_token: string) => ({}),
+  };
+}
+
+export async function checkRepoExists(username: string, token: string, repoName: string, provider: 'github' | 'gitee' = 'github'): Promise<'exists' | 'not_found' | 'auth_error'> {
+  let url: string;
+  let params: any = {};
+  const headers: any = {};
+
+  if (provider === 'gitee') {
+    url = `https://gitee.com/api/v5/repos/${username}/${repoName}`;
+    if (token) params.access_token = token;
+  } else {
+    url = `https://api.github.com/repos/${username}/${repoName}`;
+    if (token) headers.Authorization = `token ${token}`;
+    headers.Accept = 'application/vnd.github.v3+json';
+  }
 
   try {
-    await axios.get(`https://api.github.com/repos/${username}/${repoName}`, { headers });
+    await axios.get(url, { headers, params });
     return 'exists';
   } catch (e: any) {
     const status = e.response?.status;
-    // 401: bad token; 403: forbidden (token lacks permission)
     if (status === 401 || status === 403) {
-      // Only treat as auth error if token was provided
       return token ? 'auth_error' : 'not_found';
     }
     return 'not_found';
@@ -39,9 +73,9 @@ export async function addRemoteRepo(
   mode: 'multi' | 'direct'
 ): Promise<boolean> {
   const ttsStore = useTtsStore();
-  const { githubUsername, githubToken } = ttsStore.config;
+  const pc = getProviderConfig(ttsStore);
 
-  if (!githubUsername || !githubToken) {
+  if (!pc.username || !pc.token) {
     ttsStore.setPushStatus(t('github.configMissing'), 'error');
     return false;
   }
@@ -50,31 +84,24 @@ export async function addRemoteRepo(
   const localPath = mode === 'multi'
     ? path.join(root, "repos", repoName)
     : path.join(root, repoName);
-  const gitUrl = `https://github.com/${githubUsername}/${repoName}.git`;
+  const gitUrl = pc.repoUrl(pc.username, repoName);
 
-  // Step 1: Check if repo exists via GitHub API
+  // Step 1: Check if repo exists
   ttsStore.setPushStatus(t('github.cloning'), 'loading');
   let repoExists = false;
   try {
-    const res = await axios.get(
-      `https://api.github.com/repos/${githubUsername}/${repoName}`,
-      { headers: { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
-    );
-    console.log('[addRemoteRepo] repo exists, status:', res.status);
+    const params = pc.authParam(pc.token);
+    const headers = pc.authHeader(pc.token);
+    await axios.get(pc.apiCheckUrl(pc.username, repoName), { headers, params });
     repoExists = true;
   } catch (e: any) {
-    console.log('[addRemoteRepo] check error, status:', e.response?.status, e.message);
     if (e.response?.status === 401) {
       ttsStore.setPushStatus(t('github.authFailed'), 'error');
       return false;
     }
-    // 404 or other = not found, proceed to create
   }
 
-  console.log('[addRemoteRepo] repoExists:', repoExists);
-
   if (repoExists) {
-    // Clone existing repo
     try {
       await simpleGit().clone(gitUrl, localPath);
       ttsStore.setPushStatus(t('github.cloneSuccess'), 'success');
@@ -93,11 +120,18 @@ export async function addRemoteRepo(
   // Step 2: Repo doesn't exist — create it then clone
   ttsStore.setPushStatus(t('github.creatingRepo'), 'loading');
   try {
-    await axios.post(
-      'https://api.github.com/user/repos',
-      { name: repoName, private: isPrivate, auto_init: true },
-      { headers: { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
-    );
+    if (pc.provider === 'gitee') {
+      await axios.post(
+        pc.apiCreateUrl(),
+        { name: repoName, private: isPrivate, auto_init: true, access_token: pc.token }
+      );
+    } else {
+      await axios.post(
+        pc.apiCreateUrl(),
+        { name: repoName, private: isPrivate, auto_init: true },
+        { headers: pc.authHeader(pc.token) }
+      );
+    }
   } catch (createErr: any) {
     const status = createErr.response?.status;
     const errMsg = createErr.response?.data?.message || createErr.message;
@@ -178,16 +212,16 @@ export async function createAndCloneGitHubRepo(
  */
 export async function gitHubClone(t: (key: string) => string, mode: 'multi' | 'direct' = 'multi'): Promise<boolean> {
   const ttsStore = useTtsStore();
+  const pc = getProviderConfig(ttsStore);
 
-  // Validate configuration
-  if (!ttsStore.config.githubUsername || !ttsStore.config.githubRepoName) {
+  if (!pc.username || !ttsStore.config.githubRepoName) {
     ttsStore.setPushStatus(t('github.configMissing'), 'error');
     return false;
   }
 
-  const name = ttsStore.config.githubUsername;
+  const name = pc.username;
   const repo = ttsStore.config.githubRepoName;
-  const gitUrl = `https://github.com/${name}/${repo}.git`;
+  const gitUrl = pc.repoUrl(name, repo);
   const root = ttsStore.notestore.currentStore;
   // multi: clone to repos/ subdir; direct: clone directly under root
   const localPath = mode === 'multi'

@@ -120,15 +120,43 @@
               </template>
             </el-alert>
 
-            <!-- GitHub 账号配置 -->
-            <div class="section-title">{{ t('settings.githubAccount') }}</div>
+            <!-- Git 平台选择 -->
+            <div class="section-title">{{ t('settings.gitAccount') }}</div>
             <el-form :model="config" label-width="120px" label-position="top">
-              <el-form-item :label="t('settings.githubUsername')">
-                <el-input v-model="config.githubUsername" :placeholder="t('settings.githubUsernamePlaceholder')" @change="saveGitHubConfig" />
+              <el-form-item :label="t('settings.gitProvider')">
+                <div style="display: flex; gap: 8px; -webkit-app-region: no-drag;">
+                  <el-button
+                    :type="config.gitProvider === 'github' ? 'primary' : 'default'"
+                    size="small"
+                    @click="config.gitProvider = 'github'; saveGitHubConfig()"
+                  >GitHub</el-button>
+                  <el-button
+                    :type="config.gitProvider === 'gitee' ? 'primary' : 'default'"
+                    size="small"
+                    @click="config.gitProvider = 'gitee'; saveGitHubConfig()"
+                  >Gitee</el-button>
+                </div>
               </el-form-item>
-              <el-form-item :label="t('settings.githubToken')">
-                <el-input v-model="config.githubToken" type="password" show-password :placeholder="t('settings.githubTokenPlaceholder')" @change="saveGitHubConfig" />
-              </el-form-item>
+
+              <!-- GitHub 配置 -->
+              <template v-if="config.gitProvider === 'github'">
+                <el-form-item :label="t('settings.githubUsername')">
+                  <el-input v-model="config.githubUsername" :placeholder="t('settings.githubUsernamePlaceholder')" @change="saveGitHubConfig" />
+                </el-form-item>
+                <el-form-item :label="t('settings.githubToken')">
+                  <el-input v-model="config.githubToken" type="password" show-password :placeholder="t('settings.githubTokenPlaceholder')" @change="saveGitHubConfig" />
+                </el-form-item>
+              </template>
+
+              <!-- Gitee 配置 -->
+              <template v-else>
+                <el-form-item :label="t('settings.giteeUsername')">
+                  <el-input v-model="config.giteeUsername" :placeholder="t('settings.giteeUsernamePlaceholder')" @change="saveGitHubConfig" />
+                </el-form-item>
+                <el-form-item :label="t('settings.giteeToken')">
+                  <el-input v-model="config.giteeToken" type="password" show-password :placeholder="t('settings.giteeTokenPlaceholder')" @change="saveGitHubConfig" />
+                </el-form-item>
+              </template>
             </el-form>
 
             <!-- 添加远程仓库（自动判断创建或克隆） -->
@@ -327,7 +355,10 @@
     const name = cloneRepoName.value.trim();
     if (!name || !config.value.githubUsername || !config.value.githubToken) return;
     repoCheckStatus.value = 'checking';
-    const result = await checkRepoExists(config.value.githubUsername, config.value.githubToken, name);
+    const isGitee = config.value.gitProvider === 'gitee';
+    const checkUsername = isGitee ? config.value.giteeUsername : config.value.githubUsername;
+    const checkToken = isGitee ? config.value.giteeToken : config.value.githubToken;
+    const result = await checkRepoExists(checkUsername, checkToken, name, config.value.gitProvider || 'github');
     repoCheckStatus.value = result;
     if (result === 'auth_error') {
       ElMessage({ message: t('github.authFailed'), type: 'error' });

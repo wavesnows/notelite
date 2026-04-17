@@ -124,6 +124,9 @@ export const useTtsStore = defineStore(DFConf.appName, {
         githubRepoName:store.get("GithubRepoName") || "",
         githubUsername:store.get("GithubUsername") || "",
         githubToken:store.get("GithubToken") || "",
+        gitProvider: (store.get("gitProvider") as 'github' | 'gitee') || 'github',
+        giteeUsername: store.get("GiteeUsername") || "",
+        giteeToken: store.get("GiteeToken") || "",
         formConfigJson: store.get("FormConfig"),
         updateNotification: store.get("updateNotification"),
         language: store.get("language") || 'en_US',
@@ -222,10 +225,12 @@ export const useTtsStore = defineStore(DFConf.appName, {
       store.set('currentNoteBookObj',this.settings.currentbook)
     },
     setLocalNotePath() {
-     // store.set("savePath", this.config.savePath);
       store.set("GithubRepoName", this.config.githubRepoName);
       store.set("GithubUsername", this.config.githubUsername);
       store.set("GithubToken", this.config.githubToken);
+      store.set("gitProvider", this.config.gitProvider);
+      store.set("GiteeUsername", this.config.giteeUsername);
+      store.set("GiteeToken", this.config.giteeToken);
       this.setSavePath()
     },
     updateSettings(){
