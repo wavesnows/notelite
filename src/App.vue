@@ -139,10 +139,10 @@ body {
 /* Git dropdown menu light style */
 .git-dropdown.el-dropdown-menu {
   background-color: #fff !important;
-  border: 1px solid #e4e7ed !important;
+  border: none !important;
   border-radius: 6px !important;
   padding: 4px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
 }
 
 .git-dropdown .el-dropdown-menu__item {
@@ -168,10 +168,10 @@ body {
 /* Tree context menu light style */
 .tree-context-menu.el-dropdown-menu {
   background-color: #fff !important;
-  border: 1px solid #e4e7ed !important;
+  border: none !important;
   border-radius: 6px !important;
   padding: 4px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
 }
 
 .tree-context-menu .el-dropdown-menu__item {
