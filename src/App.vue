@@ -136,49 +136,68 @@ body {
   max-width: 100% !important;
 }
 
-/* Git dropdown menu dark style to match tooltips */
+/* Git dropdown menu light style */
 .git-dropdown.el-dropdown-menu {
-  background-color: #303133 !important;
-  border: none !important;
-  padding: 4px 0 !important;
+  background-color: #fff !important;
+  border: 1px solid #e4e7ed !important;
+  border-radius: 6px !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .git-dropdown .el-dropdown-menu__item {
-  color: #fff !important;
-  transition: background-color 0.2s;
+  color: #303133 !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  transition: background-color 0.15s;
 }
 
 .git-dropdown .el-dropdown-menu__item:hover {
-  background-color: #409eff !important;
-  color: #fff !important;
+  background-color: #f0f7ff !important;
+  color: #409eff !important;
 }
 
 .git-dropdown .el-dropdown-menu__item .el-icon {
-  color: #fff !important;
+  color: #606266 !important;
 }
 
-/* Tree context menu dark style */
+.git-dropdown .el-dropdown-menu__item:hover .el-icon {
+  color: #409eff !important;
+}
+
+/* Tree context menu light style */
 .tree-context-menu.el-dropdown-menu {
-  background-color: #303133 !important;
-  border: none !important;
-  padding: 4px 0 !important;
+  background-color: #fff !important;
+  border: 1px solid #e4e7ed !important;
+  border-radius: 6px !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .tree-context-menu .el-dropdown-menu__item {
-  color: #fff !important;
-  transition: background-color 0.2s;
+  color: #303133 !important;
+  border-radius: 4px !important;
+  margin: 1px 0 !important;
+  transition: background-color 0.15s;
+  font-size: 13px !important;
 }
 
 .tree-context-menu .el-dropdown-menu__item:hover {
-  background-color: #409eff !important;
-  color: #fff !important;
+  background-color: #f0f7ff !important;
+  color: #409eff !important;
 }
 
 .tree-context-menu .el-dropdown-menu__item .el-icon {
-  color: #fff !important;
+  color: #606266 !important;
+}
+
+.tree-context-menu .el-dropdown-menu__item:hover .el-icon {
+  color: #409eff !important;
 }
 
 .tree-context-menu .el-dropdown-menu__item.is-divided {
-  border-top: 1px solid #4c4d4f !important;
+  border-top: 1px solid #f0f0f0 !important;
+  margin-top: 4px !important;
+  padding-top: 4px !important;
 }
 </style>
