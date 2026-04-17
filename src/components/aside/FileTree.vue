@@ -491,8 +491,8 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.setLastEditNote()
     ttsStore.addRecentFile(itemdata.path, itemdata.label)
 
-    if (!itemdata.path.endsWith('.json')) {
-      // Non-JSON files (md, txt, hidden config files etc.) use MarkdownEditor
+    if (!itemdata.path.endsWith('.json') || ttsStore.showHiddenFiles) {
+      // Non-JSON files or when showHiddenFiles is on: use CodeMirror
       return
     }
 

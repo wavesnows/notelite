@@ -116,7 +116,7 @@ watch(
 watch(
   () => ttsStore.inputs.notePath,
   (newPath) => {
-    if (newPath && !newPath.endsWith('.json')) {
+    if (newPath && (!newPath.endsWith('.json') || ttsStore.showHiddenFiles)) {
       loadFile(newPath)
     }
   }

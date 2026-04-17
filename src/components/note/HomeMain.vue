@@ -20,7 +20,9 @@ const { inputs, cnote } = storeToRefs(store)
 const isMdFile = computed(() => {
   const p = inputs.value.notePath
   if (!p) return false
-  // Use MD editor for .md files and any non-.json text files (including hidden files)
+  // When showHiddenFiles is on, all files use CodeMirror
+  if (store.showHiddenFiles) return true
+  // Normal mode: .md and other non-.json files use CodeMirror
   return !p.endsWith('.json')
 })
 const hasNote = computed(() => !!cnote.value.lastPath)
