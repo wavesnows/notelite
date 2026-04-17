@@ -7,17 +7,6 @@
         clearable
         class="filter-input"
       />
-      <el-tooltip :content="ttsStore.showHiddenFiles ? t('fileTree.hideHiddenFiles') : t('fileTree.showHiddenFiles')" placement="right">
-        <el-button
-          size="small"
-          text
-          class="hidden-toggle"
-          :type="ttsStore.showHiddenFiles ? 'primary' : ''"
-          @click="toggleHiddenFiles"
-        >
-          <el-icon><View /></el-icon>
-        </el-button>
-      </el-tooltip>
     </div>
     <el-scrollbar height="100%" width="100%">
     <el-tree
@@ -162,7 +151,7 @@ import { storeToRefs } from "pinia"
 import {ref, watch, nextTick, getCurrentInstance, onMounted, onUnmounted} from 'vue'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import {ElTree, ElMessage,ElMessageBox, ElPopconfirm} from 'element-plus'
-import { Search, InfoFilled, Star, StarFilled, Document, Folder, FolderOpened, Delete, Position, RemoveFilled, View } from "@element-plus/icons-vue"
+import { Search, InfoFilled, Star, StarFilled, Document, Folder, FolderOpened, Delete, Position, RemoveFilled } from "@element-plus/icons-vue"
 import {getNoteLabel} from "@/libs/noteUtil"
 import { useTtsStore, editorInstance, Tree } from "@/store/store"
 import { readDir,readNotes} from "@/libs/fileHandler"
@@ -406,11 +395,6 @@ onUnmounted(() => {
   window.removeEventListener('save-tree-expanded-state', saveExpandedState);
 })
 
-function toggleHiddenFiles() {
-  ttsStore.showHiddenFiles = !ttsStore.showHiddenFiles;
-  ttsStore.refreshTreeData();
-}
-
 function cancelEvent(){
 
 }
@@ -531,17 +515,8 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
   .filter-container {
     padding: 8px;
     background: transparent;
-    display: flex;
-    align-items: center;
-    gap: 4px;
   }
 
-  .hidden-toggle {
-    flex-shrink: 0;
-    padding: 4px;
-    height: 28px;
-    width: 28px;
-  }
 
   .filter-input {
     --el-input-border-color: transparent;

@@ -44,14 +44,15 @@
           <el-icon><Monitor /></el-icon>
         </el-button>
       </el-tooltip>
-      <el-tooltip :content="t('tools.editRawJson')" placement="bottom">
+      <el-tooltip :content="ttsStore.showHiddenFiles ? t('tools.hideAllFiles') : t('tools.showAllFiles')" placement="bottom">
         <el-button
           size="small"
           circle
           class="circle-btn"
-          @click="openRawEditor"
+          :style="ttsStore.showHiddenFiles ? 'background-color: #409eff;' : ''"
+          @click="toggleShowAllFiles"
         >
-          <el-icon><Document /></el-icon>
+          <el-icon><Files /></el-icon>
         </el-button>
       </el-tooltip>
       <el-tooltip :content="t('help.keyboardShortcuts')" placement="bottom">
@@ -92,7 +93,7 @@ import Breadcrumb from "../note/Breadcrumb.vue"
 import { ref, onMounted, onUnmounted } from "vue";
 import { useTtsStore } from "@/store/store";
 import { ElMessage } from 'element-plus';
-import { Document, QuestionFilled } from '@element-plus/icons-vue';
+import { Files, QuestionFilled } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 
 const { ipcRenderer } = require("electron");
@@ -133,14 +134,9 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
 });
 
-// Open raw JSON editor (only for .json files)
-function openRawEditor() {
-  const notePath = ttsStore.cnote.lastPath;
-  if (notePath && notePath.endsWith('.md')) {
-    ElMessage.warning(t('tools.rawJsonMdNotSupported'));
-    return;
-  }
-  ttsStore.openRawJsonEditor();
+function toggleShowAllFiles() {
+  ttsStore.showHiddenFiles = !ttsStore.showHiddenFiles;
+  ttsStore.refreshTreeData();
 }
 </script>
 
