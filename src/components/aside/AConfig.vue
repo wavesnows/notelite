@@ -124,18 +124,14 @@
             <div class="section-title">{{ t('settings.gitAccount') }}</div>
             <el-form :model="config" label-width="120px" label-position="top">
               <el-form-item :label="t('settings.gitProvider')">
-                <div style="display: flex; gap: 8px; -webkit-app-region: no-drag;">
-                  <el-button
-                    :type="config.gitProvider === 'github' ? 'primary' : 'default'"
-                    size="small"
-                    @click="config.gitProvider = 'github'; saveGitHubConfig()"
-                  >GitHub</el-button>
-                  <el-button
-                    :type="config.gitProvider === 'gitee' ? 'primary' : 'default'"
-                    size="small"
-                    @click="config.gitProvider = 'gitee'; saveGitHubConfig()"
-                  >Gitee</el-button>
-                </div>
+                <el-select
+                  v-model="config.gitProvider"
+                  style="width: 160px;"
+                  @change="saveGitHubConfig"
+                >
+                  <el-option label="GitHub" value="github" />
+                  <el-option label="Gitee" value="gitee" />
+                </el-select>
               </el-form-item>
 
               <!-- GitHub 配置 -->
@@ -162,10 +158,10 @@
             <!-- 添加远程仓库（自动判断创建或克隆） -->
             <div class="section-title" style="margin-top: 16px;">{{ t('settings.addRemoteRepo') }}</div>
             <el-form label-width="120px" label-position="top">
-              <el-form-item :label="t('settings.githubRepoName')">
+              <el-form-item :label="t('settings.repoName')">
                 <el-input
                   v-model="cloneRepoName"
-                  :placeholder="t('settings.githubRepoPlaceholder')"
+                  :placeholder="t('settings.repoPlaceholder')"
                   style="width: 100%;"
                   @blur="checkRepo"
                   @change="resetRepoCheck"
@@ -247,8 +243,8 @@
           </div>
           <template v-else>
           <el-form style="margin-top: 12px;">
-            <el-form-item :label="t('settings.githubRepoName')" :label-width="formLabelWidth">
-              <el-input v-model="dialogCloneRepoName" autocomplete="off" :placeholder="t('settings.githubRepoPlaceholder')" />
+            <el-form-item :label="t('settings.repoName')" :label-width="formLabelWidth">
+              <el-input v-model="dialogCloneRepoName" autocomplete="off" :placeholder="t('settings.repoPlaceholder')" />
             </el-form-item>
           </el-form>
           <div v-if="!ttsStore.config.githubUsername || !ttsStore.config.githubToken" style="font-size: 12px; color: #e6a23c; margin-bottom: 8px;">

@@ -54,6 +54,8 @@ const en = {
       enableGitHub: 'Enable GitHub',
       gitAccount: 'Git Account',
       gitProvider: 'Platform',
+      repoName: 'Repository Name',
+      repoPlaceholder: 'Enter repository name',
       githubAccount: 'GitHub Account',
       giteeUsername: 'Gitee Username',
       giteeUsernamePlaceholder: 'Enter your Gitee username',

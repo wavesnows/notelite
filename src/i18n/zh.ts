@@ -54,6 +54,8 @@ const zh = {
       enableGitHub: '启用 GitHub',
       gitAccount: 'Git 账号',
       gitProvider: '平台',
+      repoName: '仓库名称',
+      repoPlaceholder: '输入仓库名称',
       githubAccount: 'GitHub 账号',
       giteeUsername: 'Gitee 用户名',
       giteeUsernamePlaceholder: '输入你的 Gitee 用户名',
