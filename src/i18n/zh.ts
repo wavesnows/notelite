@@ -90,8 +90,9 @@ const zh = {
     },
     fileTree: {
       filterPlaceholder: '过滤关键词',
-      createFile: '文件',
-      createFolder: '文件夹',
+      createFile: '新建笔记',
+      createMdFile: '新建 Markdown 笔记',
+      createFolder: '新建文件夹',
       remove: '删除',
       pinNote: '置顶笔记',
       unpinNote: '取消置顶',

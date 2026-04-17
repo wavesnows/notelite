@@ -73,7 +73,7 @@
                 </el-dropdown-item>
                 <el-dropdown-item v-if="node.data.isFolder" :command="{type:'mdfile', data:data}">
                   <el-icon><Document /></el-icon>
-                  <span>📝 MD File</span>
+                  <span>{{ t('fileTree.createMdFile') }}</span>
                 </el-dropdown-item>
                 <el-dropdown-item v-if="node.data.isFolder" :command="{type:'folder', data:data}">
                   <el-icon><Folder /></el-icon>

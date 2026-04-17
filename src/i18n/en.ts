@@ -90,8 +90,9 @@ const en = {
     },
     fileTree: {
       filterPlaceholder: 'Filter keyword',
-      createFile: 'File',
-      createFolder: 'Folder',
+      createFile: 'New Note',
+      createMdFile: 'New Markdown Note',
+      createFolder: 'New Folder',
       remove: 'Remove',
       pinNote: 'Pin Note',
       unpinNote: 'Unpin Note',
