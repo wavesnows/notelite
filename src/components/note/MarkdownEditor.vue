@@ -116,7 +116,7 @@ watch(
 watch(
   () => ttsStore.inputs.notePath,
   (newPath) => {
-    if (newPath && newPath.endsWith('.md')) {
+    if (newPath && !newPath.endsWith('.json')) {
       loadFile(newPath)
     }
   }
