@@ -49,7 +49,7 @@
           size="small"
           circle
           class="circle-btn"
-          :style="ttsStore.showHiddenFiles ? 'background-color: #409eff;' : ''"
+          :style="ttsStore.showHiddenFiles ? 'background-color: #e6a23c;' : ''"
           @click="toggleShowAllFiles"
         >
           <el-icon><Files /></el-icon>

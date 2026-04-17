@@ -149,9 +149,6 @@ export const useTtsStore = defineStore(DFConf.appName, {
         previewData: null as any,
         isInGitRepo: false,
       },
-      rawJsonEditor: {
-        showDialog: false,
-      },
       mdMode: 'edit' as 'edit' | 'preview',
       mdTheme: (store.get('mdTheme') as string) || 'teal',
       mdCopyTrigger: 0,
@@ -516,20 +513,6 @@ export const useTtsStore = defineStore(DFConf.appName, {
     },
 
     // Open raw JSON editor
-    openRawJsonEditor() {
-      const filePath = this.cnote.lastPath;
-
-      if (!filePath) {
-        ElMessage({
-          type: 'warning',
-          message: 'No file is currently open',
-        });
-        return;
-      }
-
-      this.rawJsonEditor.showDialog = true;
-    },
-
     // Check Git status for current notebook
     async checkGitStatus() {
       // Prefer repo path from current note, fall back to notebook path

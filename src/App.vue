@@ -8,7 +8,6 @@ import Bside from "./components/aside/Bside.vue";
 import HomeMain from "./components/note/HomeMain.vue";
 import Footer from "./components/footer/NoteFooter.vue";
 import HistoryViewer from "./components/history/HistoryViewer.vue";
-import RawJsonEditor from "./components/editor/RawJsonEditor.vue";
 import KeyboardShortcuts from "./components/help/KeyboardShortcuts.vue";
 import TerminalPanel from "./components/terminal/TerminalPanel.vue";
 
@@ -73,7 +72,6 @@ onUnmounted(() => {
     </el-container>
     <TerminalPanel v-show="ttsStore.terminal.show" />
     <HistoryViewer />
-    <RawJsonEditor />
     <KeyboardShortcuts />
   </div>
 </template>
