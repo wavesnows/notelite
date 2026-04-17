@@ -99,6 +99,9 @@ const en = {
       removeStar: 'Remove Star',
       confirmDelete: 'Are you sure to delete "{name}"?',
       confirmDeleteFolder: 'Are you sure to Delete "{name}"?',
+      showInFinder: 'Show in File Manager',
+      showHiddenFiles: 'Show hidden files',
+      hideHiddenFiles: 'Hide hidden files',
     },
     dialog: {
       addRootFolder: 'Add Root Folder',

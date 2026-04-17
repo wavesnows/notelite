@@ -128,6 +128,7 @@ function readDirGeneric(dirPath: string, options: {
   includeJson?: boolean,
   dirsOnly?: boolean,
   checkExists?: boolean,
+  showHidden?: boolean,
   customMapper?: (file: string, fullPath: string, isDirectory: boolean) => any
 }): any[] {
   if (options.checkExists && !fs.existsSync(dirPath)) {
@@ -135,12 +136,15 @@ function readDirGeneric(dirPath: string, options: {
     return []
   }
 
-  let filter = (file: string) => !file.startsWith('.')
+  const hiddenFilter = (file: string) => options.showHidden ? true : !file.startsWith('.')
+  let filter = hiddenFilter
   if (options.includeJson) {
     filter = (file: string) => {
-      if (file.startsWith('.')) return false
+      if (!options.showHidden && file.startsWith('.')) return false
       const ext = path.extname(file)
       if (ext === '.json' || ext === '.md') return true
+      // showHidden: include all text files and hidden files
+      if (options.showHidden) return true
       // 无扩展名只保留目录，过滤掉无扩展名的普通文件
       if (ext === '') {
         const fullPath = path.resolve(dirPath, file)
@@ -232,11 +236,12 @@ export function sortTreeByPinned(tree: Tree[], pinnedPaths: string[]): Tree[] {
   return [...pinned, ...unpinned];
 }
 
-export function readNotes(dirPath: string, pinnedPaths?: string[]): any {
+export function readNotes(dirPath: string, pinnedPaths?: string[], showHidden = false): any {
   const notes = readDirGeneric(dirPath, {
     recursive: true,
     includeJson: true,
-    checkExists: true
+    checkExists: true,
+    showHidden,
   });
 
   // Apply pinned sorting if provided

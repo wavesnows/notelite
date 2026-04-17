@@ -197,7 +197,8 @@ export const useTtsStore = defineStore(DFConf.appName, {
       },
       mdEditor: {
         lineWrap: true,
-      }
+      },
+      showHiddenFiles: false,
     };
   },
   // 定义getters，类似于computed，具有缓存功能
@@ -349,11 +350,8 @@ export const useTtsStore = defineStore(DFConf.appName, {
       return this.favorites.starred.includes(path);
     },
     refreshTreeData() {
-      console.log('Refreshing tree data for path:', this.notebook.currentPath);
-      const newData = readNotes(this.notebook.currentPath, this.favorites.pinned);
-      // Create new array reference to ensure Vue reactivity detection
+      const newData = readNotes(this.notebook.currentPath, this.favorites.pinned, this.showHiddenFiles);
       this.treeMenu.data = [...newData];
-      console.log('Tree data refreshed, items count:', this.treeMenu.data.length);
     },
 
     // Debounced tree refresh to avoid excessive file scanning

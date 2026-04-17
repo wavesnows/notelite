@@ -7,6 +7,17 @@
         clearable
         class="filter-input"
       />
+      <el-tooltip :content="ttsStore.showHiddenFiles ? t('fileTree.hideHiddenFiles') : t('fileTree.showHiddenFiles')" placement="right">
+        <el-button
+          size="small"
+          text
+          class="hidden-toggle"
+          :type="ttsStore.showHiddenFiles ? 'primary' : ''"
+          @click="toggleHiddenFiles"
+        >
+          <el-icon><View /></el-icon>
+        </el-button>
+      </el-tooltip>
     </div>
     <el-scrollbar height="100%" width="100%">
     <el-tree
@@ -93,7 +104,11 @@
                   <el-icon v-else><Star /></el-icon>
                   <span>{{ ttsStore.isStarred(data.path) ? t('fileTree.removeStar') : t('fileTree.addStar') }}</span>
                 </el-dropdown-item>
-                <el-dropdown-item v-if="!node.data.isFolder" :command="{type:'removeitem', data:data, node:node}" divided>
+                <el-dropdown-item :command="{type:'showInFinder', data:data}" divided>
+                  <el-icon><FolderOpened /></el-icon>
+                  <span>{{ t('fileTree.showInFinder') }}</span>
+                </el-dropdown-item>
+                <el-dropdown-item v-if="!node.data.isFolder" :command="{type:'removeitem', data:data, node:node}">
                   <el-icon><Delete /></el-icon>
                   <span>{{ t('fileTree.remove') }}</span>
                 </el-dropdown-item>
@@ -147,7 +162,7 @@ import { storeToRefs } from "pinia"
 import {ref, watch, nextTick, getCurrentInstance, onMounted, onUnmounted} from 'vue'
 import Node from 'element-plus/es/components/tree/src/model/node'
 import {ElTree, ElMessage,ElMessageBox, ElPopconfirm} from 'element-plus'
-import { Search, InfoFilled, Star, StarFilled, Document, Folder, Delete, Position, RemoveFilled } from "@element-plus/icons-vue"
+import { Search, InfoFilled, Star, StarFilled, Document, Folder, FolderOpened, Delete, Position, RemoveFilled, View } from "@element-plus/icons-vue"
 import {getNoteLabel} from "@/libs/noteUtil"
 import { useTtsStore, editorInstance, Tree } from "@/store/store"
 import { readDir,readNotes} from "@/libs/fileHandler"
@@ -284,6 +299,9 @@ const handleCommand = (command: any) => {
       case 'folder':
         dialogFormVisible.value = true;
         break;
+      case 'showInFinder':
+        ttsStore.showItemInFolder(command.data.path);
+        break;
       case 'pin':
         saveExpandedState();
         ttsStore.togglePin(command.data.path);
@@ -388,6 +406,11 @@ onUnmounted(() => {
   window.removeEventListener('save-tree-expanded-state', saveExpandedState);
 })
 
+function toggleHiddenFiles() {
+  ttsStore.showHiddenFiles = !ttsStore.showHiddenFiles;
+  ttsStore.refreshTreeData();
+}
+
 function cancelEvent(){
 
 }
@@ -468,8 +491,8 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.setLastEditNote()
     ttsStore.addRecentFile(itemdata.path, itemdata.label)
 
-    if (itemdata.path.endsWith('.md')) {
-      // MarkdownEditor handles loading via watch on notePath
+    if (!itemdata.path.endsWith('.json')) {
+      // Non-JSON files (md, txt, hidden config files etc.) use MarkdownEditor
       return
     }
 
@@ -508,6 +531,16 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
   .filter-container {
     padding: 8px;
     background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hidden-toggle {
+    flex-shrink: 0;
+    padding: 4px;
+    height: 28px;
+    width: 28px;
   }
 
   .filter-input {

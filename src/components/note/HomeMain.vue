@@ -17,7 +17,12 @@ import Welcome from '../note/Welcome.vue'
 const store = useTtsStore()
 const { inputs, cnote } = storeToRefs(store)
 
-const isMdFile = computed(() => inputs.value.notePath?.endsWith('.md') ?? false)
+const isMdFile = computed(() => {
+  const p = inputs.value.notePath
+  if (!p) return false
+  // Use MD editor for .md files and any non-.json text files (including hidden files)
+  return !p.endsWith('.json')
+})
 const hasNote = computed(() => !!cnote.value.lastPath)
 </script>
 

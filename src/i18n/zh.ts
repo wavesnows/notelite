@@ -99,6 +99,9 @@ const zh = {
       removeStar: '移除星标',
       confirmDelete: '确定要删除 "{name}" 吗？',
       confirmDeleteFolder: '确定要删除文件夹 "{name}" 吗？',
+      showInFinder: '在文件管理器中显示',
+      showHiddenFiles: '显示隐藏文件',
+      hideHiddenFiles: '隐藏隐藏文件',
     },
     dialog: {
       addRootFolder: '添加根文件夹',
