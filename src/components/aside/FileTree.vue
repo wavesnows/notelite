@@ -8,7 +8,7 @@
         class="filter-input"
       />
     </div>
-    <el-scrollbar height="100%" width="100%">
+    <el-scrollbar height="100%" width="100%" tabindex="0" @keydown="handleTreeKeydown">
     <el-tree
       :data="treeMenu.data"
       @node-click="handleNodeClick"
@@ -23,7 +23,11 @@
       ref="treeRef"
     >
     <template #default="{ node, data }">
-        <div class="custom-tree-node" @contextmenu.prevent="handleContextMenu(node, $event)">
+        <div
+          class="custom-tree-node"
+          :class="{ 'keyboard-focused': data.path === focusedNodeKey }"
+          @contextmenu.prevent="handleContextMenu(node, $event)"
+        >
           <input
             v-if="editingPath === data.path"
             class="rename-input"
@@ -172,6 +176,80 @@ const expandedKeys = ref<string[]>([]);
 const editingPath = ref('')
 const editingName = ref('')
 const renameInputRef = ref<HTMLInputElement | null>(null)
+
+const focusedNodeKey = ref<string | null>(null)
+
+function getVisibleNodes(): Tree[] {
+  const result: Tree[] = []
+  const expandedSet = new Set(ttsStore.treeMenu.expandedKeys || [])
+
+  function traverse(nodes: Tree[]) {
+    for (const node of nodes) {
+      result.push(node)
+      if (node.isFolder && expandedSet.has(node.path) && node.children) {
+        traverse(node.children)
+      }
+    }
+  }
+
+  traverse(ttsStore.treeMenu.data as Tree[])
+  return result
+}
+
+function handleTreeKeydown(event: KeyboardEvent) {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(event.key) === -1) return
+  event.preventDefault()
+  event.stopPropagation()
+
+  const visible = getVisibleNodes()
+  if (visible.length === 0) return
+
+  const currentIdx = focusedNodeKey.value
+    ? visible.findIndex(n => n.path === focusedNodeKey.value)
+    : -1
+
+  if (event.key === 'ArrowDown') {
+    const nextIdx = currentIdx < visible.length - 1 ? currentIdx + 1 : currentIdx
+    const next = visible[nextIdx]
+    if (!next) return
+    focusedNodeKey.value = next.path
+    if (!next.isFolder) {
+      handleNodeClick(next, {} as Node)
+    }
+  } else if (event.key === 'ArrowUp') {
+    const prevIdx = currentIdx > 0 ? currentIdx - 1 : 0
+    const prev = visible[prevIdx]
+    if (!prev) return
+    focusedNodeKey.value = prev.path
+    if (!prev.isFolder) {
+      handleNodeClick(prev, {} as Node)
+    }
+  } else if (event.key === 'ArrowRight') {
+    if (currentIdx === -1) return
+    const node = visible[currentIdx]
+    if (node.isFolder) {
+      const keys = ttsStore.treeMenu.expandedKeys || []
+      if (!keys.includes(node.path)) {
+        ttsStore.treeMenu.expandedKeys = [...keys, node.path]
+        nextTick(() => {
+          treeRef.value?.getNode(node.path)?.expand()
+        })
+      }
+    }
+  } else if (event.key === 'ArrowLeft') {
+    if (currentIdx === -1) return
+    const node = visible[currentIdx]
+    if (node.isFolder) {
+      const keys = ttsStore.treeMenu.expandedKeys || []
+      if (keys.includes(node.path)) {
+        ttsStore.treeMenu.expandedKeys = keys.filter(k => k !== node.path)
+        nextTick(() => {
+          treeRef.value?.getNode(node.path)?.collapse()
+        })
+      }
+    }
+  }
+}
 
 function startRename(data: Tree) {
   if (data.isFolder) return
@@ -472,6 +550,7 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.cnote.destTitle = itemdata.label;
     ttsStore.cnote.lastPath = itemdata.path;
     ttsStore.treeMenu.currentNode = treeRef.value?.getCurrentNode()
+    focusedNodeKey.value = itemdata.path
     ttsStore.setLastEditNote()
     ttsStore.addRecentFile(itemdata.path, itemdata.label)
 
@@ -652,6 +731,11 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
   outline: none;
   background: #fff;
   color: #303133;
+}
+
+.keyboard-focused {
+  background-color: rgba(64, 158, 255, 0.12);
+  border-radius: 4px;
 }
 
   </style>
