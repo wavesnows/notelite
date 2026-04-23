@@ -543,6 +543,7 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.treeMenu.node = node;
     ttsStore.treeMenu.treeData = itemdata
     ttsStore.inputs.itemData = itemdata
+    focusedNodeKey.value = itemdata.path
     console.log(itemdata)
    if(!itemdata.isFolder && fs.existsSync(itemdata.path)){
     ttsStore.inputs.notePath = itemdata.path;
@@ -550,7 +551,6 @@ const handleNodeClick = ((itemdata: Tree,node:Node) => {
     ttsStore.cnote.destTitle = itemdata.label;
     ttsStore.cnote.lastPath = itemdata.path;
     ttsStore.treeMenu.currentNode = treeRef.value?.getCurrentNode()
-    focusedNodeKey.value = itemdata.path
     ttsStore.setLastEditNote()
     ttsStore.addRecentFile(itemdata.path, itemdata.label)
 
