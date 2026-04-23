@@ -199,22 +199,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
         lineWrap: true,
       },
       showHiddenFiles: false,
-      flatFileList: (() => {
-        const result: string[] = [];
-        const traverse = (nodes: Tree[]) => {
-          for (const node of nodes) {
-            if (node.isLeaf && !node.isFolder) {
-              result.push(node.path);
-            }
-            if (node.children && node.children.length > 0) {
-              traverse(node.children);
-            }
-          }
-        };
-        const initialData = readNotes(store.get('currentNotebookPath') || path.join(os.homedir(), DFConf.appName, DFConf.defaultRepoPath, DFConf.defaultRepoName), store.get('pinnedNotes') || []);
-        traverse(initialData as Tree[]);
-        return result;
-      })(),
+      flatFileList: [] as string[],
     };
   },
   // 定义getters，类似于computed，具有缓存功能
@@ -402,7 +387,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       const nextPath = list[nextIdx];
       this.inputs.notePath = nextPath;
       this.cnote.lastPath = nextPath;
-      const fileName = nextPath.split('/').pop() || nextPath;
+      const fileName = path.basename(nextPath);
       const label = fileName.replace(/\.(json|md)$/, '');
       this.cnote.title = label;
       this.cnote.destTitle = label;

@@ -34,6 +34,7 @@ const handleFocus = () => {
 };
 
 onMounted(() => {
+  ttsStore.buildFlatFileList();
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('focus', handleFocus);
 
