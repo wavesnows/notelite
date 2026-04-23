@@ -136,6 +136,28 @@
               <span class="description">{{ t('help.link') }}</span>
             </div>
           </div>
+          <div class="shortcut-section">
+            <h3>File Tree</h3>
+            <div class="shortcut-item">
+              <span class="keys"><kbd>↑</kbd> / <kbd>↓</kbd></span>
+              <span class="description">Move to previous/next node (opens file automatically)</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="keys"><kbd>→</kbd></span>
+              <span class="description">Expand folder</span>
+            </div>
+            <div class="shortcut-item">
+              <span class="keys"><kbd>←</kbd></span>
+              <span class="description">Collapse folder</span>
+            </div>
+          </div>
+          <div class="shortcut-section">
+            <h3>Global Navigation</h3>
+            <div class="shortcut-item">
+              <span class="keys"><kbd>Alt</kbd>+<kbd>↑</kbd> / <kbd>↓</kbd></span>
+              <span class="description">Switch to previous/next file</span>
+            </div>
+          </div>
         </template>
       </div>
     </div>
