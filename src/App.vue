@@ -25,6 +25,15 @@ const handleKeyDown = (event: KeyboardEvent) => {
     event.preventDefault();
     ttsStore.toggleTerminal();
   }
+  // Alt+↑/↓ to navigate between files
+  if (event.altKey && event.key === 'ArrowDown') {
+    event.preventDefault();
+    ttsStore.navigateNote('next');
+  }
+  if (event.altKey && event.key === 'ArrowUp') {
+    event.preventDefault();
+    ttsStore.navigateNote('prev');
+  }
 };
 
 const handleFocus = () => {
