@@ -180,14 +180,22 @@ const renameInputRef = ref<HTMLInputElement | null>(null)
 const focusedNodeKey = ref<string | null>(null)
 
 function getVisibleNodes(): Tree[] {
-  saveExpandedState()  // sync store with el-tree's actual expanded state
+  saveExpandedState()
   const result: Tree[] = []
   const expandedSet = new Set(ttsStore.treeMenu.expandedKeys || [])
   const filter = filterText.value.trim()
 
+  function subtreeHasMatch(node: Tree): boolean {
+    if (node.label.includes(filter)) return true
+    if (node.children) {
+      return node.children.some(child => subtreeHasMatch(child))
+    }
+    return false
+  }
+
   function traverse(nodes: Tree[]) {
     for (const node of nodes) {
-      if (filter && !node.label.includes(filter)) continue
+      if (filter && !subtreeHasMatch(node)) continue
       result.push(node)
       if (node.isFolder && expandedSet.has(node.path) && node.children) {
         traverse(node.children)
@@ -212,8 +220,8 @@ function handleTreeKeydown(event: KeyboardEvent) {
     : -1
 
   if (event.key === 'ArrowDown') {
-    const nextIdx = currentIdx < visible.length - 1 ? currentIdx + 1 : currentIdx
-    const next = visible[nextIdx]
+    if (currentIdx >= visible.length - 1) return
+    const next = visible[currentIdx + 1]
     if (!next) return
     focusedNodeKey.value = next.path
     if (!next.isFolder) {
@@ -221,8 +229,8 @@ function handleTreeKeydown(event: KeyboardEvent) {
       if (realNode) handleNodeClick(next, realNode as unknown as Node)
     }
   } else if (event.key === 'ArrowUp') {
-    const prevIdx = currentIdx > 0 ? currentIdx - 1 : 0
-    const prev = visible[prevIdx]
+    if (currentIdx <= 0) return
+    const prev = visible[currentIdx - 1]
     if (!prev) return
     focusedNodeKey.value = prev.path
     if (!prev.isFolder) {
