@@ -180,11 +180,14 @@ const renameInputRef = ref<HTMLInputElement | null>(null)
 const focusedNodeKey = ref<string | null>(null)
 
 function getVisibleNodes(): Tree[] {
+  saveExpandedState()  // sync store with el-tree's actual expanded state
   const result: Tree[] = []
   const expandedSet = new Set(ttsStore.treeMenu.expandedKeys || [])
+  const filter = filterText.value.trim()
 
   function traverse(nodes: Tree[]) {
     for (const node of nodes) {
+      if (filter && !node.label.includes(filter)) continue
       result.push(node)
       if (node.isFolder && expandedSet.has(node.path) && node.children) {
         traverse(node.children)
@@ -214,7 +217,8 @@ function handleTreeKeydown(event: KeyboardEvent) {
     if (!next) return
     focusedNodeKey.value = next.path
     if (!next.isFolder) {
-      handleNodeClick(next, {} as Node)
+      const realNode = treeRef.value?.getNode(next.path)
+      if (realNode) handleNodeClick(next, realNode as unknown as Node)
     }
   } else if (event.key === 'ArrowUp') {
     const prevIdx = currentIdx > 0 ? currentIdx - 1 : 0
@@ -222,7 +226,8 @@ function handleTreeKeydown(event: KeyboardEvent) {
     if (!prev) return
     focusedNodeKey.value = prev.path
     if (!prev.isFolder) {
-      handleNodeClick(prev, {} as Node)
+      const realNode = treeRef.value?.getNode(prev.path)
+      if (realNode) handleNodeClick(prev, realNode as unknown as Node)
     }
   } else if (event.key === 'ArrowRight') {
     if (currentIdx === -1) return
@@ -313,6 +318,7 @@ function saveExpandedState() {
 watch(
   () => ttsStore.treeMenu.data,
   () => {
+    focusedNodeKey.value = null
     const keys = ttsStore.treeMenu.expandedKeys;
     if (!keys || keys.length === 0) return;
     nextTick(() => {
