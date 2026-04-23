@@ -361,7 +361,7 @@ export const useTtsStore = defineStore(DFConf.appName, {
       const result: string[] = [];
       const traverse = (nodes: Tree[]) => {
         for (const node of nodes) {
-          if (node.isLeaf && !node.isFolder) {
+          if (!node.isFolder) {
             result.push(node.path);
           }
           if (node.children && node.children.length > 0) {
@@ -391,6 +391,19 @@ export const useTtsStore = defineStore(DFConf.appName, {
       const label = fileName.replace(/\.(json|md)$/, '');
       this.cnote.title = label;
       this.cnote.destTitle = label;
+      // Load JSON content for EditorJS
+      if (!nextPath.endsWith('.json') || this.showHiddenFiles) {
+        // Non-JSON or hidden-files mode: CodeMirror handles loading via its own watcher
+      } else {
+        try {
+          const data = fs.readFileSync(nextPath, 'utf-8').trim();
+          this.editerData = data
+            ? JSON.parse(data)
+            : { time: Date.now(), blocks: [], version: '2.26.5' };
+        } catch (e) {
+          console.error('navigateNote: failed to load JSON', e);
+        }
+      }
       this.setLastEditNote();
       this.addRecentFile(nextPath, label);
     },
