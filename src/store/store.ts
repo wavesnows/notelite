@@ -199,6 +199,22 @@ export const useTtsStore = defineStore(DFConf.appName, {
         lineWrap: true,
       },
       showHiddenFiles: false,
+      flatFileList: (() => {
+        const result: string[] = [];
+        const traverse = (nodes: Tree[]) => {
+          for (const node of nodes) {
+            if (node.isLeaf && !node.isFolder) {
+              result.push(node.path);
+            }
+            if (node.children && node.children.length > 0) {
+              traverse(node.children);
+            }
+          }
+        };
+        const initialData = readNotes(store.get('currentNotebookPath') || path.join(os.homedir(), DFConf.appName, DFConf.defaultRepoPath, DFConf.defaultRepoName), store.get('pinnedNotes') || []);
+        traverse(initialData as Tree[]);
+        return result;
+      })(),
     };
   },
   // 定义getters，类似于computed，具有缓存功能
@@ -354,6 +370,44 @@ export const useTtsStore = defineStore(DFConf.appName, {
     refreshTreeData() {
       const newData = readNotes(this.notebook.currentPath, this.favorites.pinned, this.showHiddenFiles);
       this.treeMenu.data = [...newData];
+      this.buildFlatFileList();
+    },
+    buildFlatFileList() {
+      const result: string[] = [];
+      const traverse = (nodes: Tree[]) => {
+        for (const node of nodes) {
+          if (node.isLeaf && !node.isFolder) {
+            result.push(node.path);
+          }
+          if (node.children && node.children.length > 0) {
+            traverse(node.children);
+          }
+        }
+      };
+      traverse(this.treeMenu.data as Tree[]);
+      this.flatFileList = result;
+    },
+    navigateNote(direction: 'prev' | 'next') {
+      const list = this.flatFileList;
+      if (list.length === 0) return;
+      const current = this.cnote.lastPath;
+      const idx = list.indexOf(current);
+      let nextIdx: number;
+      if (idx === -1) {
+        nextIdx = direction === 'next' ? 0 : list.length - 1;
+      } else {
+        nextIdx = direction === 'next' ? idx + 1 : idx - 1;
+      }
+      if (nextIdx < 0 || nextIdx >= list.length) return;
+      const nextPath = list[nextIdx];
+      this.inputs.notePath = nextPath;
+      this.cnote.lastPath = nextPath;
+      const fileName = nextPath.split('/').pop() || nextPath;
+      const label = fileName.replace(/\.(json|md)$/, '');
+      this.cnote.title = label;
+      this.cnote.destTitle = label;
+      this.setLastEditNote();
+      this.addRecentFile(nextPath, label);
     },
 
     // Debounced tree refresh to avoid excessive file scanning
