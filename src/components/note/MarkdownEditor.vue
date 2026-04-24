@@ -1,18 +1,32 @@
 <template>
-  <div class="md-editor-container">
+  <div class="md-editor-container" @keydown="handleContainerKeydown">
     <div
       v-show="ttsStore.mdMode === 'edit'"
       ref="editorEl"
       class="md-codemirror"
     ></div>
-    <div
-      v-show="ttsStore.mdMode === 'preview'"
-      ref="previewEl"
-      class="md-preview"
-      :class="ttsStore.mdTheme !== 'default' ? `theme-${ttsStore.mdTheme}` : ''"
-      tabindex="-1"
-      v-html="renderedHtml"
-    ></div>
+    <div v-show="ttsStore.mdMode === 'preview'" class="md-preview-wrapper">
+      <div v-show="searchVisible" class="md-search-bar">
+        <input
+          ref="searchInputRef"
+          v-model="query"
+          class="md-search-input"
+          placeholder="Search..."
+          @keydown="handleSearchKeydown"
+        />
+        <span class="md-search-count">{{ searchCountText }}</span>
+        <button class="md-search-btn" @click="prevMatch" title="Previous (Shift+Enter)">↑</button>
+        <button class="md-search-btn" @click="nextMatch" title="Next (Enter)">↓</button>
+        <button class="md-search-btn md-search-close" @click="closeSearch" title="Close (Esc)">✕</button>
+      </div>
+      <div
+        ref="previewEl"
+        class="md-preview"
+        :class="ttsStore.mdTheme !== 'default' ? `theme-${ttsStore.mdTheme}` : ''"
+        tabindex="-1"
+        v-html="renderedHtml"
+      ></div>
+    </div>
   </div>
 </template>
 
@@ -222,5 +236,74 @@ function copyPreviewHtml() {
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
+}
+
+.md-preview-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.md-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e4e7ed;
+  flex-shrink: 0;
+}
+
+.md-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 13px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  outline: none;
+  background: #fff;
+  color: #303133;
+}
+
+.md-search-input:focus {
+  border-color: #409eff;
+}
+
+.md-search-count {
+  font-size: 12px;
+  color: #909399;
+  white-space: nowrap;
+  min-width: 48px;
+  text-align: center;
+}
+
+.md-search-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #606266;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.md-search-btn:hover {
+  background: #ecf5ff;
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.md-search-close {
+  color: #909399;
 }
 </style>
