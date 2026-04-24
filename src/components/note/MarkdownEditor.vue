@@ -31,12 +31,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { Compartment, EditorState } from '@codemirror/state'
 import MarkdownIt from 'markdown-it'
+import Mark from 'mark.js'
 import { useTtsStore } from '@/store/store'
 import '@/assets/md-preview.css'
 
@@ -48,12 +49,24 @@ const previewEl = ref<HTMLElement | null>(null)
 const content = ref('')
 let cmView: EditorView | null = null
 let saveStatusTimer: ReturnType<typeof setTimeout> | null = null
+const searchVisible = ref(false)
+const query = ref('')
+const matches = ref<HTMLElement[]>([])
+const currentIndex = ref(0)
+const searchInputRef = ref<HTMLInputElement | null>(null)
+let marker: Mark | null = null
 const lineWrapCompartment = new Compartment()
 const readOnlyCompartment = new Compartment()
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
 const renderedHtml = computed(() => md.render(content.value))
+
+const searchCountText = computed(() => {
+  if (!query.value) return ''
+  if (matches.value.length === 0) return 'No results'
+  return `${currentIndex.value + 1} / ${matches.value.length}`
+})
 
 function loadFile(filePath: string) {
   if (!filePath || !fs.existsSync(filePath)) return
@@ -82,6 +95,90 @@ function saveFile() {
   }
 }
 
+function openSearch() {
+  if (ttsStore.mdMode !== 'preview') return
+  searchVisible.value = true
+  nextTick(() => {
+    searchInputRef.value?.focus()
+    searchInputRef.value?.select()
+    if (query.value) runSearch()
+  })
+}
+
+function closeSearch() {
+  marker?.unmark()
+  matches.value = []
+  currentIndex.value = 0
+  query.value = ''
+  searchVisible.value = false
+  nextTick(() => previewEl.value?.focus())
+}
+
+function runSearch() {
+  if (!marker) return
+  marker.unmark({
+    done: () => {
+      if (!query.value) {
+        matches.value = []
+        currentIndex.value = 0
+        return
+      }
+      marker!.mark(query.value, {
+        caseSensitive: false,
+        separateWordSearch: false,
+        done: () => {
+          matches.value = Array.from(previewEl.value?.querySelectorAll('mark') ?? []) as HTMLElement[]
+          currentIndex.value = 0
+          goToMatch(0)
+        }
+      })
+    }
+  })
+}
+
+function goToMatch(index: number) {
+  if (matches.value.length === 0) return
+  matches.value.forEach(el => el.classList.remove('active'))
+  const target = matches.value[index]
+  if (!target) return
+  target.classList.add('active')
+  target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  currentIndex.value = index
+}
+
+function nextMatch() {
+  if (matches.value.length === 0) return
+  goToMatch((currentIndex.value + 1) % matches.value.length)
+}
+
+function prevMatch() {
+  if (matches.value.length === 0) return
+  goToMatch((currentIndex.value - 1 + matches.value.length) % matches.value.length)
+}
+
+function handleContainerKeydown(event: KeyboardEvent) {
+  if ((event.metaKey || event.ctrlKey) && event.key === 'f') {
+    if (ttsStore.mdMode === 'preview') {
+      event.preventDefault()
+      openSearch()
+    }
+  }
+}
+
+function handleSearchKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeSearch()
+  } else if (event.key === 'Enter') {
+    event.preventDefault()
+    if (event.shiftKey) {
+      prevMatch()
+    } else {
+      nextMatch()
+    }
+  }
+}
+
 onMounted(() => {
   cmView = new EditorView({
     doc: content.value,
@@ -102,11 +199,14 @@ onMounted(() => {
   })
 
   loadFile(ttsStore.inputs.notePath)
+  marker = new Mark(previewEl.value!)
 })
 
 onBeforeUnmount(() => {
   cmView?.destroy()
   cmView = null
+  marker?.unmark()
+  marker = null
 })
 
 watch(
@@ -140,6 +240,16 @@ watch(
   () => ttsStore.mdCopyTrigger,
   () => { copyPreviewHtml() }
 )
+
+watch(query, () => {
+  runSearch()
+})
+
+watch(renderedHtml, () => {
+  if (searchVisible.value && query.value) {
+    nextTick(() => runSearch())
+  }
+})
 
 watch(
   () => ttsStore.mdMode,
@@ -305,5 +415,18 @@ function copyPreviewHtml() {
 
 .md-search-close {
   color: #909399;
+}
+</style>
+
+<style>
+.md-preview mark {
+  background-color: rgba(255, 213, 0, 0.5);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.md-preview mark.active {
+  background-color: rgba(255, 140, 0, 0.7);
 }
 </style>
