@@ -150,7 +150,7 @@
 
 <script lang="ts" setup>
 import fs from 'fs'
-import {join} from "path"
+import {join, dirname} from "path"
 import { storeToRefs } from "pinia"
 import {ref, watch, nextTick, getCurrentInstance, onMounted, onUnmounted} from 'vue'
 import Node from 'element-plus/es/components/tree/src/model/node'
@@ -259,6 +259,12 @@ function handleTreeKeydown(event: KeyboardEvent) {
         nextTick(() => {
           treeRef.value?.getNode(node.path)?.collapse()
         })
+      }
+    } else {
+      const parentPath = dirname(node.path)
+      const parentNode = visible.find(n => n.path === parentPath)
+      if (parentNode) {
+        focusedNodeKey.value = parentNode.path
       }
     }
   }
