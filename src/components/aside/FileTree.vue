@@ -8,7 +8,7 @@
         class="filter-input"
       />
     </div>
-    <el-scrollbar height="100%" width="100%" tabindex="0" @keydown="handleTreeKeydown">
+    <el-scrollbar height="100%" width="100%" tabindex="0" @keydown.capture="handleTreeKeydown">
     <el-tree
       :data="treeMenu.data"
       @node-click="handleNodeClick"
