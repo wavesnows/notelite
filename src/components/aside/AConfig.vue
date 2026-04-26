@@ -50,6 +50,7 @@
 
           <!-- Tab 1: 笔记本 -->
           <el-tab-pane :label="t('settings.notebookTab')">
+            <el-scrollbar class="tab-scrollbar">
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.currentNotebook')">
                 <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" value-key="value" @change="saveHander">
@@ -87,10 +88,12 @@
                 </div>
               </el-form-item>
             </el-form>
+            </el-scrollbar>
           </el-tab-pane>
 
           <!-- Tab 2: 外观 -->
           <el-tab-pane :label="t('settings.appearanceTab')">
+            <el-scrollbar class="tab-scrollbar">
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.languageLabel')">
                 <el-select v-model="config.language" @change="changeLanguage">
@@ -108,10 +111,12 @@
                 </el-select>
               </el-form-item>
             </el-form>
+            </el-scrollbar>
           </el-tab-pane>
 
           <!-- Tab 3: 同步 -->
           <el-tab-pane :label="t('settings.remoteSetting')">
+            <el-scrollbar class="tab-scrollbar">
             <el-alert v-if="!ttsStore.gitAvailable" type="warning" :closable="false" style="margin-bottom: 16px;">
               <template #title>{{ t('settings.gitNotFound') }}</template>
               <template #default>
@@ -213,6 +218,7 @@
                 </el-button>
               </el-form-item>
             </el-form>
+            </el-scrollbar>
           </el-tab-pane>
 
           <!-- Tab 4: 定时任务 -->
@@ -222,6 +228,7 @@
 
                 <!-- 子 Tab 1: 任务列表 -->
                 <el-tab-pane :label="t('scheduler.taskList')" name="list">
+                  <el-scrollbar class="tab-scrollbar">
                   <div v-if="!schedulerTasks.length" class="scheduler-tab-empty">
                     {{ t('scheduler.empty') }}
                   </div>
@@ -253,10 +260,12 @@
                   <div style="margin-top:12px">
                     <el-button size="small" @click="newTask">+ {{ t('scheduler.newTask') }}</el-button>
                   </div>
+                  </el-scrollbar>
                 </el-tab-pane>
 
                 <!-- 子 Tab 2: 新建/编辑 -->
                 <el-tab-pane :label="editingTaskId ? t('scheduler.editTask') : t('scheduler.newTask')" name="form">
+                  <el-scrollbar class="tab-scrollbar">
                   <el-form :model="taskForm" label-width="120px" label-position="top">
                     <el-form-item :label="t('scheduler.taskName')">
                       <el-input v-model="taskForm.name" :placeholder="t('scheduler.taskNamePlaceholder')" />
@@ -334,6 +343,7 @@
                       <el-button v-if="editingTaskId" @click="cancelEdit">{{ t('common.cancel') }}</el-button>
                     </el-form-item>
                   </el-form>
+                  </el-scrollbar>
                 </el-tab-pane>
 
               </el-tabs>
@@ -999,52 +1009,8 @@
   font-weight: 600;
 }
 
-/* Disable drawer body's own scroll */
-:deep(.el-drawer__body) {
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.demo-tabs {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.demo-tabs :deep(.el-tabs__header) {
-  flex-shrink: 0;
-}
-
-.demo-tabs :deep(.el-tabs__content) {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.demo-tabs :deep(.el-tab-pane) {
+.tab-scrollbar {
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Inner sub-tabs */
-.demo-tabs :deep(.el-tab-pane .el-tabs) {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.demo-tabs :deep(.el-tab-pane .el-tabs__content) {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.demo-tabs :deep(.el-tab-pane .el-tab-pane) {
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 
