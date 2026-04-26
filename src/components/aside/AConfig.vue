@@ -41,7 +41,7 @@
     <!--Left Panel End-->
 
     <!--Config Drawer Start-->
-    <el-drawer v-model="config.drawer" direction="rtl" size="50%" :close-on-click-modal="true" @open="onDrawerOpen">
+    <el-drawer v-model="config.drawer" direction="rtl" size="50%" :close-on-click-modal="true" :destroy-on-close="true" @open="onDrawerOpen">
       <template #header>
         <h3>{{ t('settings.title') }}</h3>
       </template>
