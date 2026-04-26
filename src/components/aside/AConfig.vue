@@ -245,7 +245,7 @@
                 <span>{{ editingTaskId ? t('scheduler.editTask') : t('scheduler.newTask') }}</span>
                 <el-button v-if="editingTaskId" size="small" link @click="cancelEdit">{{ t('common.cancel') }}</el-button>
               </div>
-              <el-form :model="taskForm" label-width="90px" label-position="top" size="small" class="scheduler-form">
+              <el-form :model="taskForm" label-width="120px" label-position="top" class="scheduler-form">
                 <el-form-item :label="t('scheduler.taskName')">
                   <el-input v-model="taskForm.name" :placeholder="t('scheduler.taskNamePlaceholder')" />
                 </el-form-item>
