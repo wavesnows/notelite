@@ -251,8 +251,8 @@
                 </el-form-item>
                 <el-form-item :label="t('scheduler.schedule')">
                   <el-radio-group v-model="taskForm.schedule.mode">
-                    <el-radio value="simple">{{ t('scheduler.simple') }}</el-radio>
-                    <el-radio value="cron">{{ t('scheduler.cron') }}</el-radio>
+                    <el-radio label="simple">{{ t('scheduler.simple') }}</el-radio>
+                    <el-radio label="cron">{{ t('scheduler.cron') }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
                 <template v-if="taskForm.schedule.mode === 'simple'">
@@ -281,8 +281,8 @@
                 </template>
                 <el-form-item :label="t('scheduler.taskType')">
                   <el-radio-group v-model="taskForm.type">
-                    <el-radio value="shell">{{ t('scheduler.shell') }}</el-radio>
-                    <el-radio value="builtin">{{ t('scheduler.builtin') }}</el-radio>
+                    <el-radio label="shell">{{ t('scheduler.shell') }}</el-radio>
+                    <el-radio label="builtin">{{ t('scheduler.builtin') }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
                 <template v-if="taskForm.type === 'shell'">
@@ -309,7 +309,9 @@
                   <span style="margin-left:6px;font-size:12px;color:#909399">s</span>
                 </el-form-item>
                 <el-form-item :label="t('scheduler.enabled')">
-                  <el-checkbox v-model="taskForm.enabled" />
+                  <div style="-webkit-app-region: no-drag">
+                    <el-checkbox v-model="taskForm.enabled" />
+                  </div>
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" :disabled="!canSaveTask" @click="saveTask">{{ t('common.save') }}</el-button>
