@@ -189,6 +189,10 @@ export const useTtsStore = defineStore(DFConf.appName, {
       helpDialog: {
         show: false,
       },
+      scheduler: {
+        dialogVisible: false,
+        editingTask: null as import('@/types/scheduler').SchedulerTask | null,
+      },
       terminal: {
         show: false,
       },
