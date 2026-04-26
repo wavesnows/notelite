@@ -217,7 +217,7 @@
 
           <!-- Tab 4: 定时任务 -->
           <el-tab-pane :label="t('scheduler.title')">
-            <div class="scheduler-tab">
+            <div class="scheduler-tab" style="-webkit-app-region: no-drag">
               <!-- 任务列表 -->
               <div v-if="!schedulerTasks.length" class="scheduler-tab-empty">
                 {{ t('scheduler.empty') }}
