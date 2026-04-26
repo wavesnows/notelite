@@ -223,131 +223,133 @@
 
           <!-- Tab 4: 定时任务 -->
           <el-tab-pane :label="t('scheduler.title')">
-            <div style="-webkit-app-region: no-drag; height: 100%">
-              <el-tabs v-model="schedulerSubTab" style="height:100%">
+            <el-scrollbar class="tab-scrollbar" key="sb-scheduler">
+            <div style="-webkit-app-region: no-drag">
 
-                <!-- 子 Tab 1: 任务列表 -->
-                <el-tab-pane :label="t('scheduler.taskList')" name="list">
-                  <el-scrollbar class="tab-scrollbar" key="sb-scheduler-list">
-                  <div v-if="!schedulerTasks.length" class="scheduler-tab-empty">
-                    {{ t('scheduler.empty') }}
-                  </div>
-                  <div v-else class="scheduler-task-list">
-                    <div
-                      v-for="item in schedulerTasks"
-                      :key="item.id"
-                      class="scheduler-task-item"
-                      :class="{ 'is-editing': editingTaskId === item.id }"
-                      @click="editTask(item)"
-                    >
-                      <span class="s-dot" :class="dotClass(item)" :title="dotLabel(item)"></span>
-                      <span class="s-name">{{ item.name }}</span>
-                      <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
-                        {{ statusLabel(item) }}
-                      </span>
-                      <div class="s-actions" @click.stop>
-                        <el-switch
-                          :model-value="item.enabled"
-                          size="small"
-                          style="-webkit-app-region:no-drag"
-                          @change="(v: boolean) => toggleEnabled(item, v)"
-                        />
-                        <button class="s-btn" @click="runTaskNow(item)" :title="t('scheduler.runNow')">▶</button>
-                        <button class="s-btn s-btn-danger" @click="removeTask(item)" :title="t('scheduler.delete')">✕</button>
-                      </div>
+              <!-- 视图切换头部 -->
+              <div class="scheduler-view-header">
+                <span class="scheduler-view-title">
+                  {{ schedulerSubTab === 'list' ? t('scheduler.taskList') : (editingTaskId ? t('scheduler.editTask') : t('scheduler.newTask')) }}
+                </span>
+                <el-button v-if="schedulerSubTab === 'list'" size="small" @click="newTask">+ {{ t('scheduler.newTask') }}</el-button>
+                <el-button v-else size="small" @click="cancelEdit">← {{ t('scheduler.taskList') }}</el-button>
+              </div>
+
+              <!-- 任务列表视图 -->
+              <template v-if="schedulerSubTab === 'list'">
+                <div v-if="!schedulerTasks.length" class="scheduler-tab-empty">
+                  {{ t('scheduler.empty') }}
+                </div>
+                <div v-else class="scheduler-task-list">
+                  <div
+                    v-for="item in schedulerTasks"
+                    :key="item.id"
+                    class="scheduler-task-item"
+                    :class="{ 'is-editing': editingTaskId === item.id }"
+                    @click="editTask(item)"
+                  >
+                    <span class="s-dot" :class="dotClass(item)" :title="dotLabel(item)"></span>
+                    <span class="s-name">{{ item.name }}</span>
+                    <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
+                      {{ statusLabel(item) }}
+                    </span>
+                    <div class="s-actions" @click.stop>
+                      <el-switch
+                        :model-value="item.enabled"
+                        size="small"
+                        style="-webkit-app-region:no-drag"
+                        @change="(v: boolean) => toggleEnabled(item, v)"
+                      />
+                      <button class="s-btn" @click="runTaskNow(item)" :title="t('scheduler.runNow')">▶</button>
+                      <button class="s-btn s-btn-danger" @click="removeTask(item)" :title="t('scheduler.delete')">✕</button>
                     </div>
                   </div>
-                  <div style="margin-top:12px">
-                    <el-button size="small" @click="newTask">+ {{ t('scheduler.newTask') }}</el-button>
-                  </div>
-                  </el-scrollbar>
-                </el-tab-pane>
+                </div>
+              </template>
 
-                <!-- 子 Tab 2: 新建/编辑 -->
-                <el-tab-pane :label="editingTaskId ? t('scheduler.editTask') : t('scheduler.newTask')" name="form">
-                  <el-scrollbar class="tab-scrollbar" key="sb-scheduler-form">
-                  <el-form :model="taskForm" label-width="120px" label-position="top">
-                    <el-form-item :label="t('scheduler.taskName')">
-                      <el-input v-model="taskForm.name" :placeholder="t('scheduler.taskNamePlaceholder')" />
-                    </el-form-item>
-                    <el-form-item :label="t('scheduler.schedule')">
-                      <el-select v-model="taskForm.schedule.mode" style="width:120px">
-                        <el-option value="simple" :label="t('scheduler.simple')" />
-                        <el-option value="cron" :label="t('scheduler.cron')" />
+              <!-- 新建/编辑表单视图 -->
+              <template v-else>
+                <el-form :model="taskForm" label-width="120px" label-position="top" style="margin-top:8px">
+                  <el-form-item :label="t('scheduler.taskName')">
+                    <el-input v-model="taskForm.name" :placeholder="t('scheduler.taskNamePlaceholder')" />
+                  </el-form-item>
+                  <el-form-item :label="t('scheduler.schedule')">
+                    <el-select v-model="taskForm.schedule.mode" style="width:120px">
+                      <el-option value="simple" :label="t('scheduler.simple')" />
+                      <el-option value="cron" :label="t('scheduler.cron')" />
+                    </el-select>
+                  </el-form-item>
+                  <template v-if="taskForm.schedule.mode === 'simple'">
+                    <el-form-item :label="t('scheduler.frequency')">
+                      <el-select v-model="taskForm.schedule.frequency" style="width:110px">
+                        <el-option value="daily" :label="t('scheduler.daily')" />
+                        <el-option value="weekly" :label="t('scheduler.weekly')" />
+                        <el-option value="monthly" :label="t('scheduler.monthly')" />
                       </el-select>
                     </el-form-item>
-                    <template v-if="taskForm.schedule.mode === 'simple'">
-                      <el-form-item :label="t('scheduler.frequency')">
-                        <el-select v-model="taskForm.schedule.frequency" style="width:110px">
-                          <el-option value="daily" :label="t('scheduler.daily')" />
-                          <el-option value="weekly" :label="t('scheduler.weekly')" />
-                          <el-option value="monthly" :label="t('scheduler.monthly')" />
-                        </el-select>
-                      </el-form-item>
-                      <el-form-item :label="t('scheduler.time')">
-                        <el-input v-model="taskFormTime" placeholder="09:00" style="width:100px" @blur="validateTime" />
-                        <div v-if="timeError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ timeError }}</div>
-                      </el-form-item>
-                      <el-form-item v-if="taskForm.schedule.frequency === 'weekly'" :label="t('scheduler.weekday')">
-                        <el-select v-model="taskForm.schedule.weekday" style="width:110px">
-                          <el-option v-for="(d,i) in weekdays" :key="i" :value="i" :label="d" />
-                        </el-select>
-                      </el-form-item>
-                      <el-form-item v-if="taskForm.schedule.frequency === 'monthly'" :label="t('scheduler.dayOfMonth')">
-                        <el-input-number v-model="taskForm.schedule.day" :min="1" :max="31" style="width:100px" />
-                      </el-form-item>
-                    </template>
-                    <template v-else>
-                      <el-form-item :label="t('scheduler.cronExpression')">
-                        <el-input v-model="taskForm.schedule.cron" placeholder="0 9 * * *" @blur="validateTaskCron" />
-                        <div v-if="cronError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ t('scheduler.cronInvalid') }}</div>
-                      </el-form-item>
-                    </template>
-                    <el-form-item :label="t('scheduler.taskType')">
-                      <el-select v-model="taskForm.type" style="width:140px">
-                        <el-option value="shell" :label="t('scheduler.shell')" />
-                        <el-option value="builtin" :label="t('scheduler.builtin')" />
+                    <el-form-item :label="t('scheduler.time')">
+                      <el-input v-model="taskFormTime" placeholder="09:00" style="width:100px" @blur="validateTime" />
+                      <div v-if="timeError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ timeError }}</div>
+                    </el-form-item>
+                    <el-form-item v-if="taskForm.schedule.frequency === 'weekly'" :label="t('scheduler.weekday')">
+                      <el-select v-model="taskForm.schedule.weekday" style="width:110px">
+                        <el-option v-for="(d,i) in weekdays" :key="i" :value="i" :label="d" />
                       </el-select>
                     </el-form-item>
-                    <template v-if="taskForm.type === 'shell'">
-                      <el-form-item :label="t('scheduler.command')">
-                        <el-input v-model="taskForm.command" :placeholder="t('scheduler.commandPlaceholder')" />
-                      </el-form-item>
-                      <el-form-item :label="t('scheduler.workdir')">
-                        <el-input v-model="taskForm.workdir" :placeholder="t('scheduler.workdirPlaceholder')" @blur="validateWorkdir" />
-                        <div v-if="workdirError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ workdirError }}</div>
-                      </el-form-item>
-                    </template>
-                    <template v-else>
-                      <el-form-item :label="t('scheduler.action')">
-                        <el-select v-model="taskForm.action" style="width:160px">
-                          <el-option value="git-pull" :label="t('scheduler.gitPull')" />
-                          <el-option value="git-push" :label="t('scheduler.gitPush')" />
-                          <el-option value="refresh-tree" :label="t('scheduler.refreshTree')" />
-                        </el-select>
-                      </el-form-item>
-                    </template>
-                    <el-form-item :label="t('scheduler.retry')">
-                      <el-input-number v-model="taskForm.retry.maxAttempts" :min="1" :max="10" style="width:70px" />
-                      <span style="margin:0 6px;font-size:12px;color:#909399">{{ t('scheduler.maxAttempts') }}</span>
-                      <el-input-number v-model="taskForm.retry.delaySeconds" :min="10" :max="3600" style="width:90px" />
-                      <span style="margin-left:6px;font-size:12px;color:#909399">s</span>
+                    <el-form-item v-if="taskForm.schedule.frequency === 'monthly'" :label="t('scheduler.dayOfMonth')">
+                      <el-input-number v-model="taskForm.schedule.day" :min="1" :max="31" style="width:100px" />
                     </el-form-item>
-                    <el-form-item :label="t('scheduler.enabled')">
-                      <div style="display:flex;align-items:center;gap:10px;-webkit-app-region:no-drag">
-                        <el-switch v-model="taskForm.enabled" />
-                      </div>
+                  </template>
+                  <template v-else>
+                    <el-form-item :label="t('scheduler.cronExpression')">
+                      <el-input v-model="taskForm.schedule.cron" placeholder="0 9 * * *" @blur="validateTaskCron" />
+                      <div v-if="cronError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ t('scheduler.cronInvalid') }}</div>
                     </el-form-item>
-                    <el-form-item>
-                      <el-button type="primary" :disabled="!canSaveTask" @click="saveTask">{{ t('common.save') }}</el-button>
-                      <el-button v-if="editingTaskId" @click="cancelEdit">{{ t('common.cancel') }}</el-button>
+                  </template>
+                  <el-form-item :label="t('scheduler.taskType')">
+                    <el-select v-model="taskForm.type" style="width:140px">
+                      <el-option value="shell" :label="t('scheduler.shell')" />
+                      <el-option value="builtin" :label="t('scheduler.builtin')" />
+                    </el-select>
+                  </el-form-item>
+                  <template v-if="taskForm.type === 'shell'">
+                    <el-form-item :label="t('scheduler.command')">
+                      <el-input v-model="taskForm.command" :placeholder="t('scheduler.commandPlaceholder')" />
                     </el-form-item>
-                  </el-form>
-                  </el-scrollbar>
-                </el-tab-pane>
+                    <el-form-item :label="t('scheduler.workdir')">
+                      <el-input v-model="taskForm.workdir" :placeholder="t('scheduler.workdirPlaceholder')" @blur="validateWorkdir" />
+                      <div v-if="workdirError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ workdirError }}</div>
+                    </el-form-item>
+                  </template>
+                  <template v-else>
+                    <el-form-item :label="t('scheduler.action')">
+                      <el-select v-model="taskForm.action" style="width:160px">
+                        <el-option value="git-pull" :label="t('scheduler.gitPull')" />
+                        <el-option value="git-push" :label="t('scheduler.gitPush')" />
+                        <el-option value="refresh-tree" :label="t('scheduler.refreshTree')" />
+                      </el-select>
+                    </el-form-item>
+                  </template>
+                  <el-form-item :label="t('scheduler.retry')">
+                    <el-input-number v-model="taskForm.retry.maxAttempts" :min="1" :max="10" style="width:70px" />
+                    <span style="margin:0 6px;font-size:12px;color:#909399">{{ t('scheduler.maxAttempts') }}</span>
+                    <el-input-number v-model="taskForm.retry.delaySeconds" :min="10" :max="3600" style="width:90px" />
+                    <span style="margin-left:6px;font-size:12px;color:#909399">s</span>
+                  </el-form-item>
+                  <el-form-item :label="t('scheduler.enabled')">
+                    <div style="display:flex;align-items:center;gap:10px;-webkit-app-region:no-drag">
+                      <el-switch v-model="taskForm.enabled" />
+                    </div>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button type="primary" :disabled="!canSaveTask" @click="saveTask">{{ t('common.save') }}</el-button>
+                    <el-button @click="cancelEdit">{{ t('common.cancel') }}</el-button>
+                  </el-form-item>
+                </el-form>
+              </template>
 
-              </el-tabs>
             </div>
+            </el-scrollbar>
           </el-tab-pane>
 
         </el-tabs>
@@ -1060,6 +1062,19 @@
 }
 .s-btn:hover { background: rgba(0,0,0,0.06); color: #409eff; }
 .s-btn-danger:hover { color: #f56c6c; }
+.scheduler-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 10px 0;
+  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 12px;
+}
+.scheduler-view-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+}
 .scheduler-form-header {
   display: flex;
   align-items: center;
