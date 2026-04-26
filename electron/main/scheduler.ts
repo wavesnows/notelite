@@ -1,4 +1,4 @@
-import { BrowserWindow, Notification, app } from 'electron'
+import { BrowserWindow, Notification, app, ipcMain } from 'electron'
 import * as nodeCron from 'node-cron'
 import { exec } from 'child_process'
 import { join } from 'path'
@@ -77,14 +77,16 @@ async function execBuiltin(action: string): Promise<{ output: string; error?: st
       resolve({ output: '', error: 'Window not available' })
       return
     }
-    const timeout = setTimeout(() => resolve({ output: '', error: 'Builtin action timeout' }), 30000)
     mainWin.webContents.send('scheduler:builtin-action', action)
-    // Renderer replies via scheduler:builtin-result IPC
-    const { ipcMain } = require('electron')
-    ipcMain.once(`scheduler:builtin-result:${action}`, (_: any, result: { output: string; error?: string }) => {
+    const handler = (_: any, result: { output: string; error?: string }) => {
       clearTimeout(timeout)
       resolve(result)
-    })
+    }
+    const timeout = setTimeout(() => {
+      ipcMain.removeListener(`scheduler:builtin-result:${action}`, handler)
+      resolve({ output: '', error: 'Builtin action timeout' })
+    }, 30000)
+    ipcMain.once(`scheduler:builtin-result:${action}`, handler)
   })
 }
 
