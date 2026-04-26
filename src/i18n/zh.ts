@@ -340,6 +340,7 @@ const zh = {
       statusDisabled: '已禁用',
       confirmDelete: '删除任务 "{name}"？',
       editTask: '编辑任务',
+      taskList: '任务列表',
     },
   };
 

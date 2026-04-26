@@ -340,6 +340,7 @@ const en = {
       statusDisabled: 'Disabled',
       confirmDelete: 'Delete task "{name}"?',
       editTask: 'Edit Task',
+      taskList: 'Tasks',
     },
   };
 
