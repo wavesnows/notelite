@@ -25,7 +25,15 @@
         :class="ttsStore.mdTheme !== 'default' ? `theme-${ttsStore.mdTheme}` : ''"
         tabindex="-1"
         v-html="renderedHtml"
+        @click="handlePreviewClick"
+        @scroll="handlePreviewScroll"
       ></div>
+      <button
+        v-show="showBackToTop"
+        class="md-back-to-top"
+        @click="scrollToTop"
+        title="Back to top"
+      >↑</button>
     </div>
   </div>
 </template>
@@ -55,6 +63,7 @@ const matches = ref<HTMLElement[]>([])
 const currentIndex = ref(0)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 let marker: Mark | null = null
+const showBackToTop = ref(false)
 const lineWrapCompartment = new Compartment()
 const readOnlyCompartment = new Compartment()
 
@@ -154,6 +163,26 @@ function nextMatch() {
 function prevMatch() {
   if (matches.value.length === 0) return
   goToMatch((currentIndex.value - 1 + matches.value.length) % matches.value.length)
+}
+
+function handlePreviewClick(event: MouseEvent) {
+  const target = event.target as HTMLElement
+  const anchor = target.closest('a') as HTMLAnchorElement | null
+  if (!anchor) return
+  const href = anchor.getAttribute('href')
+  if (!href?.startsWith('#')) return
+  event.preventDefault()
+  const id = decodeURIComponent(href.slice(1))
+  const el = previewEl.value?.querySelector(`[id="${id}"]`) as HTMLElement | null
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function handlePreviewScroll() {
+  showBackToTop.value = (previewEl.value?.scrollTop ?? 0) > 300
+}
+
+function scrollToTop() {
+  previewEl.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function handleContainerKeydown(event: KeyboardEvent) {
@@ -354,6 +383,7 @@ function copyPreviewHtml() {
   flex: 1;
   overflow: hidden;
   height: 100%;
+  position: relative;
 }
 
 .md-search-bar {
@@ -415,6 +445,31 @@ function copyPreviewHtml() {
 
 .md-search-close {
   color: #909399;
+}
+
+.md-back-to-top {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #dcdfe6;
+  background: #fff;
+  color: #606266;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: opacity 0.2s;
+}
+
+.md-back-to-top:hover {
+  background: #ecf5ff;
+  border-color: #409eff;
+  color: #409eff;
 }
 </style>
 
