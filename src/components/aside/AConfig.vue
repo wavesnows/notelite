@@ -215,6 +215,109 @@
             </el-form>
           </el-tab-pane>
 
+          <!-- Tab 4: 定时任务 -->
+          <el-tab-pane :label="t('scheduler.title')">
+            <div class="scheduler-tab">
+              <!-- 任务列表 -->
+              <div v-if="!schedulerTasks.length" class="scheduler-tab-empty">
+                {{ t('scheduler.empty') }}
+              </div>
+              <div v-else class="scheduler-task-list">
+                <div
+                  v-for="item in schedulerTasks"
+                  :key="item.id"
+                  class="scheduler-task-item"
+                  :class="{ 'is-editing': editingTaskId === item.id }"
+                  @click="editTask(item)"
+                >
+                  <span class="s-dot" :class="dotClass(item)"></span>
+                  <span class="s-name">{{ item.name }}</span>
+                  <span class="s-cron">{{ item.schedule.cron || '—' }}</span>
+                  <div class="s-actions" @click.stop>
+                    <el-button size="small" link @click="runTaskNow(item)">▶</el-button>
+                    <el-button size="small" link type="danger" @click="removeTask(item)">✕</el-button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 新建/编辑表单 -->
+              <div class="scheduler-form-header">
+                <span>{{ editingTaskId ? t('scheduler.editTask') : t('scheduler.newTask') }}</span>
+                <el-button v-if="editingTaskId" size="small" link @click="cancelEdit">{{ t('common.cancel') }}</el-button>
+              </div>
+              <el-form :model="taskForm" label-width="90px" label-position="top" size="small" class="scheduler-form">
+                <el-form-item :label="t('scheduler.taskName')">
+                  <el-input v-model="taskForm.name" :placeholder="t('scheduler.taskNamePlaceholder')" />
+                </el-form-item>
+                <el-form-item :label="t('scheduler.schedule')">
+                  <el-radio-group v-model="taskForm.schedule.mode">
+                    <el-radio value="simple">{{ t('scheduler.simple') }}</el-radio>
+                    <el-radio value="cron">{{ t('scheduler.cron') }}</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+                <template v-if="taskForm.schedule.mode === 'simple'">
+                  <el-form-item :label="t('scheduler.frequency')">
+                    <el-select v-model="taskForm.schedule.frequency" style="width:110px">
+                      <el-option value="daily" :label="t('scheduler.daily')" />
+                      <el-option value="weekly" :label="t('scheduler.weekly')" />
+                      <el-option value="monthly" :label="t('scheduler.monthly')" />
+                    </el-select>
+                    <el-time-picker v-model="taskFormTime" format="HH:mm" value-format="HH:mm" style="width:100px;margin-left:8px" />
+                  </el-form-item>
+                  <el-form-item v-if="taskForm.schedule.frequency === 'weekly'" :label="t('scheduler.weekday')">
+                    <el-select v-model="taskForm.schedule.weekday" style="width:110px">
+                      <el-option v-for="(d,i) in weekdays" :key="i" :value="i" :label="d" />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item v-if="taskForm.schedule.frequency === 'monthly'" :label="t('scheduler.dayOfMonth')">
+                    <el-input-number v-model="taskForm.schedule.day" :min="1" :max="31" style="width:100px" />
+                  </el-form-item>
+                </template>
+                <template v-else>
+                  <el-form-item :label="t('scheduler.cronExpression')">
+                    <el-input v-model="taskForm.schedule.cron" placeholder="0 9 * * *" @blur="validateTaskCron" />
+                    <div v-if="cronError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ t('scheduler.cronInvalid') }}</div>
+                  </el-form-item>
+                </template>
+                <el-form-item :label="t('scheduler.taskType')">
+                  <el-radio-group v-model="taskForm.type">
+                    <el-radio value="shell">{{ t('scheduler.shell') }}</el-radio>
+                    <el-radio value="builtin">{{ t('scheduler.builtin') }}</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+                <template v-if="taskForm.type === 'shell'">
+                  <el-form-item :label="t('scheduler.command')">
+                    <el-input v-model="taskForm.command" placeholder="e.g. python script.py" />
+                  </el-form-item>
+                  <el-form-item :label="t('scheduler.workdir')">
+                    <el-input v-model="taskForm.workdir" :placeholder="t('scheduler.workdirPlaceholder')" />
+                  </el-form-item>
+                </template>
+                <template v-else>
+                  <el-form-item :label="t('scheduler.action')">
+                    <el-select v-model="taskForm.action" style="width:140px">
+                      <el-option value="git-pull" :label="t('scheduler.gitPull')" />
+                      <el-option value="git-push" :label="t('scheduler.gitPush')" />
+                      <el-option value="refresh-tree" :label="t('scheduler.refreshTree')" />
+                    </el-select>
+                  </el-form-item>
+                </template>
+                <el-form-item :label="t('scheduler.retry')">
+                  <el-input-number v-model="taskForm.retry.maxAttempts" :min="1" :max="10" style="width:70px" />
+                  <span style="margin:0 6px;font-size:12px;color:#909399">{{ t('scheduler.maxAttempts') }}</span>
+                  <el-input-number v-model="taskForm.retry.delaySeconds" :min="10" :max="3600" style="width:90px" />
+                  <span style="margin-left:6px;font-size:12px;color:#909399">s</span>
+                </el-form-item>
+                <el-form-item :label="t('scheduler.enabled')">
+                  <el-checkbox v-model="taskForm.enabled" />
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" :disabled="!canSaveTask" @click="saveTask">{{ t('common.save') }}</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
+          </el-tab-pane>
+
         </el-tabs>
       </template>
     </el-drawer>
@@ -266,7 +369,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { Refresh, Setting, Plus, Download, Upload, Suitcase } from '@element-plus/icons-vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { useTtsStore, Tree } from "@/store/store";
@@ -279,6 +382,8 @@
   import { ipcRenderer } from 'electron';
   import { useI18n } from 'vue-i18n';
   import { isFileInGitRepo } from '@/libs/gitHistory';
+  import { SchedulerTask, simpleToCron } from '@/types/scheduler';
+  import { v4 as uuidv4 } from 'uuid';
 
   const { t, locale } = useI18n();
   const formLabelWidth = '140px';
@@ -548,6 +653,121 @@
     }
   }
 
+  // ── Scheduler ────────────────────────────────────────────────────────────────
+
+  const schedulerTasks = ref<SchedulerTask[]>([])
+  const editingTaskId = ref<string | null>(null)
+  const cronError = ref(false)
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  function defaultTaskForm(): SchedulerTask {
+    return {
+      id: '',
+      name: '',
+      enabled: true,
+      schedule: { mode: 'simple', frequency: 'daily', time: '09:00' },
+      type: 'shell',
+      command: '',
+      workdir: '',
+      action: 'git-pull',
+      retry: { maxAttempts: 3, delaySeconds: 60 },
+    }
+  }
+
+  const taskForm = ref<SchedulerTask>(defaultTaskForm())
+
+  const taskFormTime = computed({
+    get: () => taskForm.value.schedule.time || '09:00',
+    set: (v: string) => { taskForm.value.schedule.time = v },
+  })
+
+  async function loadSchedulerTasks() {
+    schedulerTasks.value = await ipcRenderer.invoke('scheduler:list')
+  }
+
+  function editTask(item: SchedulerTask) {
+    editingTaskId.value = item.id
+    taskForm.value = { ...item, schedule: { ...item.schedule } }
+    cronError.value = false
+  }
+
+  function cancelEdit() {
+    editingTaskId.value = null
+    taskForm.value = defaultTaskForm()
+    cronError.value = false
+  }
+
+  function isValidCron(expr: string): boolean {
+    const parts = expr.trim().split(/\s+/)
+    if (parts.length !== 5) return false
+    const ranges = [[0,59],[0,23],[1,31],[1,12],[0,7]]
+    return parts.every((part, i) => {
+      if (part === '*') return true
+      if (/^\*\/\d+$/.test(part)) return true
+      const [min, max] = ranges[i]
+      return part.split(',').every(seg => {
+        const r = seg.split('-')
+        return r.every(n => { const num = parseInt(n,10); return !isNaN(num) && num >= min && num <= max })
+      })
+    })
+  }
+
+  function validateTaskCron() {
+    if (taskForm.value.schedule.mode !== 'cron') return
+    cronError.value = !isValidCron(taskForm.value.schedule.cron || '')
+  }
+
+  const canSaveTask = computed(() => {
+    if (!taskForm.value.name.trim()) return false
+    if (taskForm.value.schedule.mode === 'cron' && !isValidCron(taskForm.value.schedule.cron || '')) return false
+    if (taskForm.value.type === 'shell' && !taskForm.value.command?.trim()) return false
+    return true
+  })
+
+  async function saveTask() {
+    const toSave: SchedulerTask = { ...taskForm.value, schedule: { ...taskForm.value.schedule } }
+    if (!toSave.id) toSave.id = uuidv4()
+    if (toSave.schedule.mode === 'simple') toSave.schedule.cron = simpleToCron(toSave)
+    await ipcRenderer.invoke('scheduler:save', toSave)
+    ipcRenderer.send('scheduler:tasks-changed')
+    await loadSchedulerTasks()
+    cancelEdit()
+    ElMessage({ message: t('common.save') + ' ✓', type: 'success' })
+  }
+
+  async function runTaskNow(item: SchedulerTask) {
+    await ipcRenderer.invoke('scheduler:run-now', { id: item.id })
+  }
+
+  async function removeTask(item: SchedulerTask) {
+    try {
+      await ElMessageBox.confirm(
+        t('scheduler.confirmDelete', { name: item.name }),
+        t('common.delete'),
+        { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'warning' }
+      )
+    } catch { return }
+    await ipcRenderer.invoke('scheduler:delete', { id: item.id })
+    ipcRenderer.send('scheduler:tasks-changed')
+    await loadSchedulerTasks()
+    if (editingTaskId.value === item.id) cancelEdit()
+  }
+
+  function dotClass(item: SchedulerTask) {
+    if (!item.enabled) return 'dot-grey'
+    if (item.lastStatus === 'running') return 'dot-yellow'
+    if (item.lastStatus === 'error') return 'dot-red'
+    if (item.lastStatus === 'success') return 'dot-green'
+    return 'dot-blue'
+  }
+
+  // Load tasks when drawer opens
+  watch(() => config.value.drawer, (open) => {
+    if (open) loadSchedulerTasks()
+  })
+
+  // ── End Scheduler ─────────────────────────────────────────────────────────────
+
   async function saveHander(value: any) {
     ttsStore.settings.currentbook = value;
     if (value.rootDir && value.rootDir !== ttsStore.notestore.currentStore) {
@@ -697,4 +917,41 @@
   border-bottom: 1px solid #ebeef5;
   margin-bottom: 12px;
 }
+
+/* Scheduler tab */
+.scheduler-tab { display: flex; flex-direction: column; gap: 12px; }
+.scheduler-tab-empty { font-size: 12px; color: #909399; padding: 8px 0; }
+.scheduler-task-list { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
+.scheduler-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+.scheduler-task-item:hover { background: #f5f7fa; }
+.scheduler-task-item.is-editing { background: #ecf5ff; border-color: #b3d8ff; }
+.s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-grey { background: #909399; }
+.dot-green { background: #67c23a; }
+.dot-red { background: #f56c6c; }
+.dot-yellow { background: #e6a23c; }
+.dot-blue { background: #409eff; }
+.s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; }
+.s-cron { font-size: 11px; color: #909399; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+.s-actions { display: flex; gap: 2px; }
+.scheduler-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  padding: 6px 0 4px;
+  border-top: 1px solid #ebeef5;
+}
+.scheduler-form { margin-top: 4px; }
 </style>

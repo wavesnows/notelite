@@ -339,6 +339,7 @@ const zh = {
       statusSkipped: '已跳过',
       statusDisabled: '已禁用',
       confirmDelete: '删除任务 "{name}"？',
+      editTask: '编辑任务',
     },
   };
 

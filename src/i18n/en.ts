@@ -339,6 +339,7 @@ const en = {
       statusSkipped: 'Skipped',
       statusDisabled: 'Disabled',
       confirmDelete: 'Delete task "{name}"?',
+      editTask: 'Edit Task',
     },
   };
 

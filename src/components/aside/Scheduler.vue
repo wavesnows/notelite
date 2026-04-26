@@ -2,7 +2,7 @@
   <div class="scheduler-panel">
     <div class="scheduler-header">
       <span class="scheduler-title">{{ t('scheduler.title') }}</span>
-      <button class="add-btn" @click="openCreate" title="New task">+</button>
+      <button class="add-btn" @click="openSettings" :title="t('scheduler.newTask')">+</button>
     </div>
 
     <div v-if="!tasks.length" class="scheduler-empty">
@@ -14,7 +14,7 @@
         v-for="task in tasks"
         :key="task.id"
         class="task-row"
-        @click="openEdit(task)"
+        @click="openSettings"
       >
         <span class="status-dot" :class="dotClass(task)" :title="dotTitle(task)"></span>
         <span class="task-name">{{ task.name }}</span>
@@ -26,11 +26,6 @@
       </div>
     </div>
 
-    <TaskDialog
-      v-model="dialogVisible"
-      :initial-task="editingTask"
-      @saved="onSaved"
-    />
   </div>
 </template>
 
@@ -40,7 +35,6 @@ import { useI18n } from 'vue-i18n'
 import { ipcRenderer } from 'electron'
 import { ElMessageBox } from 'element-plus'
 import { SchedulerTask, TaskResult } from '@/types/scheduler'
-import TaskDialog from '@/components/scheduler/TaskDialog.vue'
 import { useTtsStore } from '@/store/store'
 import { gitPull, gitHubPush } from '@/libs/github'
 
@@ -48,21 +42,13 @@ const { t } = useI18n()
 const ttsStore = useTtsStore()
 
 const tasks = ref<SchedulerTask[]>([])
-const dialogVisible = ref(false)
-const editingTask = ref<SchedulerTask | null>(null)
 
 async function loadTasks() {
   tasks.value = await ipcRenderer.invoke('scheduler:list')
 }
 
-function openCreate() {
-  editingTask.value = null
-  dialogVisible.value = true
-}
-
-function openEdit(task: SchedulerTask) {
-  editingTask.value = task
-  dialogVisible.value = true
+function openSettings() {
+  ttsStore.config.drawer = true
 }
 
 async function runNow(task: SchedulerTask) {
@@ -81,12 +67,6 @@ async function deleteTask(task: SchedulerTask) {
   }
   await ipcRenderer.invoke('scheduler:delete', { id: task.id })
   await loadTasks()
-}
-
-function onSaved(saved: SchedulerTask) {
-  const idx = tasks.value.findIndex(t => t.id === saved.id)
-  if (idx >= 0) tasks.value[idx] = saved
-  else tasks.value.push(saved)
 }
 
 function dotClass(task: SchedulerTask) {
@@ -144,12 +124,14 @@ onMounted(() => {
   ipcRenderer.on('task-result', onTaskResult)
   ipcRenderer.on('scheduler:builtin-action', onBuiltinAction)
   ipcRenderer.on('scheduler:refresh-tree', onRefreshTree)
+  ipcRenderer.on('scheduler:tasks-changed', loadTasks)
 })
 
 onBeforeUnmount(() => {
   ipcRenderer.removeListener('task-result', onTaskResult)
   ipcRenderer.removeListener('scheduler:builtin-action', onBuiltinAction)
   ipcRenderer.removeListener('scheduler:refresh-tree', onRefreshTree)
+  ipcRenderer.removeListener('scheduler:tasks-changed', loadTasks)
 })
 </script>
 

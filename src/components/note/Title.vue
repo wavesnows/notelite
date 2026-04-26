@@ -43,7 +43,12 @@ const okHandler = () =>{
     console.log("OK")
     // Only rename if title actually changed
     if (ttsStore.cnote.destTitle !== ttsStore.cnote.title) {
-        renameFile()
+        const ok = renameFile()
+        if (!ok) {
+            // Revert input to current title on failure
+            ttsStore.cnote.destTitle = ttsStore.cnote.title
+            return
+        }
     }
     ttsStore.cnote.titleVisable = !ttsStore.cnote.titleVisable;
 }
