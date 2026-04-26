@@ -341,6 +341,9 @@ const zh = {
       confirmDelete: '删除任务 "{name}"？',
       editTask: '编辑任务',
       taskList: '任务列表',
+      timeRequired: '请输入时间',
+      timeInvalid: '时间格式无效，请使用 HH:mm（如 09:00）',
+      workdirNotFound: '目录不存在',
     },
   };
 

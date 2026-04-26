@@ -276,7 +276,8 @@
                         </el-select>
                       </el-form-item>
                       <el-form-item :label="t('scheduler.time')">
-                        <el-input v-model="taskFormTime" placeholder="09:00" style="width:100px" />
+                        <el-input v-model="taskFormTime" placeholder="09:00" style="width:100px" @blur="validateTime" />
+                        <div v-if="timeError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ timeError }}</div>
                       </el-form-item>
                       <el-form-item v-if="taskForm.schedule.frequency === 'weekly'" :label="t('scheduler.weekday')">
                         <el-select v-model="taskForm.schedule.weekday" style="width:110px">
@@ -304,7 +305,8 @@
                         <el-input v-model="taskForm.command" placeholder="e.g. python script.py" />
                       </el-form-item>
                       <el-form-item :label="t('scheduler.workdir')">
-                        <el-input v-model="taskForm.workdir" :placeholder="t('scheduler.workdirPlaceholder')" />
+                        <el-input v-model="taskForm.workdir" :placeholder="t('scheduler.workdirPlaceholder')" @blur="validateWorkdir" />
+                        <div v-if="workdirError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ workdirError }}</div>
                       </el-form-item>
                     </template>
                     <template v-else>
@@ -706,24 +708,30 @@
     schedulerTasks.value = await ipcRenderer.invoke('scheduler:list')
   }
 
+  function resetFormErrors() {
+    cronError.value = false
+    timeError.value = ''
+    workdirError.value = ''
+  }
+
   function newTask() {
     editingTaskId.value = null
     taskForm.value = defaultTaskForm()
-    cronError.value = false
+    resetFormErrors()
     schedulerSubTab.value = 'form'
   }
 
   function editTask(item: SchedulerTask) {
     editingTaskId.value = item.id
     taskForm.value = { ...item, schedule: { ...item.schedule } }
-    cronError.value = false
+    resetFormErrors()
     schedulerSubTab.value = 'form'
   }
 
   function cancelEdit() {
     editingTaskId.value = null
     taskForm.value = defaultTaskForm()
-    cronError.value = false
+    resetFormErrors()
     schedulerSubTab.value = 'list'
   }
 
@@ -742,15 +750,41 @@
     })
   }
 
+  const timeError = ref('')
+  const workdirError = ref('')
+
   function validateTaskCron() {
     if (taskForm.value.schedule.mode !== 'cron') return
     cronError.value = !isValidCron(taskForm.value.schedule.cron || '')
   }
 
+  function validateTime() {
+    const val = taskFormTime.value.trim()
+    if (!val) { timeError.value = t('scheduler.timeRequired'); return }
+    const match = val.match(/^(\d{1,2}):(\d{2})$/)
+    if (!match) { timeError.value = t('scheduler.timeInvalid'); return }
+    const h = parseInt(match[1]), m = parseInt(match[2])
+    if (h > 23 || m > 59) { timeError.value = t('scheduler.timeInvalid'); return }
+    timeError.value = ''
+  }
+
+  function validateWorkdir() {
+    const val = taskForm.value.workdir?.trim()
+    if (!val) { workdirError.value = ''; return }
+    workdirError.value = require('fs').existsSync(val) ? '' : t('scheduler.workdirNotFound')
+  }
+
   const canSaveTask = computed(() => {
     if (!taskForm.value.name.trim()) return false
+    if (taskForm.value.schedule.mode === 'simple') {
+      const val = taskFormTime.value.trim()
+      const match = val.match(/^(\d{1,2}):(\d{2})$/)
+      if (!match) return false
+      if (parseInt(match[1]) > 23 || parseInt(match[2]) > 59) return false
+    }
     if (taskForm.value.schedule.mode === 'cron' && !isValidCron(taskForm.value.schedule.cron || '')) return false
     if (taskForm.value.type === 'shell' && !taskForm.value.command?.trim()) return false
+    if (taskForm.value.workdir?.trim() && !require('fs').existsSync(taskForm.value.workdir.trim())) return false
     return true
   })
 

@@ -341,6 +341,9 @@ const en = {
       confirmDelete: 'Delete task "{name}"?',
       editTask: 'Edit Task',
       taskList: 'Tasks',
+      timeRequired: 'Time is required',
+      timeInvalid: 'Invalid time, use HH:mm (e.g. 09:00)',
+      workdirNotFound: 'Directory does not exist',
     },
   };
 
