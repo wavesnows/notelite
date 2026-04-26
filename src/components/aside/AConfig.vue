@@ -913,6 +913,17 @@
   font-weight: 600;
 }
 
+.demo-tabs :deep(.el-tabs__content) {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.demo-tabs :deep(.el-tab-pane) {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 
 .section-title {
   font-size: 13px;
