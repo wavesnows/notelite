@@ -344,6 +344,7 @@ const en = {
       timeRequired: 'Time is required',
       timeInvalid: 'Invalid time, use HH:mm (e.g. 09:00)',
       workdirNotFound: 'Directory does not exist',
+      commandPlaceholder: 'e.g. python /path/to/script.py',
     },
   };
 

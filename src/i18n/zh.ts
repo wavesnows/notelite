@@ -344,6 +344,7 @@ const zh = {
       timeRequired: '请输入时间',
       timeInvalid: '时间格式无效，请使用 HH:mm（如 09:00）',
       workdirNotFound: '目录不存在',
+      commandPlaceholder: '例如：python /path/to/script.py',
     },
   };
 

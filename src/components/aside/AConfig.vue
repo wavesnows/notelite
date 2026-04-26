@@ -302,7 +302,7 @@
                     </el-form-item>
                     <template v-if="taskForm.type === 'shell'">
                       <el-form-item :label="t('scheduler.command')">
-                        <el-input v-model="taskForm.command" placeholder="e.g. python script.py" />
+                        <el-input v-model="taskForm.command" :placeholder="t('scheduler.commandPlaceholder')" />
                       </el-form-item>
                       <el-form-item :label="t('scheduler.workdir')">
                         <el-input v-model="taskForm.workdir" :placeholder="t('scheduler.workdirPlaceholder')" @blur="validateWorkdir" />
