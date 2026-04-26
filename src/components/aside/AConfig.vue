@@ -250,10 +250,10 @@
                   <el-input v-model="taskForm.name" :placeholder="t('scheduler.taskNamePlaceholder')" />
                 </el-form-item>
                 <el-form-item :label="t('scheduler.schedule')">
-                  <el-radio-group v-model="taskForm.schedule.mode">
-                    <el-radio label="simple">{{ t('scheduler.simple') }}</el-radio>
-                    <el-radio label="cron">{{ t('scheduler.cron') }}</el-radio>
-                  </el-radio-group>
+                  <el-select v-model="taskForm.schedule.mode" style="width:120px">
+                    <el-option value="simple" :label="t('scheduler.simple')" />
+                    <el-option value="cron" :label="t('scheduler.cron')" />
+                  </el-select>
                 </el-form-item>
                 <template v-if="taskForm.schedule.mode === 'simple'">
                   <el-form-item :label="t('scheduler.frequency')">
@@ -262,7 +262,9 @@
                       <el-option value="weekly" :label="t('scheduler.weekly')" />
                       <el-option value="monthly" :label="t('scheduler.monthly')" />
                     </el-select>
-                    <el-time-picker v-model="taskFormTime" format="HH:mm" value-format="HH:mm" style="width:100px;margin-left:8px" />
+                  </el-form-item>
+                  <el-form-item :label="t('scheduler.time')">
+                    <el-input v-model="taskFormTime" placeholder="09:00" style="width:100px" />
                   </el-form-item>
                   <el-form-item v-if="taskForm.schedule.frequency === 'weekly'" :label="t('scheduler.weekday')">
                     <el-select v-model="taskForm.schedule.weekday" style="width:110px">
@@ -280,10 +282,10 @@
                   </el-form-item>
                 </template>
                 <el-form-item :label="t('scheduler.taskType')">
-                  <el-radio-group v-model="taskForm.type">
-                    <el-radio label="shell">{{ t('scheduler.shell') }}</el-radio>
-                    <el-radio label="builtin">{{ t('scheduler.builtin') }}</el-radio>
-                  </el-radio-group>
+                  <el-select v-model="taskForm.type" style="width:140px">
+                    <el-option value="shell" :label="t('scheduler.shell')" />
+                    <el-option value="builtin" :label="t('scheduler.builtin')" />
+                  </el-select>
                 </el-form-item>
                 <template v-if="taskForm.type === 'shell'">
                   <el-form-item :label="t('scheduler.command')">
@@ -295,7 +297,7 @@
                 </template>
                 <template v-else>
                   <el-form-item :label="t('scheduler.action')">
-                    <el-select v-model="taskForm.action" style="width:140px">
+                    <el-select v-model="taskForm.action" style="width:160px">
                       <el-option value="git-pull" :label="t('scheduler.gitPull')" />
                       <el-option value="git-push" :label="t('scheduler.gitPush')" />
                       <el-option value="refresh-tree" :label="t('scheduler.refreshTree')" />
@@ -309,8 +311,8 @@
                   <span style="margin-left:6px;font-size:12px;color:#909399">s</span>
                 </el-form-item>
                 <el-form-item :label="t('scheduler.enabled')">
-                  <div style="-webkit-app-region: no-drag">
-                    <el-checkbox v-model="taskForm.enabled" />
+                  <div style="display:flex;align-items:center;gap:10px;-webkit-app-region:no-drag">
+                    <el-switch v-model="taskForm.enabled" />
                   </div>
                 </el-form-item>
                 <el-form-item>
