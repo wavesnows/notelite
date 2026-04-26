@@ -117,7 +117,30 @@ import { useI18n } from 'vue-i18n'
 import { ipcRenderer } from 'electron'
 import { SchedulerTask, TaskResult, simpleToCron } from '@/types/scheduler'
 import { v4 as uuidv4 } from 'uuid'
-import * as nodeCron from 'node-cron'
+// Validate a 5-field cron expression without importing node-cron into the renderer
+function isValidCron(expr: string): boolean {
+  const parts = expr.trim().split(/\s+/)
+  if (parts.length !== 5) return false
+  const ranges = [
+    [0, 59],   // minute
+    [0, 23],   // hour
+    [1, 31],   // day of month
+    [1, 12],   // month
+    [0, 7],    // day of week
+  ]
+  return parts.every((part, i) => {
+    if (part === '*') return true
+    if (/^\*\/\d+$/.test(part)) return true
+    const [min, max] = ranges[i]
+    return part.split(',').every(seg => {
+      const range = seg.split('-')
+      return range.every(n => {
+        const num = parseInt(n, 10)
+        return !isNaN(num) && num >= min && num <= max
+      })
+    })
+  })
+}
 
 const { t } = useI18n()
 
@@ -192,13 +215,13 @@ async function loadLogs() {
 
 function validateCron() {
   if (task.value.schedule.mode !== 'cron') return
-  cronError.value = !nodeCron.validate(task.value.schedule.cron || '')
+  cronError.value = !isValidCron(task.value.schedule.cron || '')
 }
 
 const canSave = computed(() => {
   if (!task.value.name.trim()) return false
   if (task.value.schedule.mode === 'cron') {
-    if (!nodeCron.validate(task.value.schedule.cron || '')) return false
+    if (!isValidCron(task.value.schedule.cron || '')) return false
   }
   if (task.value.type === 'shell' && !task.value.command?.trim()) return false
   return true
