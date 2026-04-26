@@ -50,7 +50,6 @@
 
           <!-- Tab 1: 笔记本 -->
           <el-tab-pane :label="t('settings.notebookTab')">
-            <el-scrollbar class="tab-scrollbar" key="sb-notebook">
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.currentNotebook')">
                 <el-select v-model="settings.currentbook" :placeholder="t('settings.currentNotebook')" value-key="value" @change="saveHander">
@@ -88,12 +87,10 @@
                 </div>
               </el-form-item>
             </el-form>
-            </el-scrollbar>
           </el-tab-pane>
 
           <!-- Tab 2: 外观 -->
           <el-tab-pane :label="t('settings.appearanceTab')">
-            <el-scrollbar class="tab-scrollbar" key="sb-appearance">
             <el-form label-width="120px" label-position="top">
               <el-form-item :label="t('settings.languageLabel')">
                 <el-select v-model="config.language" @change="changeLanguage">
@@ -111,12 +108,10 @@
                 </el-select>
               </el-form-item>
             </el-form>
-            </el-scrollbar>
           </el-tab-pane>
 
           <!-- Tab 3: 同步 -->
           <el-tab-pane :label="t('settings.remoteSetting')">
-            <el-scrollbar class="tab-scrollbar" key="sb-sync">
             <el-alert v-if="!ttsStore.gitAvailable" type="warning" :closable="false" style="margin-bottom: 16px;">
               <template #title>{{ t('settings.gitNotFound') }}</template>
               <template #default>
@@ -218,12 +213,10 @@
                 </el-button>
               </el-form-item>
             </el-form>
-            </el-scrollbar>
           </el-tab-pane>
 
           <!-- Tab 4: 定时任务 -->
           <el-tab-pane :label="t('scheduler.title')">
-            <el-scrollbar class="tab-scrollbar" key="sb-scheduler">
             <div style="-webkit-app-region: no-drag">
 
               <!-- 视图切换头部 -->
@@ -349,7 +342,6 @@
               </template>
 
             </div>
-            </el-scrollbar>
           </el-tab-pane>
 
         </el-tabs>
@@ -1011,9 +1003,7 @@
   font-weight: 600;
 }
 
-.tab-scrollbar {
-  height: 100%;
-}
+
 
 
 .section-title {
