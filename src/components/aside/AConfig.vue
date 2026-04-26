@@ -233,10 +233,18 @@
                       :class="{ 'is-editing': editingTaskId === item.id }"
                       @click="editTask(item)"
                     >
-                      <span class="s-dot" :class="dotClass(item)"></span>
+                      <span class="s-dot" :class="dotClass(item)" :title="dotLabel(item)"></span>
                       <span class="s-name">{{ item.name }}</span>
-                      <span class="s-cron">{{ item.schedule.cron || '—' }}</span>
+                      <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
+                        {{ statusLabel(item) }}
+                      </span>
                       <div class="s-actions" @click.stop>
+                        <el-switch
+                          :model-value="item.enabled"
+                          size="small"
+                          style="-webkit-app-region:no-drag"
+                          @change="(v: boolean) => toggleEnabled(item, v)"
+                        />
                         <button class="s-btn" @click="runTaskNow(item)" :title="t('scheduler.runNow')">▶</button>
                         <button class="s-btn s-btn-danger" @click="removeTask(item)" :title="t('scheduler.delete')">✕</button>
                       </div>
@@ -786,6 +794,30 @@
     return 'dot-blue'
   }
 
+  function dotLabel(item: SchedulerTask) {
+    if (!item.enabled) return t('scheduler.statusDisabled')
+    if (item.lastStatus === 'running') return t('scheduler.statusRunning')
+    if (item.lastStatus === 'error') return t('scheduler.statusError')
+    if (item.lastStatus === 'success') return t('scheduler.statusSuccess')
+    return t('scheduler.never')
+  }
+
+  function statusLabel(item: SchedulerTask) {
+    if (!item.enabled) return t('scheduler.statusDisabled')
+    if (!item.lastRun) return t('scheduler.never')
+    if (item.lastStatus === 'running') return t('scheduler.statusRunning')
+    if (item.lastStatus === 'error') return t('scheduler.statusError')
+    if (item.lastStatus === 'success') return t('scheduler.statusSuccess')
+    return ''
+  }
+
+  async function toggleEnabled(item: SchedulerTask, enabled: boolean) {
+    const toSave: SchedulerTask = JSON.parse(JSON.stringify(item))
+    toSave.enabled = enabled
+    await ipcRenderer.invoke('scheduler:save', toSave)
+    await loadSchedulerTasks()
+  }
+
   // Load tasks when drawer opens
   watch(() => config.value.drawer, (open) => {
     if (open) loadSchedulerTasks()
@@ -977,7 +1009,12 @@
 .dot-yellow { background: #e6a23c; }
 .dot-blue { background: #409eff; }
 .s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; }
-.s-cron { font-size: 11px; color: #909399; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+.s-status { font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+.s-status-success { color: #67c23a; }
+.s-status-error { color: #f56c6c; }
+.s-status-running { color: #e6a23c; }
+.s-status-skipped { color: #909399; }
+.s-status-none { color: #909399; }
 .s-actions { display: flex; gap: 2px; }
 .s-btn {
   width: 20px; height: 20px; border: none; background: transparent;
