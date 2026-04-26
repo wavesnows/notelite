@@ -177,12 +177,12 @@ watch(() => props.modelValue, (open) => {
 async function loadLogs() {
   // Logs come from task-result events; for now show last results from store via list
   const tasks: SchedulerTask[] = await ipcRenderer.invoke('scheduler:list')
-  const found = tasks.find(t => t.id === task.value.id)
+  const found = tasks.find(item => item.id === task.value.id)
   if (found?.lastRun) {
     logs.value = [{
       id: found.id,
       status: found.lastStatus === 'success' ? 'success' : 'error',
-      output: found.lastError || '',
+      output: found.lastStatus === 'success' ? t('scheduler.statusSuccess') : (found.lastError || t('scheduler.statusError')),
       error: found.lastError,
       timestamp: found.lastRun,
     }]
@@ -224,8 +224,10 @@ function handleClose() {
 }
 
 function toggleLog(i: number) {
-  if (expanded.value.has(i)) expanded.value.delete(i)
-  else expanded.value.add(i)
+  const next = new Set(expanded.value)
+  if (next.has(i)) next.delete(i)
+  else next.add(i)
+  expanded.value = next
 }
 
 function formatTime(ts: number) {
