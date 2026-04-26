@@ -42,6 +42,7 @@ import { ElMessageBox } from 'element-plus'
 import { SchedulerTask, TaskResult } from '@/types/scheduler'
 import TaskDialog from '@/components/scheduler/TaskDialog.vue'
 import { useTtsStore } from '@/store/store'
+import { gitPull, gitHubPush } from '@/libs/github'
 
 const { t } = useI18n()
 const ttsStore = useTtsStore()
@@ -69,11 +70,15 @@ async function runNow(task: SchedulerTask) {
 }
 
 async function deleteTask(task: SchedulerTask) {
-  await ElMessageBox.confirm(
-    t('scheduler.confirmDelete', { name: task.name }),
-    t('common.delete'),
-    { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'warning' }
-  )
+  try {
+    await ElMessageBox.confirm(
+      t('scheduler.confirmDelete', { name: task.name }),
+      t('common.delete'),
+      { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'warning' }
+    )
+  } catch {
+    return
+  }
   await ipcRenderer.invoke('scheduler:delete', { id: task.id })
   await loadTasks()
 }
@@ -114,9 +119,8 @@ function onTaskResult(_event: any, result: TaskResult) {
 
 // Handle builtin actions requested by scheduler
 function onBuiltinAction(_event: any, action: string) {
-  const { gitHubPull, gitHubPush } = require('@/libs/github')
   if (action === 'git-pull') {
-    gitHubPull(t, ttsStore.notebook.currentPath).then((ok: boolean) => {
+    gitPull(t, ttsStore.notebook.currentPath).then((ok: boolean) => {
       ipcRenderer.send(`scheduler:builtin-result:git-pull`, { output: ok ? 'pulled' : '', error: ok ? undefined : 'pull failed' })
       if (ok) ttsStore.refreshTreeData()
     }).catch((e: any) => {
