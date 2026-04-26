@@ -734,7 +734,6 @@
     if (!toSave.id) toSave.id = uuidv4()
     if (toSave.schedule.mode === 'simple') toSave.schedule.cron = simpleToCron(toSave)
     await ipcRenderer.invoke('scheduler:save', toSave)
-    ipcRenderer.send('scheduler:tasks-changed')
     await loadSchedulerTasks()
     cancelEdit()
     ElMessage({ message: t('common.save') + ' ✓', type: 'success' })

@@ -7,7 +7,7 @@ import logger from "../utils/log";
 import os from 'os';
 const pty = require('node-pty');
 
-import { initScheduler, schedulerHandleList, schedulerHandleSave, schedulerHandleDelete, schedulerHandleRunNow } from './scheduler'
+import { initScheduler, schedulerHandleList, schedulerHandleSave, schedulerHandleDeleteAndNotify, schedulerHandleRunNow } from './scheduler'
 
 // Detect if git is available
 function detectGit(): boolean {
@@ -325,5 +325,5 @@ ipcMain.on('terminal-resize', (_event, cols: number, rows: number) => {
 // Scheduler IPC handlers
 ipcMain.handle('scheduler:list', () => schedulerHandleList())
 ipcMain.handle('scheduler:save', (_event, task) => schedulerHandleSave(task))
-ipcMain.handle('scheduler:delete', (_event, { id }) => schedulerHandleDelete(id))
+ipcMain.handle('scheduler:delete', (_event, { id }) => schedulerHandleDeleteAndNotify(id))
 ipcMain.handle('scheduler:run-now', (_event, { id }) => schedulerHandleRunNow(id))

@@ -186,7 +186,23 @@ function unregisterJob(id: string) {
 
 export function initScheduler(window: BrowserWindow) {
   mainWin = window
-  const tasks = loadTasks()
+  let tasks = loadTasks()
+
+  // Insert default task on first run
+  if (tasks.length === 0) {
+    const defaultTask: SchedulerTask = {
+      id: 'default-git-pull',
+      name: 'Daily Git Pull',
+      enabled: false,
+      schedule: { mode: 'simple', frequency: 'daily', time: '09:00', cron: '0 9 * * *' },
+      type: 'builtin',
+      action: 'git-pull',
+      retry: { maxAttempts: 3, delaySeconds: 60 },
+    }
+    saveTask(defaultTask)
+    tasks = loadTasks()
+  }
+
   for (const task of tasks) {
     if (task.enabled) registerJob(task)
   }
@@ -200,7 +216,18 @@ export function schedulerHandleList() {
 export function schedulerHandleSave(task: SchedulerTask): SchedulerTask {
   saveTask(task)
   registerJob(task)
+  if (mainWin && !mainWin.isDestroyed()) {
+    mainWin.webContents.send('scheduler:tasks-changed')
+  }
   return task
+}
+
+export function schedulerHandleDeleteAndNotify(id: string) {
+  unregisterJob(id)
+  deleteTaskFromStore(id)
+  if (mainWin && !mainWin.isDestroyed()) {
+    mainWin.webContents.send('scheduler:tasks-changed')
+  }
 }
 
 export function schedulerHandleDelete(id: string) {
