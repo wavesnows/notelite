@@ -69,6 +69,19 @@ const readOnlyCompartment = new Compartment()
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
+// Give headings id attributes for anchor link navigation
+const defaultHeadingRenderer = md.renderer.rules.heading_open || ((tokens: any[], idx: number, options: any, _env: any, self: any) => self.renderToken(tokens, idx, options))
+md.renderer.rules.heading_open = (tokens: any[], idx: number, options: any, env: any, self: any) => {
+  const token = tokens[idx]
+  const inlineToken = tokens[idx + 1]
+  if (inlineToken && inlineToken.children) {
+    const text = inlineToken.children.map((t: any) => t.content).join('')
+    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '')
+    token.attrSet('id', id)
+  }
+  return defaultHeadingRenderer(tokens, idx, options, env, self)
+}
+
 const renderedHtml = computed(() => md.render(content.value))
 
 const searchCountText = computed(() => {
