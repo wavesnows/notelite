@@ -3,7 +3,7 @@
     <FileTree v-if="ttsStore.page.asideIndex == '1'"/>
     <Favorites v-if="ttsStore.page.asideIndex == '2'"/>
     <RecentFiles v-if="ttsStore.page.asideIndex == '3'"/>
-    <Common v-if="ttsStore.page.asideIndex == '4'"/>
+    <Scheduler v-if="ttsStore.page.asideIndex == '4'"/>
     <Lan v-if="ttsStore.page.asideIndex == '5'"/>
     <!-- Drag handle -->
     <div class="resize-handle" @mousedown="startDrag"></div>
@@ -17,6 +17,7 @@ import { storeToRefs } from "pinia";
 import FileTree from "./FileTree.vue"
 import Favorites from "./Favorites.vue"
 import RecentFiles from "./RecentFiles.vue"
+import Scheduler from "./Scheduler.vue"
 import Common from "./Common.vue";
 import Lan from "./Lan.vue"
 
