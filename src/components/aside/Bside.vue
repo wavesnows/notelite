@@ -18,7 +18,6 @@ import FileTree from "./FileTree.vue"
 import Favorites from "./Favorites.vue"
 import RecentFiles from "./RecentFiles.vue"
 import Scheduler from "./Scheduler.vue"
-import Common from "./Common.vue";
 import Lan from "./Lan.vue"
 
 const ttsStore = useTtsStore();
