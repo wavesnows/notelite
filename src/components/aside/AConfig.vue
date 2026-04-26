@@ -729,7 +729,8 @@
   })
 
   async function saveTask() {
-    const toSave: SchedulerTask = { ...taskForm.value, schedule: { ...taskForm.value.schedule } }
+    // JSON round-trip strips Vue reactive proxies so IPC structured clone works
+    const toSave: SchedulerTask = JSON.parse(JSON.stringify(taskForm.value))
     if (!toSave.id) toSave.id = uuidv4()
     if (toSave.schedule.mode === 'simple') toSave.schedule.cron = simpleToCron(toSave)
     await ipcRenderer.invoke('scheduler:save', toSave)
