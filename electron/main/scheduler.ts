@@ -166,7 +166,11 @@ function registerJob(task: SchedulerTask) {
     writeLog(task.id, 'error', `Invalid cron expression: ${task.schedule.cron}`)
     return
   }
-  const job = nodeCron.schedule(task.schedule.cron, () => runTask(task))
+  const taskId = task.id
+  const job = nodeCron.schedule(task.schedule.cron, () => {
+    const fresh = loadTasks().find(t => t.id === taskId)
+    if (fresh) runTask(fresh)
+  })
   activeJobs.set(task.id, job)
 }
 

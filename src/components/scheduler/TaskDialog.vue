@@ -117,6 +117,7 @@ import { useI18n } from 'vue-i18n'
 import { ipcRenderer } from 'electron'
 import { SchedulerTask, TaskResult, simpleToCron } from '@/types/scheduler'
 import { v4 as uuidv4 } from 'uuid'
+import * as nodeCron from 'node-cron'
 
 const { t } = useI18n()
 
@@ -191,17 +192,13 @@ async function loadLogs() {
 
 function validateCron() {
   if (task.value.schedule.mode !== 'cron') return
-  const expr = task.value.schedule.cron || ''
-  // Basic 5-field cron validation: each field non-empty
-  const parts = expr.trim().split(/\s+/)
-  cronError.value = parts.length !== 5
+  cronError.value = !nodeCron.validate(task.value.schedule.cron || '')
 }
 
 const canSave = computed(() => {
   if (!task.value.name.trim()) return false
   if (task.value.schedule.mode === 'cron') {
-    const parts = (task.value.schedule.cron || '').trim().split(/\s+/)
-    if (parts.length !== 5) return false
+    if (!nodeCron.validate(task.value.schedule.cron || '')) return false
   }
   if (task.value.type === 'shell' && !task.value.command?.trim()) return false
   return true
