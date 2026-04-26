@@ -7,6 +7,8 @@ import logger from "../utils/log";
 import os from 'os';
 const pty = require('node-pty');
 
+import { initScheduler, schedulerHandleList, schedulerHandleSave, schedulerHandleDelete, schedulerHandleRunNow } from './scheduler'
+
 // Detect if git is available
 function detectGit(): boolean {
   try {
@@ -143,6 +145,7 @@ async function createWindow() {
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
     win?.webContents.send("git-available", gitAvailable);
+    if (win) initScheduler(win);
   });
 
   // Make all links open with the browser, not with the application
@@ -318,3 +321,9 @@ ipcMain.on('terminal-resize', (_event, cols: number, rows: number) => {
     ptyProcess.resize(cols, rows);
   }
 });
+
+// Scheduler IPC handlers
+ipcMain.handle('scheduler:list', () => schedulerHandleList())
+ipcMain.handle('scheduler:save', (_event, task) => schedulerHandleSave(task))
+ipcMain.handle('scheduler:delete', (_event, { id }) => schedulerHandleDelete(id))
+ipcMain.handle('scheduler:run-now', (_event, { id }) => schedulerHandleRunNow(id))
