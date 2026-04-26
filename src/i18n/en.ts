@@ -297,7 +297,7 @@ const en = {
     scheduler: {
       title: 'Scheduler',
       newTask: 'New Task',
-      empty: 'No tasks yet. Click + to create one.',
+      empty: 'No tasks yet.',
       taskName: 'Task name',
       taskNamePlaceholder: 'e.g. Daily git pull',
       schedule: 'Schedule',

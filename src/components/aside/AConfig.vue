@@ -234,8 +234,8 @@
                   <span class="s-name">{{ item.name }}</span>
                   <span class="s-cron">{{ item.schedule.cron || '—' }}</span>
                   <div class="s-actions" @click.stop>
-                    <el-button size="small" link @click="runTaskNow(item)">▶</el-button>
-                    <el-button size="small" link type="danger" @click="removeTask(item)">✕</el-button>
+                    <button class="s-btn" @click="runTaskNow(item)" :title="t('scheduler.runNow')">▶</button>
+                    <button class="s-btn s-btn-danger" @click="removeTask(item)" :title="t('scheduler.delete')">✕</button>
                   </div>
                 </div>
               </div>
@@ -943,6 +943,13 @@
 .s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; }
 .s-cron { font-size: 11px; color: #909399; white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 .s-actions { display: flex; gap: 2px; }
+.s-btn {
+  width: 20px; height: 20px; border: none; background: transparent;
+  cursor: pointer; font-size: 11px; color: #909399; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.s-btn:hover { background: rgba(0,0,0,0.06); color: #409eff; }
+.s-btn-danger:hover { color: #f56c6c; }
 .scheduler-form-header {
   display: flex;
   align-items: center;

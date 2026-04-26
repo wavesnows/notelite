@@ -297,7 +297,7 @@ const zh = {
     scheduler: {
       title: '定时任务',
       newTask: '新建任务',
-      empty: '暂无任务，点击 + 创建',
+      empty: '暂无任务',
       taskName: '任务名称',
       taskNamePlaceholder: '例如：每日 git pull',
       schedule: '执行时间',
