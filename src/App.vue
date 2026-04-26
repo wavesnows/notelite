@@ -136,6 +136,16 @@ body {
   -webkit-app-region: no-drag;
 }
 
+.el-drawer,
+.el-drawer * {
+  -webkit-app-region: no-drag;
+}
+
+.el-dialog,
+.el-dialog * {
+  -webkit-app-region: no-drag;
+}
+
 /* Global override for EditorJS width constraints */
 .ce-block__content,
 .ce-toolbar__content {
