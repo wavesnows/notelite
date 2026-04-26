@@ -173,8 +173,17 @@ function handlePreviewClick(event: MouseEvent) {
   if (!href?.startsWith('#')) return
   event.preventDefault()
   const id = decodeURIComponent(href.slice(1))
-  const el = previewEl.value?.querySelector(`[id="${id}"]`) as HTMLElement | null
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const container = previewEl.value
+  if (!container) return
+  const el = Array.from(container.querySelectorAll('[id]')).find(
+    e => e.getAttribute('id') === id
+  ) as HTMLElement | undefined
+  if (el) {
+    const elRect = el.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    const offset = elRect.top - containerRect.top + container.scrollTop - 16
+    container.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' })
+  }
 }
 
 function handlePreviewScroll() {
