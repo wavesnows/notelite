@@ -999,21 +999,26 @@
   font-weight: 600;
 }
 
-/* Disable drawer body's own scroll — let tab-pane scroll instead */
+/* Disable drawer body's own scroll */
 :deep(.el-drawer__body) {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  padding: 0 20px 20px;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .demo-tabs {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
+
+.demo-tabs :deep(.el-tabs__header) {
+  flex-shrink: 0;
 }
 
 .demo-tabs :deep(.el-tabs__content) {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -1021,16 +1026,18 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 4px;
 }
 
-/* Inner sub-tabs: outer pane doesn't scroll, inner panes do */
+/* Inner sub-tabs */
 .demo-tabs :deep(.el-tab-pane .el-tabs) {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .demo-tabs :deep(.el-tab-pane .el-tabs__content) {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
