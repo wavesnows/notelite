@@ -241,15 +241,15 @@
                     :class="{ 'is-editing': editingTaskId === item.id }"
                     @click="editTask(item)"
                   >
-                    <span class="s-dot" :class="dotClass(item)" :title="dotLabel(item)"></span>
                     <div class="s-info">
                       <div class="s-name-row">
                         <span class="s-name">{{ item.name }}</span>
-                      </div>
-                      <div class="s-meta-row">
                         <span class="s-badge" :class="item.systemJobId ? 's-badge-system' : 's-badge-app'">
                           {{ item.type === 'shell' ? (item.systemJobId ? t('scheduler.badgeSystem') : t('scheduler.badgeApp')) : t('scheduler.badgeApp') }}
                         </span>
+                      </div>
+                      <div class="s-meta-row">
+                        <span class="s-dot" :class="dotClass(item)"></span>
                         <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
                           {{ runningTaskIds.has(item.id) ? '⏳ ' + t('scheduler.statusRunning') : statusLabel(item) }}
                         </span>
