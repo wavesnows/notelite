@@ -147,6 +147,7 @@ async function runTask(task: SchedulerTask): Promise<void> {
 
   if (mainWin && !mainWin.isDestroyed()) {
     mainWin.webContents.send('task-result', taskResult)
+    mainWin.webContents.send('scheduler:tasks-changed')
   }
 
   if (!succeeded) {

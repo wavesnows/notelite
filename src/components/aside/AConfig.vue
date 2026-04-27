@@ -834,6 +834,7 @@
 
   async function runTaskNow(item: SchedulerTask) {
     await ipcRenderer.invoke('scheduler:run-now', { id: item.id })
+    await loadSchedulerTasks()
   }
 
   async function removeTask(item: SchedulerTask) {
