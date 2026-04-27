@@ -245,11 +245,11 @@
                     <div class="s-info">
                       <div class="s-name-row">
                         <span class="s-name">{{ item.name }}</span>
+                      </div>
+                      <div class="s-meta-row">
                         <span class="s-badge" :class="item.systemJobId ? 's-badge-system' : 's-badge-app'">
                           {{ item.type === 'shell' ? (item.systemJobId ? t('scheduler.badgeSystem') : t('scheduler.badgeApp')) : t('scheduler.badgeApp') }}
                         </span>
-                      </div>
-                      <div class="s-meta-row">
                         <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
                           {{ runningTaskIds.has(item.id) ? '⏳ ' + t('scheduler.statusRunning') : statusLabel(item) }}
                         </span>
@@ -1094,17 +1094,20 @@
 .dot-red { background: #f56c6c; }
 .dot-yellow { background: #e6a23c; }
 .dot-blue { background: #409eff; }
-.s-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.s-name-row { display: flex; align-items: center; gap: 6px; }
-.s-meta-row { display: flex; align-items: center; gap: 8px; }
+.s-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.s-name-row { display: flex; align-items: center; }
+.s-meta-row { display: flex; align-items: center; gap: 6px; }
 .s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; font-size: 13px; }
-.s-time { font-size: 11px; color: #c0c4cc; }
+.s-time { font-size: 11px; color: #c0c4cc; margin-left: auto; }
 .s-badge {
   font-size: 10px;
   padding: 1px 5px;
   border-radius: 3px;
   flex-shrink: 0;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.4;
 }
 .s-badge-system { background: #f0f0f0; color: #606266; }
 .s-badge-app { background: #ecf5ff; color: #409eff; }
