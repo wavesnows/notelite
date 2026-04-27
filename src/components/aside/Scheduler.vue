@@ -2,7 +2,7 @@
   <div class="scheduler-panel">
     <div class="scheduler-header">
       <span class="scheduler-title">{{ t('scheduler.title') }}</span>
-      <button class="add-btn" @click="openSettings" :title="t('scheduler.newTask')">+</button>
+      <button class="settings-btn" @click="openSettings" :title="t('settings.title')">⚙︎</button>
     </div>
 
     <div v-if="!tasks.length" class="scheduler-empty">
@@ -17,15 +17,15 @@
         @click="openSettings"
       >
         <span class="status-dot" :class="dotClass(task)" :title="dotTitle(task)"></span>
-        <span class="task-name">{{ task.name }}</span>
-        <span class="task-next">{{ nextRunLabel(task) }}</span>
+        <div class="task-info">
+          <span class="task-name">{{ task.name }}</span>
+          <span class="task-meta">{{ lastRunLabel(task) }}</span>
+        </div>
         <span class="task-actions" @click.stop>
           <button class="action-btn" @click="runNow(task)" :title="t('scheduler.runNow')">▶</button>
-          <button class="action-btn danger" @click="deleteTask(task)" :title="t('scheduler.delete')">✕</button>
         </span>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -33,7 +33,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ipcRenderer } from 'electron'
-import { ElMessageBox } from 'element-plus'
 import { SchedulerTask, TaskResult } from '@/types/scheduler'
 import { useTtsStore } from '@/store/store'
 import { gitPull, gitHubPush } from '@/libs/github'
@@ -55,20 +54,6 @@ async function runNow(task: SchedulerTask) {
   await ipcRenderer.invoke('scheduler:run-now', { id: task.id })
 }
 
-async function deleteTask(task: SchedulerTask) {
-  try {
-    await ElMessageBox.confirm(
-      t('scheduler.confirmDelete', { name: task.name }),
-      t('common.delete'),
-      { confirmButtonText: t('common.ok'), cancelButtonText: t('common.cancel'), type: 'warning' }
-    )
-  } catch {
-    return
-  }
-  await ipcRenderer.invoke('scheduler:delete', { id: task.id })
-  await loadTasks()
-}
-
 function dotClass(task: SchedulerTask) {
   if (!task.enabled) return 'dot-grey'
   if (task.lastStatus === 'running') return 'dot-yellow'
@@ -79,15 +64,23 @@ function dotClass(task: SchedulerTask) {
 
 function dotTitle(task: SchedulerTask) {
   if (!task.enabled) return t('scheduler.statusDisabled')
-  return task.lastStatus ? t(`scheduler.status${task.lastStatus.charAt(0).toUpperCase() + task.lastStatus.slice(1)}`) : t('scheduler.never')
+  return task.lastStatus
+    ? t(`scheduler.status${task.lastStatus.charAt(0).toUpperCase() + task.lastStatus.slice(1)}`)
+    : t('scheduler.never')
 }
 
-function nextRunLabel(task: SchedulerTask) {
-  if (!task.enabled || !task.schedule.cron) return '—'
-  return task.schedule.cron
+function lastRunLabel(task: SchedulerTask) {
+  if (!task.enabled) return t('scheduler.statusDisabled')
+  if (!task.lastRun) return t('scheduler.never')
+  const date = new Date(task.lastRun)
+  const now = Date.now()
+  const diff = now - task.lastRun
+  if (diff < 60000) return `${Math.floor(diff / 1000)}s ago`
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+  return date.toLocaleDateString()
 }
 
-// Handle task-result updates from main process
 function onTaskResult(_event: any, result: TaskResult) {
   const task = tasks.value.find(t => t.id === result.id)
   if (task) {
@@ -97,7 +90,6 @@ function onTaskResult(_event: any, result: TaskResult) {
   }
 }
 
-// Handle builtin actions requested by scheduler
 function onBuiltinAction(_event: any, action: string) {
   if (action === 'git-pull') {
     gitPull(t, ttsStore.notebook.currentPath).then((ok: boolean) => {
@@ -140,7 +132,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 0;
 }
 .scheduler-header {
   display: flex;
@@ -156,21 +147,20 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.add-btn {
+.settings-btn {
   width: 22px;
   height: 22px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  background: #fff;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  color: #409eff;
+  font-size: 14px;
+  color: #909399;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
 }
-.add-btn:hover { background: #ecf5ff; }
+.settings-btn:hover { background: rgba(0,0,0,0.06); color: #409eff; }
 .scheduler-empty {
   padding: 16px 12px;
   font-size: 12px;
@@ -181,10 +171,9 @@ onBeforeUnmount(() => {
 .task-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 7px 10px;
   cursor: pointer;
-  font-size: 12px;
   border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 .task-row:hover { background: rgba(0,0,0,0.03); }
@@ -199,20 +188,23 @@ onBeforeUnmount(() => {
 .dot-red { background: #f56c6c; }
 .dot-yellow { background: #e6a23c; }
 .dot-blue { background: #409eff; }
-.task-name {
+.task-info {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.task-name {
+  font-size: 12px;
+  color: #303133;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #303133;
 }
-.task-next {
+.task-meta {
   font-size: 11px;
   color: #909399;
-  white-space: nowrap;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .task-actions {
   display: flex;
@@ -235,5 +227,4 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 .action-btn:hover { background: rgba(0,0,0,0.06); color: #409eff; }
-.action-btn.danger:hover { color: #f56c6c; }
 </style>
