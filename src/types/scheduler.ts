@@ -21,6 +21,7 @@ export interface SchedulerTask {
   lastRun?: number
   lastStatus?: 'success' | 'error' | 'running' | 'skipped'
   lastError?: string
+  systemJobId?: string  // set when shell task is installed in OS scheduler
 }
 
 export interface TaskResult {
