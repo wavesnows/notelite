@@ -4,6 +4,8 @@ import { exec } from 'child_process'
 import { join } from 'path'
 import * as fs from 'fs'
 import { SchedulerTask, TaskResult } from '../../src/types/scheduler'
+import { isSystemSchedulerSupported, installJob, uninstallJob } from './system-scheduler'
+import { mergeResultsIntoTasks } from './scheduler-results'
 
 const ElectronStore = require('electron-store')
 const store = new ElectronStore()
@@ -186,7 +188,7 @@ function unregisterJob(id: string) {
 
 export function initScheduler(window: BrowserWindow) {
   mainWin = window
-  let tasks = loadTasks()
+  let tasks = mergeResultsIntoTasks(loadTasks())
 
   // Insert default task on first run
   if (tasks.length === 0) {
@@ -210,19 +212,40 @@ export function initScheduler(window: BrowserWindow) {
 }
 
 export function schedulerHandleList() {
-  return loadTasks()
+  return mergeResultsIntoTasks(loadTasks())
 }
 
-export function schedulerHandleSave(task: SchedulerTask): SchedulerTask {
+export async function schedulerHandleSave(task: SchedulerTask): Promise<SchedulerTask> {
+  if (task.type === 'shell' && isSystemSchedulerSupported()) {
+    if (task.systemJobId) await uninstallJob(task)
+    const { success, jobId } = await installJob(task)
+    if (success) {
+      task.systemJobId = jobId
+      writeLog(task.id, 'info', `Installed system job: ${jobId}`)
+    } else {
+      task.systemJobId = undefined
+      writeLog(task.id, 'warn', 'System job install failed, falling back to node-cron')
+      registerJob(task)
+    }
+  } else {
+    if (task.systemJobId) {
+      await uninstallJob(task)
+      task.systemJobId = undefined
+    }
+    registerJob(task)
+  }
   saveTask(task)
-  registerJob(task)
   if (mainWin && !mainWin.isDestroyed()) {
     mainWin.webContents.send('scheduler:tasks-changed')
   }
   return task
 }
 
-export function schedulerHandleDeleteAndNotify(id: string) {
+export async function schedulerHandleDeleteAndNotify(id: string): Promise<void> {
+  const task = loadTasks().find(t => t.id === id)
+  if (task?.systemJobId) {
+    await uninstallJob(task)
+  }
   unregisterJob(id)
   deleteTaskFromStore(id)
   if (mainWin && !mainWin.isDestroyed()) {
