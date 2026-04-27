@@ -290,7 +290,12 @@
                       </el-select>
                     </el-form-item>
                     <el-form-item v-if="taskForm.schedule.frequency === 'monthly'" :label="t('scheduler.dayOfMonth')">
-                      <el-input-number v-model="taskForm.schedule.day" :min="1" :max="31" style="width:100px" />
+                      <el-input
+                        v-model.number="taskForm.schedule.day"
+                        type="number"
+                        style="width:80px"
+                        @change="v => taskForm.schedule.day = Math.min(31, Math.max(1, Number(v) || 1))"
+                      />
                     </el-form-item>
                   </template>
                   <template v-else>
@@ -323,11 +328,25 @@
                       </el-select>
                     </el-form-item>
                   </template>
-                  <el-form-item :label="t('scheduler.retry')">
-                    <el-input-number v-model="taskForm.retry.maxAttempts" :min="1" :max="10" style="width:70px" />
-                    <span style="margin:0 6px;font-size:12px;color:#909399">{{ t('scheduler.maxAttempts') }}</span>
-                    <el-input-number v-model="taskForm.retry.delaySeconds" :min="10" :max="3600" style="width:90px" />
-                    <span style="margin-left:6px;font-size:12px;color:#909399">s</span>
+                  <el-form-item :label="t('scheduler.maxAttempts')">
+                    <el-input
+                      v-model.number="taskForm.retry.maxAttempts"
+                      type="number"
+                      style="width:80px"
+                      :min="1"
+                      :max="10"
+                      @change="v => taskForm.retry.maxAttempts = Math.min(10, Math.max(1, Number(v) || 1))"
+                    />
+                  </el-form-item>
+                  <el-form-item :label="t('scheduler.delaySeconds')">
+                    <el-input
+                      v-model.number="taskForm.retry.delaySeconds"
+                      type="number"
+                      style="width:100px"
+                      :min="10"
+                      :max="3600"
+                      @change="v => taskForm.retry.delaySeconds = Math.min(3600, Math.max(10, Number(v) || 60))"
+                    />
                   </el-form-item>
                   <el-form-item :label="t('scheduler.enabled')">
                     <div style="display:flex;align-items:center;gap:10px;-webkit-app-region:no-drag">

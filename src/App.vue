@@ -141,9 +141,13 @@ body {
   -webkit-app-region: no-drag;
 }
 
-/* Allow tab-pane content to scroll in drawers */
+/* Allow tab content to scroll in drawers */
+.el-drawer .el-tabs--left {
+  overflow: visible !important;
+}
 .el-drawer .el-tabs--left .el-tabs__content {
   overflow-y: auto !important;
+  height: 100%;
 }
 
 .el-dialog,
