@@ -242,13 +242,20 @@
                     @click="editTask(item)"
                   >
                     <span class="s-dot" :class="dotClass(item)" :title="dotLabel(item)"></span>
-                    <span class="s-name">{{ item.name }}</span>
-                    <span class="s-badge" :class="item.systemJobId ? 's-badge-system' : 's-badge-app'">
-                      {{ item.type === 'shell' ? (item.systemJobId ? t('scheduler.badgeSystem') : t('scheduler.badgeApp')) : t('scheduler.badgeApp') }}
-                    </span>
-                    <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
-                      {{ statusLabel(item) }}
-                    </span>
+                    <div class="s-info">
+                      <div class="s-name-row">
+                        <span class="s-name">{{ item.name }}</span>
+                        <span class="s-badge" :class="item.systemJobId ? 's-badge-system' : 's-badge-app'">
+                          {{ item.type === 'shell' ? (item.systemJobId ? t('scheduler.badgeSystem') : t('scheduler.badgeApp')) : t('scheduler.badgeApp') }}
+                        </span>
+                      </div>
+                      <div class="s-meta-row">
+                        <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
+                          {{ runningTaskIds.has(item.id) ? '⏳ ' + t('scheduler.statusRunning') : statusLabel(item) }}
+                        </span>
+                        <span v-if="item.lastRun" class="s-time">{{ relativeTime(item.lastRun) }}</span>
+                      </div>
+                    </div>
                     <div class="s-actions" @click.stop>
                       <el-switch
                         :model-value="item.enabled"
@@ -256,7 +263,12 @@
                         style="-webkit-app-region:no-drag"
                         @change="(v: boolean) => toggleEnabled(item, v)"
                       />
-                      <button class="s-btn" @click="runTaskNow(item)" :title="t('scheduler.runNow')">▶</button>
+                      <button
+                        class="s-btn"
+                        :disabled="runningTaskIds.has(item.id)"
+                        @click="runTaskNow(item)"
+                        :title="t('scheduler.runNow')"
+                      >{{ runningTaskIds.has(item.id) ? '⏳' : '▶' }}</button>
                       <button class="s-btn s-btn-danger" @click="removeTask(item)" :title="t('scheduler.delete')">✕</button>
                     </div>
                   </div>
@@ -709,6 +721,7 @@
   const schedulerTasks = ref<SchedulerTask[]>([])
   const editingTaskId = ref<string | null>(null)
   const schedulerSubTab = ref('list')
+  const runningTaskIds = ref(new Set<string>())
   const cronError = ref(false)
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const isWindows = process.platform === 'win32'
@@ -833,8 +846,25 @@
   }
 
   async function runTaskNow(item: SchedulerTask) {
-    await ipcRenderer.invoke('scheduler:run-now', { id: item.id })
-    await loadSchedulerTasks()
+    const next = new Set(runningTaskIds.value)
+    next.add(item.id)
+    runningTaskIds.value = next
+    try {
+      await ipcRenderer.invoke('scheduler:run-now', { id: item.id })
+      await loadSchedulerTasks()
+    } finally {
+      const after = new Set(runningTaskIds.value)
+      after.delete(item.id)
+      runningTaskIds.value = after
+    }
+  }
+
+  function relativeTime(ts: number): string {
+    const diff = Date.now() - ts
+    if (diff < 60000) return Math.floor(diff / 1000) + 's ago'
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago'
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago'
+    return new Date(ts).toLocaleDateString()
   }
 
   async function removeTask(item: SchedulerTask) {
@@ -1064,7 +1094,11 @@
 .dot-red { background: #f56c6c; }
 .dot-yellow { background: #e6a23c; }
 .dot-blue { background: #409eff; }
-.s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; }
+.s-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.s-name-row { display: flex; align-items: center; gap: 6px; }
+.s-meta-row { display: flex; align-items: center; gap: 8px; }
+.s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; font-size: 13px; }
+.s-time { font-size: 11px; color: #c0c4cc; }
 .s-badge {
   font-size: 10px;
   padding: 1px 5px;
