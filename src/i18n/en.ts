@@ -345,6 +345,9 @@ const en = {
       timeInvalid: 'Invalid time, use HH:mm (e.g. 09:00)',
       workdirNotFound: 'Directory does not exist',
       commandPlaceholder: 'e.g. python /path/to/script.py',
+      badgeSystem: '⚙ System',
+      badgeApp: '⚙ App',
+      windowsFallback: 'Shell tasks use in-app scheduling on Windows.',
     },
   };
 

@@ -345,6 +345,9 @@ const zh = {
       timeInvalid: '时间格式无效，请使用 HH:mm（如 09:00）',
       workdirNotFound: '目录不存在',
       commandPlaceholder: '例如：python /path/to/script.py',
+      badgeSystem: '⚙ 系统',
+      badgeApp: '⚙ 应用',
+      windowsFallback: 'Shell 任务在 Windows 上使用应用内调度。',
     },
   };
 

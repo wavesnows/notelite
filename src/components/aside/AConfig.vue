@@ -243,6 +243,9 @@
                   >
                     <span class="s-dot" :class="dotClass(item)" :title="dotLabel(item)"></span>
                     <span class="s-name">{{ item.name }}</span>
+                    <span class="s-badge" :class="item.systemJobId ? 's-badge-system' : 's-badge-app'">
+                      {{ item.type === 'shell' ? (item.systemJobId ? t('scheduler.badgeSystem') : t('scheduler.badgeApp')) : t('scheduler.badgeApp') }}
+                    </span>
                     <span class="s-status" :class="'s-status-' + (item.lastStatus || 'none')">
                       {{ statusLabel(item) }}
                     </span>
@@ -304,6 +307,9 @@
                       <div v-if="cronError" style="color:#f56c6c;font-size:12px;margin-top:2px">{{ t('scheduler.cronInvalid') }}</div>
                     </el-form-item>
                   </template>
+                  <div v-if="taskForm.type === 'shell' && isWindows" class="s-windows-note">
+                    {{ t('scheduler.windowsFallback') }}
+                  </div>
                   <el-form-item :label="t('scheduler.taskType')">
                     <el-select v-model="taskForm.type" style="width:140px">
                       <el-option value="shell" :label="t('scheduler.shell')" />
@@ -705,6 +711,7 @@
   const schedulerSubTab = ref('list')
   const cronError = ref(false)
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const isWindows = process.platform === 'win32'
 
   function defaultTaskForm(): SchedulerTask {
     return {
@@ -1057,6 +1064,21 @@
 .dot-yellow { background: #e6a23c; }
 .dot-blue { background: #409eff; }
 .s-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #303133; }
+.s-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.s-badge-system { background: #f0f0f0; color: #606266; }
+.s-badge-app { background: #ecf5ff; color: #409eff; }
+.s-windows-note {
+  font-size: 12px;
+  color: #e6a23c;
+  padding: 6px 0;
+  margin-bottom: 4px;
+}
 .s-status { font-size: 11px; white-space: nowrap; flex-shrink: 0; }
 .s-status-success { color: #67c23a; }
 .s-status-error { color: #f56c6c; }
