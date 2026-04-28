@@ -1109,8 +1109,7 @@
   align-items: center;
   line-height: 1.4;
 }
-.s-badge-system { background: #f0f0f0; color: #606266; }
-.s-badge-app { background: #ecf5ff; color: #409eff; }
+.s-badge-system, .s-badge-app { background: #f0f0f0; color: #909399; }
 .s-windows-note {
   font-size: 12px;
   color: #e6a23c;
