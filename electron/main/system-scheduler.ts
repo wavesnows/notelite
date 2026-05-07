@@ -34,7 +34,19 @@ function systemJobId(task: SchedulerTask): string {
 function generateWrapper(task: SchedulerTask): string {
   const userData = app.getPath('userData')
   const resultsFile = join(userData, 'scheduler-results.json')
-  const nodeBin = process.execPath
+  // In Electron, process.execPath points to Electron itself, not Node.
+  const nodeBin = (() => {
+    const candidates = [
+      '/usr/local/bin/node',
+      '/opt/homebrew/bin/node',
+      '/usr/bin/node',
+    ]
+    for (const c of candidates) {
+      try { require('fs').accessSync(c); return c; } catch (_) {}
+    }
+    try { return require('child_process').execSync('which node', { encoding: 'utf-8' }).trim(); } catch (_) {}
+    return 'node'
+  })()
   const workdir = task.workdir || homedir()
   const command = task.command || ''
   const taskId = task.id
