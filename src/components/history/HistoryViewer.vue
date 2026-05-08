@@ -47,6 +47,10 @@
             <div class="commit-content">
               <div class="commit-message">{{ commit.message }}</div>
               <div class="commit-meta">
+                <span class="commit-date">
+                  <el-icon><Clock /></el-icon>
+                  {{ formatDate(commit.date) }}
+                </span>
                 <span class="author">
                   <el-icon><User /></el-icon>
                   {{ commit.author_name }}
