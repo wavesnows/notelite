@@ -27,6 +27,13 @@
     <!-- Empty state: no commits -->
     <el-empty v-else-if="commits.length === 0" :description="t('history.noHistory')" />
 
+    <!-- 多选对比工具栏 -->
+    <div v-if="selectedHashes.length > 0" class="diff-toolbar">
+      <span class="diff-hint">{{ selectedHashes.length === 1 ? '再选一个版本对比' : '已选 2 个版本' }}</span>
+      <el-button v-if="selectedHashes.length === 2" size="small" type="primary" @click="diffSelected">对比所选</el-button>
+      <el-button size="small" @click="selectedHashes = []">取消</el-button>
+    </div>
+
     <!-- Timeline of commits -->
     <el-scrollbar v-else height="calc(100vh - 150px)">
       <el-timeline>
@@ -36,7 +43,7 @@
           :timestamp="formatDate(commit.date)"
           placement="top"
         >
-          <el-card class="commit-card" shadow="hover">
+          <el-card class="commit-card" :class="{ 'is-selected': selectedHashes.includes(commit.hash) }" shadow="hover">
             <div class="commit-content">
               <div class="commit-message">{{ commit.message }}</div>
               <div class="commit-meta">
@@ -51,18 +58,46 @@
               </div>
             </div>
             <div class="commit-actions">
-              <el-button size="small" @click="previewCommit(commit)">
-                {{ t('history.preview') }}
+              <span v-show="commit.hash === commits[0].hash" class="current-badge">当前</span>
+              <el-button v-show="commit.hash !== commits[0].hash" size="small" @click="previewCommit(commit)">预览</el-button>
+              <el-button v-show="commit.hash !== commits[0].hash" size="small" @click="diffWithCurrent(commit)">对比</el-button>
+              <el-button v-show="commit.hash !== commits[0].hash" size="small" @click="toggleSelect(commit)">
+                {{ selectedHashes.includes(commit.hash) ? '✕' : '选' }}
               </el-button>
-              <el-button size="small" type="primary" @click="confirmRestore(commit)">
-                {{ t('history.restore') }}
-              </el-button>
+              <el-button v-show="commit.hash !== commits[0].hash" size="small" type="primary" @click="confirmRestore(commit)">恢复</el-button>
             </div>
           </el-card>
         </el-timeline-item>
       </el-timeline>
     </el-scrollbar>
   </el-drawer>
+
+  <!-- Diff dialog -->
+  <el-dialog
+    v-model="diffVisible"
+    :title="diffTitle"
+    width="80%"
+    top="4vh"
+  >
+    <div v-if="diffLoading" class="preview-loading">
+      <el-icon class="is-loading"><Loading /></el-icon>
+    </div>
+    <div v-else-if="!diffLines.length" class="preview-empty">
+      <el-icon><Document /></el-icon>
+      <p>两个版本内容相同</p>
+    </div>
+    <div v-else class="diff-content">
+      <div
+        v-for="(line, i) in diffLines"
+        :key="i"
+        class="diff-line"
+        :class="line.type"
+      ><span class="diff-sign">{{ line.sign }}</span><span class="diff-text">{{ line.text }}</span></div>
+    </div>
+    <template #footer>
+      <el-button @click="diffVisible = false">{{ t('common.cancel') }}</el-button>
+    </template>
+  </el-dialog>
 
   <!-- Preview dialog -->
   <el-dialog
@@ -89,6 +124,10 @@
       <div v-else-if="!history.previewData" class="preview-error">
         No preview data available
       </div>
+      <!-- md 文件：直接显示原始内容 -->
+      <div v-else-if="history.previewData._markdown !== undefined" class="preview-markdown">
+        <pre class="md-raw">{{ history.previewData._markdown }}</pre>
+      </div>
       <div v-else-if="!history.previewData.blocks || history.previewData.blocks.length === 0" class="preview-empty">
         <el-icon><Document /></el-icon>
         <p>This file was empty in this version</p>
@@ -110,6 +149,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
+const { ipcRenderer } = require('electron');
 import { useI18n } from 'vue-i18n';
 import { useTtsStore } from '@/store/store';
 import { storeToRefs } from 'pinia';
@@ -144,15 +184,88 @@ const fileName = computed(() => {
 
 const previewVisible = ref(false);
 const previewLoading = ref(false);
+
+// ── Diff 状态 ──────────────────────────────────────────────
+const selectedHashes = ref<string[]>([])
+const diffVisible = ref(false)
+const diffLoading = ref(false)
+const diffTitle = ref('')
+interface DiffLine { type: 'add' | 'del' | 'hunk' | 'normal'; sign: string; text: string }
+const diffLines = ref<DiffLine[]>([])
+
+function toggleSelect(commit: any) {
+  const h = commit.hash
+  if (selectedHashes.value.includes(h)) {
+    selectedHashes.value = selectedHashes.value.filter(x => x !== h)
+  } else if (selectedHashes.value.length < 2) {
+    selectedHashes.value = [...selectedHashes.value, h]
+  }
+}
+
+async function runDiff(hashA: string, hashB: string | null, title: string) {
+  const filePath = ttsStore.cnote.lastPath
+  const { getRepoPath } = await import('@/libs/gitHistory')
+  const repoPath = getRepoPath(filePath)
+  if (!repoPath) { ElMessage({ type: 'warning', message: '文件不在 git 仓库中' }); return }
+  diffTitle.value = title
+  diffVisible.value = true
+  diffLoading.value = true
+  diffLines.value = []
+  try {
+    const { diff } = await ipcRenderer.invoke('git:diff', { repoPath, hashA, hashB, filePath })
+    diffLines.value = parseDiff(diff)
+  } finally {
+    diffLoading.value = false
+  }
+}
+
+function parseDiff(raw: string): DiffLine[] {
+  const lines: DiffLine[] = []
+  for (const line of raw.split('\n')) {
+    if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('diff ') || line.startsWith('index ')) continue
+    if (line.startsWith('@@')) {
+      lines.push({ type: 'hunk', sign: '', text: line })
+    } else if (line.startsWith('+')) {
+      lines.push({ type: 'add', sign: '+', text: line.slice(1) })
+    } else if (line.startsWith('-')) {
+      lines.push({ type: 'del', sign: '-', text: line.slice(1) })
+    } else {
+      lines.push({ type: 'normal', sign: ' ', text: line.slice(1) })
+    }
+  }
+  return lines
+}
+
+async function diffWithCurrent(commit: any) {
+  await runDiff(commit.hash, null, `${shortHash(commit.hash)} vs 当前版本`)
+}
+
+async function diffSelected() {
+  const [a, b] = selectedHashes.value
+  await runDiff(a, b, `${shortHash(a)} vs ${shortHash(b)}`)
+  selectedHashes.value = []
+}
 const previewError = ref(false);
 const selectedCommit = ref<any>(null);
 let previewEditorInstance: EditorJS | null = null;
 
-// Format date for display
+// Format date for display — show absolute date + relative time
 function formatDate(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toLocaleString();
+  const now = Date.now();
+  const diff = now - date.getTime();
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const absolute = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+
+  let relative = '';
+  if (diff < 60000) relative = '刚刚';
+  else if (diff < 3600000) relative = `${Math.floor(diff/60000)} 分钟前`;
+  else if (diff < 86400000) relative = `${Math.floor(diff/3600000)} 小时前`;
+  else if (diff < 86400000 * 7) relative = `${Math.floor(diff/86400000)} 天前`;
+
+  return relative ? `${absolute}（${relative}）` : absolute;
 }
 
 // Shorten commit hash
@@ -457,5 +570,65 @@ watch(previewVisible, async (newVal) => {
 
 .preview-empty .el-icon {
   font-size: 48px;
+}
+
+.diff-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--el-color-primary-light-9, #ecf5ff);
+  border-bottom: 1px solid var(--el-border-color, #ddd);
+  font-size: 13px;
+}
+.diff-hint { flex: 1; color: #606266; }
+
+.commit-card.is-selected {
+  border-color: var(--el-color-primary, #409eff);
+  box-shadow: 0 0 0 1px var(--el-color-primary, #409eff);
+}
+
+.diff-content {
+  max-height: 65vh;
+  overflow-y: auto;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.diff-line {
+  display: flex;
+  padding: 1px 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.diff-line.add { background: #f0fff4; color: #1a7f37; }
+.diff-line.del { background: #fff5f5; color: #cf222e; }
+.diff-line.hunk { background: #f6f8fa; color: #57606a; font-style: italic; }
+.diff-line.normal { color: #303133; }
+.diff-sign { width: 16px; flex-shrink: 0; user-select: none; }
+
+.current-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--el-color-success-light-9, #f0f9eb);
+  color: var(--el-color-success, #67c23a);
+  border: 1px solid var(--el-color-success-light-5, #b3e19d);
+}
+
+.preview-markdown {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.md-raw {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #303133;
+  margin: 0;
 }
 </style>
