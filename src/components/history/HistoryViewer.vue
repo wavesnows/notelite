@@ -35,7 +35,7 @@
     </div>
 
     <!-- Timeline of commits -->
-    <el-scrollbar v-else height="calc(100vh - 150px)">
+    <el-scrollbar height="calc(100vh - 150px)">
       <el-timeline>
         <el-timeline-item
           v-for="commit in commits"
