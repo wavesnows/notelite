@@ -69,6 +69,25 @@ const readOnlyCompartment = new Compartment()
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 
+// Resolve relative image paths to absolute file:// URLs based on current file location
+const defaultImageRenderer = md.renderer.rules.image || ((tokens: any[], idx: number, options: any, _env: any, self: any) => self.renderToken(tokens, idx, options))
+md.renderer.rules.image = (tokens: any[], idx: number, options: any, env: any, self: any) => {
+  const token = tokens[idx]
+  const srcIndex = token.attrIndex('src')
+  if (srcIndex >= 0) {
+    const src = token.attrs[srcIndex][1] as string
+    if (src && !src.startsWith('http') && !src.startsWith('file://') && !src.startsWith('data:')) {
+      const currentPath = ttsStore.inputs.notePath
+      if (currentPath) {
+        const dir = require('path').dirname(currentPath)
+        const absPath = require('path').resolve(dir, src)
+        token.attrs[srcIndex][1] = 'file://' + absPath
+      }
+    }
+  }
+  return defaultImageRenderer(tokens, idx, options, env, self)
+}
+
 // Give headings id attributes for anchor link navigation
 const defaultHeadingRenderer = md.renderer.rules.heading_open || ((tokens: any[], idx: number, options: any, _env: any, self: any) => self.renderToken(tokens, idx, options))
 md.renderer.rules.heading_open = (tokens: any[], idx: number, options: any, env: any, self: any) => {
