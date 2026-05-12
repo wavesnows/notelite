@@ -1,7 +1,8 @@
-import { app, BrowserWindow, shell, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, shell, ipcMain, dialog, Notification } from "electron";
 import { release } from "os";
 import { join } from "path";
-import { execSync } from "child_process";
+import { execSync, execSync as _execSync, spawn, ChildProcess } from "child_process";
+import { readFileSync, readdirSync, appendFileSync, mkdirSync } from "fs";
 
 import logger from "../utils/log";
 import os from 'os';
@@ -251,6 +252,23 @@ ipcMain.on('open-dialog', (event) => {
   });
 });
 
+// 文件/目录选择对话框（返回路径，供配置面板使用）
+ipcMain.handle('dialog:openFile', async (_event, options: any = {}) => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    ...options,
+  })
+  return result.canceled ? null : result.filePaths[0]
+})
+
+ipcMain.handle('dialog:openDirectory', async (_event, options: any = {}) => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    ...options,
+  })
+  return result.canceled ? null : result.filePaths[0]
+})
+
 // Terminal IPC handlers
 ipcMain.on('terminal-open', (event, cwd: string) => {
   // Kill existing PTY if any
@@ -322,8 +340,208 @@ ipcMain.on('terminal-resize', (_event, cols: number, rows: number) => {
   }
 });
 
+// 文章改编：后台静默执行 monitor.py，输出通过 IPC 流式传回面板
+let articleRewriteProc: ChildProcess | null = null
+
+ipcMain.on('article-rewrite-run', (_event, command: string) => {
+  // 杀掉上一个还在跑的任务
+  if (articleRewriteProc) {
+    try { articleRewriteProc.kill('SIGTERM') } catch (_) {}
+    articleRewriteProc = null
+  }
+
+  const home = os.homedir()
+  const extraPaths = [
+    `${home}/miniconda3/bin`,
+    `${home}/.bun/bin`,
+    `${home}/.opencode/bin`,
+    `${home}/.nvm/versions/node/v23.11.0/bin`,
+    '/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin'
+  ].join(':')
+
+  const env = {
+    ...process.env,
+    PATH: `${extraPaths}:${process.env.PATH || ''}`,
+    HOME: os.homedir(),
+  }
+
+  // 日志文件路径
+  const logDir = join(app.getPath('userData'), 'article-rewrite-logs')
+  try { mkdirSync(logDir, { recursive: true }) } catch (_) {}
+  const logFile = join(logDir, `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.log`)
+  const writeLog = (text: string) => {
+    try { appendFileSync(logFile, text) } catch (_) {}
+  }
+  writeLog(`[${new Date().toLocaleString()}] Command: ${command}\n\n`)
+
+  // 用 shell 执行，支持完整的命令字符串
+  const proc = spawn('/bin/zsh', ['-c', command], {
+    cwd: os.homedir(),
+    env,
+  })
+  articleRewriteProc = proc
+
+  proc.stdout.on('data', (data: Buffer) => {
+    const text = data.toString()
+    writeLog(text)
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('article-rewrite-output', text)
+    }
+  })
+
+  proc.stderr.on('data', (data: Buffer) => {
+    const text = data.toString()
+    writeLog(text)
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('article-rewrite-output', text)
+    }
+  })
+
+  proc.on('close', (code: number | null) => {
+    articleRewriteProc = null
+    const exitCode = code ?? 1
+    writeLog(`\n[exit ${exitCode}]\n`)
+    // 系统通知
+    if (Notification.isSupported()) {
+      new Notification({
+        title: exitCode === 0 ? '✅ 任务完成' : '❌ 任务失败',
+        body: exitCode === 0 ? '文章处理完成，可查看结果' : `任务异常退出（exit ${exitCode}）`,
+        silent: false,
+      }).show()
+    }
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('article-rewrite-done', exitCode)
+    }
+  })
+
+  proc.on('error', (err: Error) => {
+    articleRewriteProc = null
+    writeLog(`\n[error] ${err.message}\n`)
+    if (Notification.isSupported()) {
+      new Notification({ title: '❌ 任务失败', body: err.message }).show()
+    }
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('article-rewrite-output', `Error: ${err.message}\n`)
+      win.webContents.send('article-rewrite-done', 1)
+    }
+  })
+})
+
+// 停止文章改编
+ipcMain.handle('article-rewrite:log-dir', () => {
+  return join(app.getPath('userData'), 'article-rewrite-logs')
+})
+
+ipcMain.handle('article-rewrite:is-running', () => {
+  return articleRewriteProc !== null
+})
+
+ipcMain.on('article-rewrite-stop', () => {
+  if (articleRewriteProc) {
+    try { articleRewriteProc.kill('SIGTERM') } catch (_) {}
+    articleRewriteProc = null
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('article-rewrite-done', -1)
+    }
+  }
+})
+
+// Git diff IPC handler
+ipcMain.handle('git:diff', async (_event, { repoPath, hashA, hashB, filePath }: {
+  repoPath: string, hashA: string, hashB: string | null, filePath: string
+}) => {
+  try {
+    const rel = filePath.startsWith(repoPath) ? filePath.slice(repoPath.length + 1) : filePath
+    // hashB null 表示与工作区当前文件对比
+    const cmd = hashB
+      ? `git diff ${hashA} ${hashB} -- "${rel}"`
+      : `git diff ${hashA} -- "${rel}"`
+    const result = execSync(cmd, { cwd: repoPath, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 })
+    return { diff: result }
+  } catch (e: any) {
+    return { diff: e.stdout || '', error: e.message }
+  }
+})
+
 // Scheduler IPC handlers
 ipcMain.handle('scheduler:list', () => schedulerHandleList())
 ipcMain.handle('scheduler:save', async (_event, task) => schedulerHandleSave(task))
 ipcMain.handle('scheduler:delete', async (_event, { id }) => schedulerHandleDeleteAndNotify(id))
 ipcMain.handle('scheduler:run-now', (_event, { id }) => schedulerHandleRunNow(id))
+
+// External tasks IPC handlers
+ipcMain.handle('external-tasks:list', async () => {
+  const launchAgentsDir = join(os.homedir(), 'Library', 'LaunchAgents')
+  const result: any[] = []
+  let plistFiles: string[] = []
+  try {
+    plistFiles = readdirSync(launchAgentsDir).filter(f => f.endsWith('.plist'))
+  } catch { return [] }
+
+  // 解析 launchctl list 获取运行状态
+  let launchctlOutput = ''
+  try {
+    launchctlOutput = _execSync('launchctl list', { encoding: 'utf-8', timeout: 5000 })
+  } catch {}
+  const runningMap: Record<string, { pid?: number; lastExitCode?: number }> = {}
+  for (const line of launchctlOutput.split('\n').slice(1)) {
+    const parts = line.trim().split(/\s+/)
+    if (parts.length >= 3) {
+      const label = parts[2]
+      const pid = parts[0] !== '-' ? parseInt(parts[0]) : undefined
+      const exitCode = parts[1] !== '-' ? parseInt(parts[1]) : undefined
+      runningMap[label] = { pid, lastExitCode: exitCode }
+    }
+  }
+
+  for (const file of plistFiles) {
+    const label = file.replace('.plist', '')
+    // 只显示非 com.notelite.* 的外部任务
+    if (label.startsWith('com.notelite.')) continue
+    try {
+      const plistPath = join(launchAgentsDir, file)
+      const content = readFileSync(plistPath, 'utf-8')
+      // 简单解析 plist XML
+      const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/)
+      const intervalMatch = content.match(/<key>StartInterval<\/key>\s*<integer>(\d+)<\/integer>/)
+      const logMatch = content.match(/<key>StandardOutPath<\/key>\s*<string>([^<]+)<\/string>/)
+      const argsMatch = [...content.matchAll(/<string>([^<]+)<\/string>/g)]
+        .map(m => m[1])
+        .filter(s => !s.includes('<') && s.length < 200)
+      const parsedLabel = labelMatch?.[1] || label
+      const interval = intervalMatch ? parseInt(intervalMatch[1]) : undefined
+      const logPath = logMatch?.[1]
+      const command = argsMatch.slice(0, 3).join(' ')
+      const status = runningMap[parsedLabel]
+      result.push({
+        label: parsedLabel,
+        plistPath,
+        command,
+        interval,
+        logPath,
+        isRunning: status?.pid != null,
+        pid: status?.pid,
+        lastExitCode: status?.lastExitCode,
+      })
+    } catch {}
+  }
+  return result
+})
+
+ipcMain.handle('external-tasks:start', async (_event, label: string) => {
+  try {
+    _execSync(`launchctl start ${label}`, { timeout: 5000 })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('external-tasks:stop', async (_event, label: string) => {
+  try {
+    _execSync(`launchctl stop ${label}`, { timeout: 5000 })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
