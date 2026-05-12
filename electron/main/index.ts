@@ -375,8 +375,11 @@ ipcMain.on('article-rewrite-run', (_event, command: string) => {
   writeLog(`[${new Date().toLocaleString()}] Command: ${command}\n\n`)
 
   // 用 shell 执行，支持完整的命令字符串
+  // cwd 设为 monitor.py 所在目录，让 mc 能找到正确的 skill 上下文
+  const monitorMatch = command.match(/["']?(\S+monitor\.py)["']?/)
+  const monitorDir = monitorMatch ? require('path').dirname(monitorMatch[1]) : os.homedir()
   const proc = spawn('/bin/zsh', ['-c', command], {
-    cwd: os.homedir(),
+    cwd: monitorDir,
     env,
   })
   articleRewriteProc = proc
@@ -496,8 +499,8 @@ ipcMain.handle('external-tasks:list', async () => {
 
   for (const file of plistFiles) {
     const label = file.replace('.plist', '')
-    // 只显示非 com.notelite.* 的外部任务
-    if (label.startsWith('com.notelite.')) continue
+    // 只显示非 com.yesnote.* 的外部任务
+    if (label.startsWith('com.yesnote.')) continue
     try {
       const plistPath = join(launchAgentsDir, file)
       const content = readFileSync(plistPath, 'utf-8')
